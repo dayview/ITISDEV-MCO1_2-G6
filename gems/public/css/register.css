@@ -1,0 +1,247 @@
+/* ==========================================================================
+   GEMS — Registration page styles
+   ========================================================================== */
+
+.reg-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---- Sidebar ---- */
+.reg-sidebar {
+  width: 236px;
+  flex: none;
+  background: #004D26;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 16px;
+}
+
+.reg-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 6px 6px 20px;
+}
+
+.reg-sidebar__logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: #00A86B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.reg-sidebar__name {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.reg-sidebar__sub {
+  font-size: 11px;
+  color: rgba(255,255,255,.55);
+  font-weight: 600;
+}
+
+.reg-steps { display: flex; flex-direction: column; gap: 4px; }
+
+.reg-step {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.reg-step--active {
+  background: #00A86B;
+  color: #fff;
+}
+
+.reg-step--idle {
+  color: rgba(255,255,255,.8);
+}
+
+.reg-sidebar__cta {
+  margin-top: auto;
+  background: rgba(255,255,255,.08);
+  border-radius: 11px;
+  padding: 14px;
+}
+
+.reg-sidebar__cta-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.reg-sidebar__cta-sub {
+  font-size: 11.5px;
+  color: rgba(255,255,255,.65);
+  line-height: 1.45;
+  margin-bottom: 11px;
+}
+
+.btn-login-instead {
+  width: 100%;
+  background: #fff;
+  color: #004D26;
+  border: none;
+  border-radius: 8px;
+  padding: 9px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn-login-instead:hover { background: #e6f4ed; }
+
+/* ---- Main scroll area ---- */
+.reg-main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  background: #F4F6F5;
+}
+
+.reg-inner {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 34px 36px 48px;
+}
+
+.reg-heading {
+  font-size: 26px;
+  font-weight: 800;
+  color: #004D26;
+}
+
+.reg-subheading {
+  font-size: 14px;
+  color: #6B7280;
+  margin-top: 4px;
+}
+
+/* ---- Section cards ---- */
+.reg-section {
+  background: #fff;
+  border: 1px solid #E9ECEF;
+  border-radius: 14px;
+  padding: 24px;
+  margin-top: 22px;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04);
+}
+
+.reg-section + .reg-section { margin-top: 18px; }
+
+.reg-section__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 18px;
+}
+
+/* ---- Fields ---- */
+.field { margin-bottom: 16px; }
+.field:last-child { margin-bottom: 0; }
+
+.field__label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 7px;
+}
+
+.field input {
+  width: 100%;
+  border: 1px solid #D7DEDA;
+  border-radius: 9px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: #111827;
+  outline: none;
+  background: #fff;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.field input:focus { border-color: #006633; }
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Fake select / date dropdowns */
+.fake-select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #D7DEDA;
+  border-radius: 9px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: #9AA3A0;
+  background: #fff;
+  cursor: pointer;
+}
+
+/* ---- Footer actions ---- */
+.reg-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+
+.reg-footer__login {
+  font-size: 13.5px;
+  color: #6B7280;
+}
+
+.reg-footer__login a {
+  color: #006633;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.reg-footer__btns { display: flex; gap: 10px; }
+
+.btn-cancel {
+  background: #fff;
+  border: 1px solid #E9ECEF;
+  border-radius: 11px;
+  padding: 13px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn-cancel:hover { background: #f4f6f5; }
+
+.btn-create {
+  background: #006633;
+  color: #fff;
+  border: none;
+  border-radius: 11px;
+  padding: 13px 26px;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn-create:hover { background: #005229; }

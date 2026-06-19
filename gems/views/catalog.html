@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Opportunity Catalog — GEMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../public/css/gems.css" />
+</head>
+<body>
+
+<div class="app-wrapper">
+
+  <!-- =====================================================================
+       PROTO BAR — prototype chrome (non-functional, visual reference only)
+       ===================================================================== -->
+  <div class="proto-bar">
+    <a href="dashboard.html" class="proto-bar__brand">
+      <div class="proto-bar__logo-icon">G</div>
+      <span>GEMS</span>
+      <span class="proto-bar__subtitle">Prototype · MCO1</span>
+    </a>
+
+    <div class="proto-bar__tabs">
+      <a href="dashboard.html" class="proto-tab proto-tab--active">App</a>
+      <span class="proto-tab">Mobile</span>
+      <span class="proto-tab">Registration</span>
+      <span class="proto-tab">Catalog</span>
+    </div>
+
+    <div class="proto-bar__actions">
+      <div class="proto-toggle">
+        <span class="proto-toggle__btn proto-toggle__btn--active">Student</span>
+        <span class="proto-toggle__btn">Admin</span>
+      </div>
+      <a href="login.html" class="proto-login-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5M15 12H3"/></svg>
+        Log in
+      </a>
+    </div>
+  </div><!-- /proto-bar -->
+
+  <!-- =====================================================================
+       LAYOUT BODY
+       ===================================================================== -->
+  <div class="layout-body">
+
+    <!-- =================================================================
+         SIDEBAR
+         ================================================================= -->
+    <nav class="sidebar" aria-label="Main navigation">
+
+      <div class="sidebar__header">
+        <div class="sidebar__logo">G</div>
+        <div>
+          <div class="sidebar__title">GEMS</div>
+          <div class="sidebar__org">DLSU · OVPERI</div>
+        </div>
+      </div>
+
+      <div class="sidebar__section">Navigation</div>
+
+      <a href="dashboard.html" class="nav-btn">
+        <span class="nav-icon">&#9783;</span>
+        Dashboard
+      </a>
+
+      <a href="catalog.html" class="nav-btn nav-btn--active" aria-current="page">
+        <span class="nav-icon">&#128270;</span>
+        Opportunity Catalog
+      </a>
+
+      <a href="applications.html" class="nav-btn">
+        <span class="nav-icon">&#128196;</span>
+        My Applications
+      </a>
+
+      <!-- Account section -->
+      <div class="sidebar__section">Account</div>
+      <a href="documents.html" class="nav-btn">
+        <span class="nav-icon">&#128196;</span>
+        My Documents
+      </a>
+
+      <div class="sidebar__section">Admin</div>
+
+      <a href="admin/dashboard.html" class="nav-btn">
+        <span class="nav-icon">&#9965;</span>
+        Review Dashboard
+      </a>
+
+      <div class="sidebar__logout">
+        <span class="nav-icon">&#8594;</span>
+        Log out
+      </div>
+
+    </nav><!-- /sidebar -->
+
+    <!-- =================================================================
+         MAIN
+         ================================================================= -->
+    <div class="main">
+
+      <!-- Topbar -->
+      <header class="main-topbar">
+        <div>
+          <div class="page-title">Opportunity Catalog</div>
+          <div class="page-subtitle">Browse and filter international programs</div>
+        </div>
+
+        <div class="topbar-actions">
+          <div class="topbar-search">
+            <span>&#128269;</span>
+            Search programs, countries, universities…
+          </div>
+
+          <button class="notif-btn" aria-label="Notifications">
+            &#128276;
+            <span class="notif-dot"></span>
+          </button>
+
+          <div class="user-info">
+            <div class="user-name">Leon G. Pavino</div>
+            <div class="user-role">CCS · 3.42 CGPA</div>
+          </div>
+          <div class="user-avatar" aria-hidden="true">LP</div>
+        </div>
+      </header><!-- /main-topbar -->
+
+      <!-- =============================================================
+           CONTENT
+           ============================================================= -->
+      <main class="content" id="main-content">
+
+        <!-- Search + Filters row -->
+        <div class="search-row">
+          <div class="search-input-wrap" style="flex:1;">
+            <span style="color:var(--text-faint);font-size:16px;">&#128269;</span>
+            <span style="color:var(--text-faint);">Search by university, country, or program type…</span>
+          </div>
+          <button class="btn btn--secondary" style="gap:7px;padding:10px 16px;font-size:13px;">
+            <span>&#9776;</span> Filters
+          </button>
+        </div>
+
+        <!-- Filter pills -->
+        <div class="filter-pills" role="group" aria-label="Filter by region or type">
+          <button class="pill pill--active">All regions</button>
+          <button class="pill">Asia</button>
+          <button class="pill">Europe</button>
+          <button class="pill">Exchange</button>
+          <button class="pill">Summer</button>
+          <button class="pill pill--eligible">&#10003; Eligible only</button>
+        </div>
+
+        <!-- Result count -->
+        <div class="result-count">6 opportunities · sorted by deadline</div>
+
+        <!-- ============================================================
+             Program rows
+             ============================================================ -->
+
+        <!-- Row 1: CAU -->
+        <div class="opp-row">
+          <div class="opp-icon">CAU</div>
+
+          <div class="opp-row__info">
+            <div class="flex-row align-center gap-8 mb-4">
+              <span class="opp-name">Summer Program 2026</span>
+              <span class="chip chip--green">
+                <span class="chip__dot"></span>Eligible
+              </span>
+            </div>
+            <div class="opp-meta">Chung-Ang University · South Korea · Summer Program</div>
+          </div>
+
+          <div class="opp-row__right">
+            <div class="opp-row__deadline">
+              <div class="opp-deadline-label">Deadline</div>
+              <div class="opp-deadline-val">30 Jun 2026</div>
+            </div>
+            <a href="#" class="btn btn--primary">View</a>
+          </div>
+        </div>
+
+        <!-- Row 2: NTU -->
+        <div class="opp-row">
+          <div class="opp-icon">NTU</div>
+
+          <div class="opp-row__info">
+            <div class="flex-row align-center gap-8 mb-4">
+              <span class="opp-name">Exchange Semester</span>
+              <span class="chip chip--green">
+                <span class="chip__dot"></span>Eligible
+              </span>
+            </div>
+            <div class="opp-meta">Nanyang Technological University · Singapore · Exchange</div>
+          </div>
+
+          <div class="opp-row__right">
+            <div class="opp-row__deadline">
+              <div class="opp-deadline-label">Deadline</div>
+              <div class="opp-deadline-val">15 Jul 2026</div>
+            </div>
+            <a href="#" class="btn btn--primary">View</a>
+          </div>
+        </div>
+
+        <!-- Row 3: NUS -->
+        <div class="opp-row">
+          <div class="opp-icon">NUS</div>
+
+          <div class="opp-row__info">
+            <div class="flex-row align-center gap-8 mb-4">
+              <span class="opp-name">Exchange Semester</span>
+              <span class="chip chip--green">
+                <span class="chip__dot"></span>Eligible
+              </span>
+            </div>
+            <div class="opp-meta">National University of Singapore · Singapore · Exchange</div>
+          </div>
+
+          <div class="opp-row__right">
+            <div class="opp-row__deadline">
+              <div class="opp-deadline-label">Deadline</div>
+              <div class="opp-deadline-val">31 Aug 2026</div>
+            </div>
+            <a href="#" class="btn btn--primary">View</a>
+          </div>
+        </div>
+
+        <!-- Row 4: HKUST -->
+        <div class="opp-row">
+          <div class="opp-icon">HK</div>
+
+          <div class="opp-row__info">
+            <div class="flex-row align-center gap-8 mb-4">
+              <span class="opp-name">Exchange Semester</span>
+              <span class="chip chip--green">
+                <span class="chip__dot"></span>Eligible
+              </span>
+            </div>
+            <div class="opp-meta">Hong Kong Univ. of Sci. &amp; Tech. · Hong Kong · Exchange</div>
+          </div>
+
+          <div class="opp-row__right">
+            <div class="opp-row__deadline">
+              <div class="opp-deadline-label">Deadline</div>
+              <div class="opp-deadline-val">10 Sep 2026</div>
+            </div>
+            <a href="#" class="btn btn--primary">View</a>
+          </div>
+        </div>
+
+        <!-- Row 5: TUM -->
+        <div class="opp-row">
+          <div class="opp-icon">TUM</div>
+
+          <div class="opp-row__info">
+            <div class="flex-row align-center gap-8 mb-4">
+              <span class="opp-name">Exchange Semester</span>
+              <span class="chip chip--amber">
+                <span class="chip__dot"></span>Not eligible
+              </span>
+            </div>
+            <div class="opp-meta">Technical University of Munich · Germany · Exchange</div>
+          </div>
+
+          <div class="opp-row__right">
+            <div class="opp-row__deadline">
+              <div class="opp-deadline-label">Deadline</div>
+              <div class="opp-deadline-val">05 Dec 2026</div>
+            </div>
+            <a href="#" class="btn btn--secondary">View</a>
+          </div>
+        </div>
+
+        <!-- Row 6: KU -->
+        <div class="opp-row" style="margin-bottom:0;">
+          <div class="opp-icon">KU</div>
+
+          <div class="opp-row__info">
+            <div class="flex-row align-center gap-8 mb-4">
+              <span class="opp-name">Research Exchange</span>
+              <span class="chip chip--amber">
+                <span class="chip__dot"></span>Not eligible
+              </span>
+            </div>
+            <div class="opp-meta">Kyoto University · Japan · Research Exchange</div>
+          </div>
+
+          <div class="opp-row__right">
+            <div class="opp-row__deadline">
+              <div class="opp-deadline-label">Deadline</div>
+              <div class="opp-deadline-val">28 Feb 2027</div>
+            </div>
+            <a href="#" class="btn btn--secondary">View</a>
+          </div>
+        </div>
+
+      </main><!-- /content -->
+
+    </div><!-- /main -->
+
+  </div><!-- /layout-body -->
+
+</div><!-- /app-wrapper -->
+
+</body>
+</html>

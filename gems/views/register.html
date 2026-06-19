@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Account — GEMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../public/css/gems.css" />
+  <link rel="stylesheet" href="../public/css/register.css" />
+</head>
+<body>
+
+<div class="app-wrapper">
+
+  <!-- =====================================================================
+       PROTO BAR
+       ===================================================================== -->
+  <div class="proto-bar">
+    <a href="dashboard.html" class="proto-bar__brand">
+      <div class="proto-bar__logo-icon">G</div>
+      <span>GEMS</span>
+      <span class="proto-bar__subtitle">Prototype · MCO1</span>
+    </a>
+
+    <div class="proto-bar__tabs">
+      <a href="dashboard.html" class="proto-tab">App</a>
+      <span class="proto-tab">Mobile</span>
+      <span class="proto-tab proto-tab--active">Registration</span>
+      <span class="proto-tab">Catalog</span>
+    </div>
+
+    <div class="proto-bar__actions">
+      <div class="proto-toggle">
+        <span class="proto-toggle__btn proto-toggle__btn--active">Student</span>
+        <span class="proto-toggle__btn">Admin</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       REGISTRATION BODY
+       ===================================================================== -->
+  <div class="reg-body">
+
+    <!-- ---- Sidebar ---- -->
+    <aside class="reg-sidebar">
+
+      <div class="reg-sidebar__brand">
+        <div class="reg-sidebar__logo">G</div>
+        <div>
+          <div class="reg-sidebar__name">New applicant</div>
+          <div class="reg-sidebar__sub">Create your profile</div>
+        </div>
+      </div>
+
+      <div class="reg-steps">
+
+        <!-- Step 1: Personal Info — active -->
+        <div class="reg-step reg-step--active">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>
+          </svg>
+          Personal Info
+        </div>
+
+        <!-- Step 2: Academic Details -->
+        <div class="reg-step reg-step--idle">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 10L12 5 2 10l10 5 10-5z"/>
+            <path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>
+          </svg>
+          Academic Details
+        </div>
+
+        <!-- Step 3: Documents -->
+        <div class="reg-step reg-step--idle">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 3v4a1 1 0 0 0 1 1h4"/>
+            <path d="M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+          </svg>
+          Documents
+        </div>
+
+      </div>
+
+      <!-- "Log in instead" card -->
+      <div class="reg-sidebar__cta">
+        <div class="reg-sidebar__cta-title">Already registered?</div>
+        <div class="reg-sidebar__cta-sub">Log in to track your applications.</div>
+        <a href="login.html" style="display:block;text-decoration:none;">
+          <button class="btn-login-instead">Log in instead</button>
+        </a>
+      </div>
+
+    </aside><!-- /reg-sidebar -->
+
+    <!-- ---- Main content ---- -->
+    <main class="reg-main">
+      <div class="reg-inner">
+
+        <div class="reg-heading">Create your GEMS account</div>
+        <div class="reg-subheading">Set up your profile once — your details auto-fill every application.</div>
+
+        <!-- Account Credentials -->
+        <div class="reg-section">
+          <div class="reg-section__title">Account Credentials</div>
+
+          <div class="field">
+            <div class="field__label">DLSU Email Address</div>
+            <input type="email" placeholder="lastname_firstname@dlsu.edu.ph" />
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <div class="field__label">Password</div>
+              <input type="password" placeholder="••••••••" />
+            </div>
+            <div class="field">
+              <div class="field__label">Confirm Password</div>
+              <input type="password" placeholder="••••••••" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Personal Information -->
+        <div class="reg-section">
+          <div class="reg-section__title">Personal Information</div>
+
+          <div class="field">
+            <div class="field__label">Full Name</div>
+            <input type="text" placeholder="e.g. Katrina Isabel Estrella" />
+          </div>
+
+          <div class="field">
+            <div class="field__label">Phone Number</div>
+            <input type="tel" placeholder="+63 9XX XXX XXXX" />
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <div class="field__label">Gender</div>
+              <div class="fake-select">
+                Select
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field__label">Date of Birth</div>
+              <div class="fake-select">
+                DD / MM / YYYY
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Academic Details -->
+        <div class="reg-section">
+          <div class="reg-section__title">Academic Details</div>
+
+          <div class="field">
+            <div class="field__label">Student ID Number</div>
+            <input type="text" placeholder="e.g. 2023-04589" />
+          </div>
+
+          <div class="field-row" style="margin-bottom:16px;">
+            <div class="field">
+              <div class="field__label">College</div>
+              <div class="fake-select">
+                Select college
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field__label">Enrollment Status</div>
+              <div class="fake-select">
+                Full-time
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <div class="field__label">Current Major / Program</div>
+              <input type="text" placeholder="e.g. BS Computer Science" />
+            </div>
+            <div class="field">
+              <div class="field__label">Expected Graduation Term</div>
+              <div class="fake-select">
+                Select term
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="reg-footer">
+          <div class="reg-footer__login">
+            Already have an account? <a href="login.html">Log in</a>
+          </div>
+          <div class="reg-footer__btns">
+            <a href="dashboard.html" style="text-decoration:none;">
+              <button class="btn-cancel">Cancel</button>
+            </a>
+            <a href="dashboard.html" style="text-decoration:none;">
+              <button class="btn-create">Create account</button>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </main><!-- /reg-main -->
+
+  </div><!-- /reg-body -->
+
+</div><!-- /app-wrapper -->
+
+</body>
+</html>

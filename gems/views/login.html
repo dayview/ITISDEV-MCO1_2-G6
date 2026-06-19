@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log in — GEMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../public/css/gems.css" />
+  <link rel="stylesheet" href="../public/css/login.css" />
+</head>
+<body>
+
+<div class="app-wrapper">
+
+  <!-- =====================================================================
+       PROTO BAR
+       ===================================================================== -->
+  <div class="proto-bar">
+    <a href="dashboard.html" class="proto-bar__brand">
+      <div class="proto-bar__logo-icon">G</div>
+      <span>GEMS</span>
+      <span class="proto-bar__subtitle">Prototype · MCO1</span>
+    </a>
+
+    <div class="proto-bar__tabs">
+      <a href="dashboard.html" class="proto-tab proto-tab--active">App</a>
+      <span class="proto-tab">Mobile</span>
+      <span class="proto-tab">Registration</span>
+      <span class="proto-tab">Catalog</span>
+    </div>
+
+    <div class="proto-bar__actions">
+      <div class="proto-toggle">
+        <span class="proto-toggle__btn proto-toggle__btn--active">Student</span>
+        <span class="proto-toggle__btn">Admin</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       LOGIN MODAL OVERLAY
+       ===================================================================== -->
+  <div class="login-bg">
+
+    <div class="login-card">
+
+      <!-- Header -->
+      <div class="login-card__head">
+        <div class="login-card__brand">
+          <div class="login-card__brand-left">
+            <div class="login-card__logo">G</div>
+            <span class="login-card__title">Welcome back</span>
+          </div>
+          <a href="dashboard.html"
+             style="background:rgba(255,255,255,.15);border:none;border-radius:8px;width:30px;height:30px;font-size:15px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;">
+            ✕
+          </a>
+        </div>
+        <div class="login-card__sub">Sign in to your GEMS account.</div>
+      </div>
+
+      <!-- Body -->
+      <div class="login-card__body">
+
+        <div class="field">
+          <div class="field__label">DLSU Email Address</div>
+          <input type="email" placeholder="lastname_firstname@dlsu.edu.ph" />
+        </div>
+
+        <div class="field">
+          <div class="field__row">
+            <div class="field__label" style="margin-bottom:0;">Password</div>
+            <a href="#" class="field__forgot">Forgot password?</a>
+          </div>
+          <input type="password" placeholder="••••••••" />
+        </div>
+
+        <label class="keep-signed">
+          <div class="keep-signed__box">✓</div>
+          Keep me signed in
+        </label>
+
+        <a href="dashboard.html" style="display:block;text-decoration:none;">
+          <button class="btn-login">Log in</button>
+        </a>
+
+        <div class="login-footer">
+          New to GEMS? <a href="register.html">Create an account</a>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /login-bg -->
+
+</div><!-- /app-wrapper -->
+
+</body>
+</html>
