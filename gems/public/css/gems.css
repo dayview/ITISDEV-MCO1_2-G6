@@ -1,15 +1,3 @@
-/* ==========================================================================
-   GEMS – Global Exchange Management System
-   Shared Stylesheet
-   ========================================================================== */
-
-/* --------------------------------------------------------------------------
-   1. Google Fonts are loaded per-page via <link>; fallback stack here
-   -------------------------------------------------------------------------- */
-
-/* --------------------------------------------------------------------------
-   2. CSS Custom Properties
-   -------------------------------------------------------------------------- */
 :root {
   --green-dark:   #004D26;
   --green-mid:    #006633;
@@ -40,9 +28,6 @@
   --red-bright: #B91C1C;
 }
 
-/* --------------------------------------------------------------------------
-   3. Reset / Base
-   -------------------------------------------------------------------------- */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -65,17 +50,11 @@ button {
   font-family: inherit;
 }
 
-/* --------------------------------------------------------------------------
-   4. Animation
-   -------------------------------------------------------------------------- */
 @keyframes gemsPop {
   from { opacity: 0; transform: translateY(8px) scale(.99); }
   to   { opacity: 1; transform: none; }
 }
 
-/* --------------------------------------------------------------------------
-   5. Scrollbar
-   -------------------------------------------------------------------------- */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -88,9 +67,7 @@ button {
   background-clip: content-box;
 }
 
-/* ==========================================================================
-   LAYOUT
-   ========================================================================== */
+/* layout */
 
 /* Full-viewport wrapper */
 .app-wrapper {
@@ -102,7 +79,8 @@ button {
 }
 
 /* --------------------------------------------------------------------------
-   Proto bar (prototype chrome — top strip)
+   Proto bar (prototype chrome — top strip) 
+   TODO: SHOULD BE REMOVED IMMEDIATELY!!
    -------------------------------------------------------------------------- */
 .proto-bar {
   height: 46px;
@@ -1408,7 +1386,6 @@ button {
 .mb-20 { margin-bottom: 20px; }
 .w-full { width: 100%; }
 
-/* Search row (catalog) */
 .search-row {
   display: flex;
   flex-direction: row;
@@ -1430,11 +1407,258 @@ button {
   font-size: 13.5px;
 }
 
-/* Catalog row right side flex */
 .opp-row__right {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 16px;
   flex: none;
+}
+
+.topbar-search input {
+  background: transparent;
+  border: none;
+  color: var(--text-dark);
+  font-size: 14px;
+  outline: none;
+}
+
+.topbar-search input::placeholder {
+  color: var(--text-muted);
+}
+
+.review-table__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-page);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.sort-controls,
+.filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.sort-label,
+.filter-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 4px;
+}
+
+.sort-btn {
+  padding: 6px 12px;
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sort-btn:hover {
+  border-color: var(--green-mid);
+  color: var(--green-mid);
+}
+
+.sort-btn--active {
+  background: var(--green-mid);
+  border-color: var(--green-mid);
+  color: white;
+}
+
+.pill--filter {
+  padding: 6px 12px;
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.pill--filter:hover {
+  border-color: var(--green-mid);
+  background: var(--green-light);
+}
+
+.pill--filter.pill--active {
+  background: var(--green-mid);
+  border-color: var(--green-mid);
+  color: white;
+}
+
+.table-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-white);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.approve-btn {
+  color: var(--green-text);
+}
+
+.approve-btn:hover {
+  background: var(--green-light);
+  border-color: var(--green-mid);
+}
+
+.reject-btn {
+  color: var(--red-text);
+}
+
+.reject-btn:hover {
+  background: var(--red-bg);
+  border-color: var(--red-text);
+}
+
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--green-mid);
+}
+
+.selection-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: var(--blue-bg);
+  color: var(--blue-text);
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.btn--primary,
+.btn--secondary {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn--primary {
+  background: var(--green-mid);
+  color: white;
+}
+
+.btn--primary:hover {
+  background: var(--green-dark);
+}
+
+.btn--primary:disabled {
+  background: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.btn--secondary {
+  background: var(--bg-white);
+  color: var(--text-dark);
+  border: 1px solid var(--border);
+}
+
+.btn--secondary:hover {
+  border-color: var(--text-mid);
+  background: var(--bg-page);
+}
+
+.btn--secondary:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--green-mid);
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.btn--ghost:hover {
+  color: var(--green-dark);
+}
+
+@media (max-width: 768px) {
+  .review-table__controls {
+    flex-direction: column;
+  }
+
+  .sort-controls,
+  .filter-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .table-col-headers {
+    display: none;
+  }
+
+  .table-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+
+  .table-row > div {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .table-row > div::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+/* Lucide icons */
+.nav-btn i[data-lucide] {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+  flex-shrink: 0;
 }
