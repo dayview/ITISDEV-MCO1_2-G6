@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Review Dashboard — GEMS Admin</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="../../public/css/gems.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/css/gems.css" />
 </head>
 <body>
 
@@ -60,30 +60,41 @@
        LAYOUT BODY
        ===================================================================== -->
   <div class="layout-body">
+
+    <!-- =================================================================
+         SIDEBAR — Admin navigation
+         ================================================================= -->
     <nav class="sidebar" aria-label="Admin navigation">
 
       <!-- Logo + system name -->
       <div class="sidebar__header">
-        <img class="sidebar__logo" src="../../public/images/OVPERI-white.png" alt="OVPERI Logo"/>
+        <div class="sidebar__logo">G</div>
         <div>
           <div class="sidebar__title">GEMS</div>
+          <div class="sidebar__org">DLSU · OVPERI</div>
+        </div>
+      </div>
+
+      <!-- Admin profile -->
+      <div class="sidebar__profile">
+        <div class="sidebar__avatar">OV</div>
+        <div>
+          <div class="sidebar__profile-name">OVPERI Admin</div>
+          <div class="sidebar__profile-role">Records Officer</div>
         </div>
       </div>
 
       <!-- Overview section -->
       <div class="sidebar__section">Overview</div>
-        <a href="dashboard.html" class="nav-btn nav-btn--active" aria-current="page">
-          <i data-lucide="layout-dashboard"></i>
-          Review Dashboard
-        </a>
+
+      <a href="dashboard.html" class="nav-btn nav-btn--active" aria-current="page">
+        <span class="nav-icon">&#9783;</span>
+        Review Dashboard
+      </a>
 
       <!-- Manage section -->
       <div class="sidebar__section">Manage</div>
 
-      <a href="#" class="nav-btn">
-        <span class="nav-icon"></span>
-        Post an Opportunity
-      </a>
       <a href="#" class="nav-btn">
         <span class="nav-icon">&#128101;</span>
         Applicants
@@ -95,39 +106,37 @@
       </a>
 
       <a href="#" class="nav-btn">
-        <span class="nav-icon"></span>
-        Audit Logs
+        <span class="nav-icon">&#43;</span>
+        Post an Opportunity
       </a>
+
+      <!-- Student view link -->
+      <div class="sidebar__section">Switch view</div>
+
+      <a href="../dashboard.html" class="nav-btn">
+        <span class="nav-icon">&#8617;</span>
+        Student View
+      </a>
+
+      <a href="../profile.html" class="nav-btn">
+        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+        Profile
+      </a>
+
+      <!-- Logout -->
+      <div class="sidebar__logout">
+        <span class="nav-icon">&#8594;</span>
+        Log out
+      </div>
+
     </nav><!-- /sidebar -->
 
+    <!-- =================================================================
+         MAIN
+         ================================================================= -->
     <div class="main">
 
       <!-- Topbar removed — using global top navigation to avoid redundancy -->
-      <!-- Topbar -->
-      <header class="main-topbar">
-        <div>
-          <div class="page-title">Review Dashboard</div>
-          <div class="page-subtitle">Manage applicants through the review pipeline</div>
-        </div>
-
-        <div class="topbar-actions">
-          <!-- Search by name or ID -->
-          <div class="topbar-search">
-            <span>&#128269;</span>
-            <input type="text" id="search-input" placeholder="Search by name, ID, or college…" />
-          </div>
-
-          <button class="notif-btn" aria-label="Notifications">
-            &#128276;
-          </button>
-
-          <div class="user-info">
-            <div class="user-name">OVPERI Admin</div>
-            <div class="user-role">Records Officer</div>
-          </div>
-          <div class="user-avatar" aria-hidden="true">OV</div>
-        </div>
-      </header><!-- /main-topbar -->
 
       <!-- =============================================================
            CONTENT
@@ -138,31 +147,31 @@
         <div class="stat-grid" role="region" aria-label="Pipeline statistics">
 
           <!-- Pending Review -->
-          <div class="stat-card" data-stat="pending">
+          <div class="stat-card">
             <div class="stat-card__label">Pending Review</div>
-            <div class="stat-card__value">—</div>
-            <div class="stat-card__sub stat-card__sub--amber"><span class="stat-urgent">—</span> urgent · deadline &lt; 7d</div>
+            <div class="stat-card__value">17</div>
+            <div class="stat-card__sub stat-card__sub--amber">6 urgent · deadline &lt; 7d</div>
           </div>
 
           <!-- Nominated -->
-          <div class="stat-card" data-stat="nominated">
+          <div class="stat-card">
             <div class="stat-card__label">Nominated</div>
-            <div class="stat-card__value">—</div>
+            <div class="stat-card__value">8</div>
             <div class="stat-card__sub stat-card__sub--blue">Awaiting partner reply</div>
           </div>
 
           <!-- Accepted -->
-          <div class="stat-card" data-stat="accepted">
+          <div class="stat-card">
             <div class="stat-card__label">Accepted</div>
-            <div class="stat-card__value">—</div>
+            <div class="stat-card__value">23</div>
             <div class="stat-card__sub stat-card__sub--green">AY 2026–27 cohort</div>
           </div>
 
           <!-- Live Programs -->
-          <div class="stat-card" data-stat="live-programs">
+          <div class="stat-card">
             <div class="stat-card__label">Live Programs</div>
-            <div class="stat-card__value">—</div>
-            <div class="stat-card__sub stat-card__sub--muted">across <span class="stat-countries">—</span> countries</div>
+            <div class="stat-card__value">34</div>
+            <div class="stat-card__sub stat-card__sub--muted">across 19 countries</div>
           </div>
 
         </div><!-- /stat-grid -->
@@ -172,67 +181,280 @@
              ============================================================ -->
         <div class="review-table" role="region" aria-label="Applicant review queue">
 
-          <!-- Table header with filters & actions -->
+          <!-- Table header -->
           <div class="review-table__header">
             <div class="review-table__header-left">
               <div class="review-table__title">Applicant review queue</div>
-              <div class="review-table__subtitle" id="queue-subtitle">Sorted by recency</div>
+              <div class="review-table__subtitle">Sorted by urgency · nearest deadline first</div>
             </div>
 
             <div class="review-table__actions">
-              <span class="selection-badge" id="selection-badge" style="display:none;">
-                <span id="selection-count">0</span> selected
-              </span>
-              <button class="btn btn--secondary" id="export-btn" style="display:none;">
-                &#8595; Export CSV
+              <span class="selection-badge">2 selected</span>
+              <button class="btn btn--secondary">
+                &#8595; Export list
               </button>
-              <button class="btn btn--primary" id="batch-approve-btn" style="display:none;" data-action="batch-approve">
+              <button class="btn btn--primary">
                 &#10003; Batch approve
               </button>
             </div>
           </div>
 
-          <!-- Sort controls -->
-          <div class="review-table__controls">
-            <div class="sort-controls">
-              <span class="sort-label">Sort by:</span>
-              <button class="sort-btn sort-btn--active" data-sort="recency">Recency</button>
-              <button class="sort-btn" data-sort="urgency">Urgency</button>
-              <button class="sort-btn" data-sort="status">Status</button>
-              <button class="sort-btn" data-sort="college">College</button>
-              <button class="sort-btn" data-sort="cgpa">CGPA</button>
-              <button class="sort-btn" data-sort="documents">Documents</button>
-            </div>
-
-            <div class="filter-controls">
-              <span class="filter-label">Filter:</span>
-              <button class="pill pill--filter" data-filter-type="status" data-filter-value="">All</button>
-              <button class="pill pill--filter" data-filter-type="status" data-filter-value="submitted">Submitted</button>
-              <button class="pill pill--filter" data-filter-type="status" data-filter-value="under-review">Under Review</button>
-              <button class="pill pill--filter" data-filter-type="status" data-filter-value="nominated">Nominated</button>
-              <button class="pill pill--filter" data-filter-type="status" data-filter-value="accepted">Accepted</button>
-              <button class="pill pill--filter" data-filter-type="status" data-filter-value="rejected">Rejected</button>
-            </div>
-          </div>
-
           <!-- Column headers -->
           <div class="table-col-headers" role="row" aria-label="Column headers">
-            <div>
-              <input type="checkbox" id="select-all" aria-label="Select all applications" />
-            </div>
+            <div></div><!-- checkbox col -->
             <div>Student</div>
             <div>Program</div>
             <div>CGPA</div>
             <div>Submitted</div>
             <div>Documents</div>
             <div>Status</div>
-            <div>Actions</div>
           </div>
 
-          <!-- Applications container (JavaScript will populate this) -->
-          <div id="applications-container">
-            <!-- Table rows will be inserted here by admin-dashboard.js -->
-          </div>
+          <!-- --------------------------------------------------------
+               Row 1: Leon G. Pavino — CHECKED
+               -------------------------------------------------------- -->
+          <div class="table-row" role="row">
+
+            <!-- Checkbox: checked -->
+            <div class="table-checkbox"
+                 style="background:#006633; border:1.5px solid #006633;"
+                 aria-label="Selected"
+                 role="checkbox"
+                 aria-checked="true">
+              &#10003;
+            </div>
+
+            <!-- Student -->
+            <div>
+              <div class="table-cell-primary">Leon G. Pavino</div>
+              <div class="table-cell-secondary">120-12345 · CCS</div>
+            </div>
+
+            <!-- Program -->
+            <div>
+              <div class="table-cell-primary">NUS Exchange</div>
+              <div class="table-cell-secondary">National University of Singapore</div>
+            </div>
+
+            <!-- CGPA -->
+            <div class="table-cell">3.42</div>
+
+            <!-- Submitted -->
+            <div class="table-cell">12 Jun</div>
+
+            <!-- Documents -->
+            <div>
+              <span class="chip chip--green">
+                <span class="chip__dot"></span>Complete
+              </span>
+            </div>
+
+            <!-- Status -->
+            <div>
+              <span class="chip chip--blue">
+                <span class="chip__dot"></span>Under Review
+              </span>
+            </div>
+
+          </div><!-- /row 1 -->
+
+          <!-- --------------------------------------------------------
+               Row 2: Maria C. Santos — UNCHECKED
+               -------------------------------------------------------- -->
+          <div class="table-row" role="row">
+
+            <!-- Checkbox: unchecked -->
+            <div class="table-checkbox"
+                 style="background:#fff; border:1.5px solid #D1D5DB;"
+                 aria-label="Not selected"
+                 role="checkbox"
+                 aria-checked="false">
+            </div>
+
+            <div>
+              <div class="table-cell-primary">Maria C. Santos</div>
+              <div class="table-cell-secondary">118-22980 · RVRCOB</div>
+            </div>
+
+            <div>
+              <div class="table-cell-primary">Sciences Po Exchange</div>
+              <div class="table-cell-secondary">Sciences Po</div>
+            </div>
+
+            <div class="table-cell">3.10</div>
+            <div class="table-cell">11 Jun</div>
+
+            <div>
+              <span class="chip chip--red">
+                <span class="chip__dot"></span>Incomplete
+              </span>
+            </div>
+
+            <div>
+              <span class="chip chip--blue">
+                <span class="chip__dot"></span>Under Review
+              </span>
+            </div>
+
+          </div><!-- /row 2 -->
+
+          <!-- --------------------------------------------------------
+               Row 3: Andrea T. Tan — CHECKED
+               -------------------------------------------------------- -->
+          <div class="table-row" role="row">
+
+            <!-- Checkbox: checked -->
+            <div class="table-checkbox"
+                 style="background:#006633; border:1.5px solid #006633;"
+                 aria-label="Selected"
+                 role="checkbox"
+                 aria-checked="true">
+              &#10003;
+            </div>
+
+            <div>
+              <div class="table-cell-primary">Andrea T. Tan</div>
+              <div class="table-cell-secondary">119-77120 · GCOE</div>
+            </div>
+
+            <div>
+              <div class="table-cell-primary">Kyoto Research</div>
+              <div class="table-cell-secondary">Kyoto University</div>
+            </div>
+
+            <div class="table-cell">3.55</div>
+            <div class="table-cell">10 Jun</div>
+
+            <div>
+              <span class="chip chip--green">
+                <span class="chip__dot"></span>Complete
+              </span>
+            </div>
+
+            <div>
+              <span class="chip chip--blue">
+                <span class="chip__dot"></span>Nominated
+              </span>
+            </div>
+
+          </div><!-- /row 3 -->
+
+          <!-- --------------------------------------------------------
+               Row 4: Jorge V. Reyes — UNCHECKED
+               -------------------------------------------------------- -->
+          <div class="table-row" role="row">
+
+            <div class="table-checkbox"
+                 style="background:#fff; border:1.5px solid #D1D5DB;"
+                 aria-label="Not selected"
+                 role="checkbox"
+                 aria-checked="false">
+            </div>
+
+            <div>
+              <div class="table-cell-primary">Jorge V. Reyes</div>
+              <div class="table-cell-secondary">120-04531 · CLA</div>
+            </div>
+
+            <div>
+              <div class="table-cell-primary">Chung-Ang Summer</div>
+              <div class="table-cell-secondary">Chung-Ang University</div>
+            </div>
+
+            <div class="table-cell">3.20</div>
+            <div class="table-cell">09 Jun</div>
+
+            <div>
+              <span class="chip chip--green">
+                <span class="chip__dot"></span>Complete
+              </span>
+            </div>
+
+            <div>
+              <span class="chip chip--green">
+                <span class="chip__dot"></span>Accepted
+              </span>
+            </div>
+
+          </div><!-- /row 4 -->
+
+          <!-- --------------------------------------------------------
+               Row 5: Paolo R. Medina — UNCHECKED
+               -------------------------------------------------------- -->
+          <div class="table-row" role="row">
+
+            <div class="table-checkbox"
+                 style="background:#fff; border:1.5px solid #D1D5DB;"
+                 aria-label="Not selected"
+                 role="checkbox"
+                 aria-checked="false">
+            </div>
+
+            <div>
+              <div class="table-cell-primary">Paolo R. Medina</div>
+              <div class="table-cell-secondary">117-66201 · GCOE</div>
+            </div>
+
+            <div>
+              <div class="table-cell-primary">Melbourne Exchange</div>
+              <div class="table-cell-secondary">University of Melbourne</div>
+            </div>
+
+            <div class="table-cell">2.95</div>
+            <div class="table-cell">08 Jun</div>
+
+            <div>
+              <span class="chip chip--red">
+                <span class="chip__dot"></span>Incomplete
+              </span>
+            </div>
+
+            <div>
+              <span class="chip chip--red">
+                <span class="chip__dot"></span>Rejected
+              </span>
+            </div>
+
+          </div><!-- /row 5 -->
+
+          <!-- --------------------------------------------------------
+               Row 6: Katrina I. Estrella — UNCHECKED
+               -------------------------------------------------------- -->
+          <div class="table-row" role="row">
+
+            <div class="table-checkbox"
+                 style="background:#fff; border:1.5px solid #D1D5DB;"
+                 aria-label="Not selected"
+                 role="checkbox"
+                 aria-checked="false">
+            </div>
+
+            <div>
+              <div class="table-cell-primary">Katrina I. Estrella</div>
+              <div class="table-cell-secondary">120-33419 · CCS</div>
+            </div>
+
+            <div>
+              <div class="table-cell-primary">NTU Exchange</div>
+              <div class="table-cell-secondary">Nanyang Technological University</div>
+            </div>
+
+            <div class="table-cell">3.78</div>
+            <div class="table-cell">08 Jun</div>
+
+            <div>
+              <span class="chip chip--green">
+                <span class="chip__dot"></span>Complete
+              </span>
+            </div>
+
+            <div>
+              <span class="chip chip--blue">
+                <span class="chip__dot"></span>Under Review
+              </span>
+            </div>
+
+          </div><!-- /row 6 -->
 
         </div><!-- /review-table -->
 
@@ -244,10 +466,5 @@
 
 </div><!-- /app-wrapper -->
 
-<script src="/js/admin-dashboard.js"></script>
-<script src="https://unpkg.com/lucide@laatest/dist/umd/lucide.js"></script>
-<script>
-  lucide.createIcons();
-</script>
 </body>
 </html>
