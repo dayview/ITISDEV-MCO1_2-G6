@@ -12,6 +12,53 @@
 <body>
 
 <div class="app-wrapper">
+
+  <!-- =====================================================================
+       PROTO BAR — prototype chrome (non-functional, visual reference only)
+       ===================================================================== -->
+  <nav class="student-topnav" aria-label="Main navigation">
+    <a href="http://127.0.0.1:5500/gems/views/student/dashboard.html" class="student-topnav__brand">
+      <div class="student-topnav__logo">
+        <img src="../../public/images/OVPERI-white.png" alt="OVPERI" class="student-topnav__logo-img">
+      </div>
+      <span class="student-topnav__title">GEMS</span>
+    </a>
+
+    <div class="student-topnav__links">
+      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/catalog.html">
+        <div class="student-topnav__link-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v18"/></svg>
+        </div>
+        <div class="student-topnav__link-label">Catalog</div>
+      </a>
+
+      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/documents.html">
+        <div class="student-topnav__link-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        </div>
+        <div class="student-topnav__link-label">Documents</div>
+      </a>
+
+      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/applications.html">
+        <div class="student-topnav__link-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5l4 4L8 20l-4 1 1-4L16.5 3.5z"/></svg>
+        </div>
+        <div class="student-topnav__link-label">My Applications</div>
+      </a>
+
+      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/profile.html">
+        <div class="student-topnav__link-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="student-topnav__link-label">Account</div>
+      </a>
+    </div>
+    <div class="student-topnav__actions"></div>
+  </nav>
+
+  <!-- =====================================================================
+       LAYOUT BODY
+       ===================================================================== -->
   <div class="layout-body">
     <nav class="sidebar" aria-label="Admin navigation">
 
@@ -55,6 +102,7 @@
 
     <div class="main">
 
+      <!-- Topbar removed — using global top navigation to avoid redundancy -->
       <!-- Topbar -->
       <header class="main-topbar">
         <div>

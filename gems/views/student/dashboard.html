@@ -7,147 +7,99 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="gems/public/css/gems.css" />
+  <link rel="stylesheet" href="../../public/css/gems.css" />
 </head>
-<body>
+<body class="student-page dashboard-page">
 
 <div class="app-wrapper">
-
-  <!-- =====================================================================
-       PROTO BAR — prototype chrome (non-functional, visual reference only)
+<!-- =====================================================================
+       HEADER
        ===================================================================== -->
-  <div class="proto-bar">
-    <!-- Brand -->
-    <a href="dashboard.html" class="proto-bar__brand">
-      <div class="proto-bar__logo-icon">G</div>
-      <span>GEMS</span>
-      <span class="proto-bar__subtitle">Prototype · MCO1</span>
+  <nav class="student-topnav catalog-nav" aria-label="Student navigation">
+    <a href="dashboard.html" class="student-topnav__brand" aria-label="GEMS dashboard">
+      <div class="student-topnav__logo">
+        <img src="../../public/images/OVPERI-white.png" alt="" class="student-topnav__logo-img">
+      </div>
+      <span class="student-topnav__title">GEMS</span>
     </a>
 
-    <!-- View tabs (non-functional) -->
-    <div class="proto-bar__tabs">
-      <a href="dashboard.html" class="proto-tab proto-tab--active">App</a>
-      <span class="proto-tab">Mobile</span>
-      <span class="proto-tab">Registration</span>
-      <span class="proto-tab">Catalog</span>
+    <div class="catalog-nav__search">
+      <label class="topbar-search" for="global-search">
+        <span class="topbar-search__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </span>
+        <input id="global-search" type="search" aria-label="Search programs, countries, and universities" placeholder="Search programs, countries, universities..." autocomplete="off" />
+      </label>
+      <button type="button" class="catalog-icon-btn" aria-label="Open filters">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path>
+        </svg>
+      </button>
     </div>
 
-    <!-- Role toggle (non-functional) -->
-    <div class="proto-bar__actions">
-      <div class="proto-toggle">
-        <span class="proto-toggle__btn proto-toggle__btn--active">Student</span>
-        <span class="proto-toggle__btn">Admin</span>
-      </div>
-      <a href="login.html" class="proto-login-btn">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5M15 12H3"/></svg>
-        Log in
+    <div class="student-topnav__links catalog-nav__links">
+      <a class="student-topnav__link" href="dashboard.html" aria-current="page">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="8" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="15" width="7" height="6" rx="1.5"></rect></svg>
+        </div>
+        <span class="student-topnav__link-label">Dashboard</span>
+      </a>
+
+      <a class="student-topnav__link" href="catalog.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">Catalog</span>
+      </a>
+
+      <a class="student-topnav__link" href="documents.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">Documents</span>
+      </a>
+
+      <a class="student-topnav__link" href="applications.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">My Applications</span>
+      </a>
+
+      <button type="button" class="catalog-notification" aria-label="Notifications, 3 unread">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="catalog-notification__badge">3</span>
+      </button>
+
+      <a class="student-topnav__link catalog-account-link" href="profile.html">
+        <span class="user-avatar" aria-hidden="true">LP</span>
       </a>
     </div>
-  </div><!-- /proto-bar -->
+  </nav>
 
-  <!-- =====================================================================
-       LAYOUT BODY
-       ===================================================================== -->
-  <div class="layout-body">
-
-    <!-- =================================================================
-         SIDEBAR
-         ================================================================= -->
-    <nav class="sidebar" aria-label="Main navigation">
-
-      <!-- Logo + system name -->
-      <div class="sidebar__header">
-        <div class="sidebar__logo">G</div>
-        <div>
-          <div class="sidebar__title">GEMS</div>
-          <div class="sidebar__org">DLSU · OVPERI</div>
-        </div>
-      </div>
-
-      <!-- Navigation -->
-      <div class="sidebar__section">Navigation</div>
-
-      <a href="dashboard.html" class="nav-btn nav-btn--active" aria-current="page">
-        <span class="nav-icon">&#9783;</span>
-        Dashboard
-      </a>
-
-      <a href="catalog.html" class="nav-btn">
-        <span class="nav-icon">&#128270;</span>
-        Opportunity Catalog
-      </a>
-
-      <a href="applications.html" class="nav-btn">
-        <span class="nav-icon">&#128196;</span>
-        My Applications
-      </a>
-
-      <!-- Account section -->
-      <div class="sidebar__section">Account</div>
-      <a href="documents.html" class="nav-btn">
-        <span class="nav-icon">&#128196;</span>
-        My Documents
-      </a>
-
-      <a href="profile.html" class="nav-btn">
-        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-        Profile
-      </a>
-
-      <!-- Admin section -->
-      <div class="sidebar__section">Admin</div>
-
-      <a href="admin/dashboard.html" class="nav-btn">
-        <span class="nav-icon">&#9965;</span>
-        Review Dashboard
-      </a>
-
-      <!-- Logout -->
-      <div class="sidebar__logout">
-        <span class="nav-icon">&#8594;</span>
-        Log out
-      </div>
-
-    </nav><!-- /sidebar -->
-
-    <!-- =================================================================
-         MAIN
-         ================================================================= -->
-    <div class="main">
-
-      <!-- Topbar -->
-      <header class="main-topbar">
-        <div>
-          <div class="page-title">Dashboard</div>
-          <div class="page-subtitle">Monday, 15 June 2026</div>
-        </div>
-
-        <div class="topbar-actions">
-          <!-- Search -->
-          <div class="topbar-search">
-            <span>&#128269;</span>
-            Search programs, requirements…
+      <main class="content student-shell" id="main-content">
+        <header class="student-hero">
+          <div class="student-hero__copy">
+            <h1 class="student-hero__title">Dashboard</h1>
+            <p class="student-hero__subtitle">Track your applications, deadlines, and recommended opportunities.</p>
           </div>
-
-          <!-- Notification -->
-          <button class="notif-btn" aria-label="Notifications">
-            &#128276;
-            <span class="notif-dot"></span>
-          </button>
-
-          <!-- User -->
-          <div class="user-info">
-            <div class="user-name">Leon G. Pavino</div>
-            <div class="user-role">CCS · 3.42 CGPA</div>
+          <div class="student-hero__art" aria-hidden="true">
+            <svg viewBox="0 0 420 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M74 232C127 142 204 88 337 72" stroke="#B5E4C9" stroke-width="2.5" stroke-dasharray="8 7" stroke-linecap="round" opacity=".7"/>
+              <rect x="146" y="74" width="174" height="132" rx="22" fill="#C8E8D6"/>
+              <rect x="168" y="100" width="52" height="72" rx="12" fill="#9DD4B4"/>
+              <rect x="232" y="128" width="52" height="44" rx="12" fill="#9DD4B4" opacity=".78"/>
+              <circle cx="317" cy="78" r="44" fill="#EAF7EF"/>
+              <path d="M296 78l15 15 28-32" stroke="#0F7A3D" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".74"/>
+              <circle cx="134" cy="211" r="38" fill="#EAF7EF"/>
+              <path d="M117 213h34M117 198h34M117 228h21" stroke="#0F7A3D" stroke-width="8" stroke-linecap="round" opacity=".55"/>
+              <path d="M337 72C378 83 383 134 347 162" stroke="#5CC48A" stroke-width="2.5" stroke-dasharray="8 7" stroke-linecap="round"/>
+            </svg>
           </div>
-          <div class="user-avatar" aria-hidden="true">LP</div>
-        </div>
-      </header><!-- /main-topbar -->
-
-      <!-- =============================================================
-           CONTENT
-           ============================================================= -->
-      <main class="content" id="main-content">
+        </header>
 
         <!-- Stat cards -->
         <div class="stat-grid" role="region" aria-label="Summary statistics">
@@ -192,16 +144,16 @@
 
             <div class="flex-row align-center space-between mb-16">
               <div>
-                <div class="card__title" style="margin-bottom:4px;">Recommended for you</div>
-                <div class="card__subtitle" style="margin:0;font-size:12px;color:var(--text-faint);">
-                  Matched to your profile · CGPA 3.42 · CCS · non-graduating
+                <div class="card__title mb-8">Recommended for you</div>
+                <div class="card__subtitle">
+                  Matched to your profile · CGPA 3.42 · CCS
                 </div>
               </div>
-              <a href="catalog.html" class="btn--ghost" style="font-size:12.5px;white-space:nowrap;">View catalog &#8594;</a>
+              <a href="catalog.html" class="btn--ghost">View catalog &#8594;</a>
             </div>
 
             <!-- Program row 1: NUS -->
-            <a href="catalog.html" class="opp-row" style="text-decoration:none;display:flex;">
+            <a href="catalog.html" class="opp-row">
               <div class="opp-icon opp-icon--sm">NUS</div>
               <div class="opp-row__info">
                 <div class="opp-name">National University of Singapore</div>
@@ -213,7 +165,7 @@
             </a>
 
             <!-- Program row 2: NTU -->
-            <a href="catalog.html" class="opp-row" style="text-decoration:none;display:flex;">
+            <a href="catalog.html" class="opp-row">
               <div class="opp-icon opp-icon--sm">NTU</div>
               <div class="opp-row__info">
                 <div class="opp-name">Nanyang Technological University</div>
@@ -225,7 +177,7 @@
             </a>
 
             <!-- Program row 3: CAU -->
-            <a href="catalog.html" class="opp-row" style="text-decoration:none;display:flex;margin-bottom:0;">
+            <a href="catalog.html" class="opp-row mb-0">
               <div class="opp-icon opp-icon--sm">CAU</div>
               <div class="opp-row__info">
                 <div class="opp-name">Chung-Ang University</div>
@@ -247,28 +199,28 @@
 
             <!-- Deadline 1: urgent / red -->
             <div class="deadline-item">
-              <div class="deadline-bar" style="background:#B91C1C;"></div>
+              <div class="deadline-bar deadline-bar--danger"></div>
               <div class="deadline-content">
                 <div class="deadline-label">Upload Letter of Intent (NUS)</div>
-                <div class="deadline-when" style="color:#B91C1C;">20 Jun 2026 · in 3 days</div>
+                <div class="deadline-when deadline-when--danger">20 Jun 2026 · in 3 days</div>
               </div>
             </div>
 
             <!-- Deadline 2: moderate / amber -->
             <div class="deadline-item">
-              <div class="deadline-bar" style="background:#B45309;"></div>
+              <div class="deadline-bar deadline-bar--warning"></div>
               <div class="deadline-content">
                 <div class="deadline-label">Chung-Ang program payment</div>
-                <div class="deadline-when" style="color:#B45309;">30 Jun 2026 · in 13 days</div>
+                <div class="deadline-when deadline-when--warning">30 Jun 2026 · in 13 days</div>
               </div>
             </div>
 
             <!-- Deadline 3: comfortable / green -->
             <div class="deadline-item">
-              <div class="deadline-bar" style="background:#15803D;"></div>
+              <div class="deadline-bar deadline-bar--success"></div>
               <div class="deadline-content">
                 <div class="deadline-label">NTU nomination window</div>
-                <div class="deadline-when" style="color:#15803D;">15 Jul 2026 · in 28 days</div>
+                <div class="deadline-when deadline-when--success">15 Jul 2026 · in 28 days</div>
               </div>
             </div>
 
@@ -277,10 +229,6 @@
         </div><!-- /dashboard-grid -->
 
       </main><!-- /content -->
-
-    </div><!-- /main -->
-
-  </div><!-- /layout-body -->
 
 </div><!-- /app-wrapper -->
 
