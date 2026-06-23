@@ -21,9 +21,9 @@
   },
   "homepage": "https://github.com/dayview/ITISDEV-MCO1_2-G6#readme",
   "dependencies": {
-    "better-sqlite3": "^12.11.1",
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "lucide": "^1.21.0"
+    "lucide": "^1.21.0",
+    "mongodb": "^7.3.0"
   }
 }
