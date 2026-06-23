@@ -3,20 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Log in — GEMS</title>
+  <title>Opportunity Details — GEMS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../public/css/gems.css" />
-  <link rel="stylesheet" href="../../public/css/login.css" />
 </head>
 <body>
 
 <div class="app-wrapper">
-
-  <!-- =====================================================================
-       PROTO BAR
-       ===================================================================== -->
   <nav class="student-topnav" aria-label="Student navigation">
     <a href="http://127.0.0.1:5500/gems/views/student/dashboard.html" class="student-topnav__brand">
       <div class="student-topnav__logo">
@@ -57,63 +52,61 @@
     <div class="student-topnav__actions"></div>
   </nav>
 
-  <!-- =====================================================================
-       LOGIN MODAL OVERLAY
-       ===================================================================== -->
-  <div class="login-bg">
-
-    <div class="login-card">
-
-      <!-- Header -->
-      <div class="login-card__head">
-        <div class="login-card__brand">
-          <div class="login-card__brand-left">
-            <div class="login-card__logo">G</div>
-            <span class="login-card__title">Welcome back</span>
-          </div>
-          <a href="dashboard.html"
-             style="background:rgba(255,255,255,.15);border:none;border-radius:8px;width:30px;height:30px;font-size:15px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;">
-            ✕
-          </a>
-        </div>
-        <div class="login-card__sub">Sign in to your GEMS account.</div>
-      </div>
-
-      <!-- Body -->
-      <div class="login-card__body">
-
-        <div class="field">
-          <div class="field__label">DLSU Email Address</div>
-          <input type="email" placeholder="lastname_firstname@dlsu.edu.ph" />
-        </div>
-
-        <div class="field">
-          <div class="field__row">
-            <div class="field__label" style="margin-bottom:0;">Password</div>
-            <a href="#" class="field__forgot">Forgot password?</a>
-          </div>
-          <input type="password" placeholder="••••••••" />
-        </div>
-
-        <label class="keep-signed">
-          <div class="keep-signed__box">✓</div>
-          Keep me signed in
-        </label>
-
-        <a href="dashboard.html" style="display:block;text-decoration:none;">
-          <button class="btn-login">Log in</button>
-        </a>
-
-        <div class="login-footer">
-          New to GEMS? <a href="register.html">Create an account</a>
-        </div>
-
-      </div>
+  <!-- Top navigation (student view) -->
+  <nav class="student-topnav" aria-label="Student navigation">
+    <a href="dashboard.html" class="student-topnav__brand">
+      <div class="student-topnav__logo">G</div>
+      <span>GEMS</span>
+    </a>
+    <div class="student-topnav__links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="catalog.html">Opportunity Catalog</a>
+      <a href="applications.html">My Applications</a>
+      <a href="documents.html">My Documents</a>
+      <a href="profile.html">Account</a>
     </div>
+    <div class="student-topnav__actions">
+      <a href="admin/dashboard.html">Admin</a>
+    </div>
+  </nav>
 
-  </div><!-- /login-bg -->
+  <div class="layout-body">
+    <div class="main">
+      <header class="main-topbar">
+        <div>
+          <div class="page-title">Opportunity Details</div>
+          <div class="page-subtitle">View full requirements and application instructions</div>
+        </div>
 
-</div><!-- /app-wrapper -->
+        <div class="topbar-actions">
+          <div class="topbar-search">
+            <span>&#128269;</span>
+            Search your applications…
+          </div>
+          <button class="notif-btn" aria-label="Notifications">
+            &#128276;
+            <span class="notif-dot"></span>
+          </button>
+          <div class="user-avatar" aria-hidden="true">LP</div>
+        </div>
+      </header>
 
+      <main class="content" id="main-content">
+        <div id="opportunity-loading" class="card">
+          <div class="card__title">Loading opportunity details…</div>
+        </div>
+        <div id="opportunity-error" class="card" style="display:none;">
+          <div class="card__title">Unable to load opportunity</div>
+          <div class="card__subtitle">Please go back to the catalog and try again.</div>
+        </div>
+        <div id="opportunity-detail"></div>
+      </main>
+    </div>
+  </div>
+</div>
+
+<script src="../../public/js/opportunity-data.js"></script>
+<script src="../../public/js/opportunity-api.js"></script>
+<script src="../../public/js/opportunity-detail.js"></script>
 </body>
 </html>

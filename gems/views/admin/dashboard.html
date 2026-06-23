@@ -16,31 +16,45 @@
   <!-- =====================================================================
        PROTO BAR — prototype chrome (non-functional, visual reference only)
        ===================================================================== -->
-  <div class="proto-bar">
-    <a href="../dashboard.html" class="proto-bar__brand">
-      <div class="proto-bar__logo-icon">G</div>
-      <span>GEMS</span>
-      <span class="proto-bar__subtitle">Prototype · MCO1 · Admin View</span>
+  <nav class="student-topnav" aria-label="Main navigation">
+    <a href="http://127.0.0.1:5500/gems/views/student/dashboard.html" class="student-topnav__brand">
+      <div class="student-topnav__logo">
+        <img src="../../public/images/OVPERI-white.png" alt="OVPERI" class="student-topnav__logo-img">
+      </div>
+      <span class="student-topnav__title">GEMS</span>
     </a>
 
-    <div class="proto-bar__tabs">
-      <a href="../dashboard.html" class="proto-tab">App</a>
-      <span class="proto-tab">Mobile</span>
-      <span class="proto-tab">Registration</span>
-      <span class="proto-tab">Catalog</span>
-    </div>
+    <div class="student-topnav__links">
+      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/catalog.html">
+        <div class="student-topnav__link-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v18"/></svg>
+        </div>
+        <div class="student-topnav__link-label">Catalog</div>
+      </a>
 
-    <div class="proto-bar__actions">
-      <div class="proto-toggle">
-        <span class="proto-toggle__btn">Student</span>
-        <span class="proto-toggle__btn proto-toggle__btn--active">Admin</span>
-      </div>
-      <a href="../login.html" class="proto-login-btn">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5M15 12H3"/></svg>
-        Log in
+      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/documents.html">
+        <div class="student-topnav__link-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        </div>
+        <div class="student-topnav__link-label">Documents</div>
+      </a>
+
+      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/applications.html">
+        <div class="student-topnav__link-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5l4 4L8 20l-4 1 1-4L16.5 3.5z"/></svg>
+        </div>
+        <div class="student-topnav__link-label">My Applications</div>
+      </a>
+
+      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/profile.html">
+        <div class="student-topnav__link-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="student-topnav__link-label">Account</div>
       </a>
     </div>
-  </div><!-- /proto-bar -->
+    <div class="student-topnav__actions"></div>
+  </nav>
 
   <!-- =====================================================================
        LAYOUT BODY
@@ -122,25 +136,7 @@
          ================================================================= -->
     <div class="main">
 
-      <!-- Topbar -->
-      <header class="main-topbar">
-        <div>
-          <div class="page-title">Review Dashboard</div>
-          <div class="page-subtitle">Monday, 15 June 2026 · applications moving through the pipeline</div>
-        </div>
-
-        <div class="topbar-actions">
-          <button class="notif-btn" aria-label="Notifications">
-            &#128276;
-          </button>
-
-          <div class="user-info">
-            <div class="user-name">OVPERI Admin</div>
-            <div class="user-role">Records Officer</div>
-          </div>
-          <div class="user-avatar" aria-hidden="true">OV</div>
-        </div>
-      </header><!-- /main-topbar -->
+      <!-- Topbar removed — using global top navigation to avoid redundancy -->
 
       <!-- =============================================================
            CONTENT

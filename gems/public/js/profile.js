@@ -87,8 +87,7 @@
         const subText = label.querySelector('.upload-subtext');
         uploadText.textContent = fileInput.files[0].name;
         subText.textContent = 'Ready to upload';
-        label.style.borderColor = 'var(--color-success)';
-        label.style.backgroundColor = 'rgba(16, 185, 129, 0.05)';
+        label.classList.add('profile-upload--ready');
       }
     });
   });
