@@ -1,7 +1,37 @@
+const mongoose = require('mongoose');
+
 const applicationSchema = new mongoose.Schema({
-    student_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
-    opportunity_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Opportunity', required: true },
-    status: { type: String, enum: ['submitted', 'under-review', 'nominated', 'accepted'], default: 'submitted' },
-    submitted_date: { type: String, required: true },
-    documents_status: { type: String, enum: ['incomplete', 'complete'], default: 'incomplete' },
+    studentId: { 
+        type: mongoose.Schema.Types.ObjectId, ref: 'User', 
+        required: true 
+    },
+    opportunityId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Opportunity', 
+        required: true 
+    },
+    status: {
+        type: String,
+        enum: ['submitted', 'under-review', 'nominated', 'accepted', 'rejected'],
+        default: 'submitted',
+    },
+    documents: [{ 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Document' 
+    }],
+    documentsStatus: { 
+        type: String, 
+        enum: ['incomplete', 'complete'], 
+        default: 'incomplete' 
+    },
+    statusHistory: [{
+        status: String,
+        changedAt: { type: Date, default: Date.now },
+        changedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    }],
 }, { timestamps: true });
+
+applicationSchema.index({ userId: 1, opportunityId: 1 }, { unique: true });
+applicationSchema.index({ opportunityId: 1, status: 1 });
+
+module.exports = mongoose.model('Application', applicationSchema);
