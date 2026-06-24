@@ -9,446 +9,212 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../public/css/gems.css" />
 </head>
-<body>
+<body class="student-page admin-page">
 
 <div class="app-wrapper">
-
-  <!-- =====================================================================
-       PROTO BAR — prototype chrome (non-functional, visual reference only)
-       ===================================================================== -->
-  <nav class="student-topnav" aria-label="Main navigation">
-    <a href="http://127.0.0.1:5500/gems/views/student/dashboard.html" class="student-topnav__brand">
+  <nav class="student-topnav catalog-nav" aria-label="Admin navigation">
+    <a href="dashboard.html" class="student-topnav__brand" aria-label="GEMS admin dashboard">
       <div class="student-topnav__logo">
-        <img src="../../public/images/OVPERI-white.png" alt="OVPERI" class="student-topnav__logo-img">
+        <img src="../../public/images/OVPERI-white.png" alt="" class="student-topnav__logo-img">
       </div>
       <span class="student-topnav__title">GEMS</span>
     </a>
 
-    <div class="student-topnav__links">
-      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/catalog.html">
-        <div class="student-topnav__link-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v18"/></svg>
+    <div class="catalog-nav__search">
+      <label class="topbar-search" for="global-search">
+        <span class="topbar-search__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </span>
+        <input id="global-search" type="search" aria-label="Search applicants and programs" placeholder="Search applicants, programs..." autocomplete="off" />
+      </label>
+      <button type="button" class="catalog-icon-btn" aria-label="Open filters">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="student-topnav__links catalog-nav__links">
+      <a class="student-topnav__link" href="dashboard.html" aria-current="page">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="8" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="15" width="7" height="6" rx="1.5"></rect></svg>
         </div>
-        <div class="student-topnav__link-label">Catalog</div>
+        <span class="student-topnav__link-label">Dashboard</span>
       </a>
 
-      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/documents.html">
-        <div class="student-topnav__link-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+      <a class="student-topnav__link" href="#">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
         </div>
-        <div class="student-topnav__link-label">Documents</div>
+        <span class="student-topnav__link-label">Applicants</span>
       </a>
 
-      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/applications.html">
-        <div class="student-topnav__link-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5l4 4L8 20l-4 1 1-4L16.5 3.5z"/></svg>
+      <a class="student-topnav__link" href="#">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
         </div>
-        <div class="student-topnav__link-label">My Applications</div>
+        <span class="student-topnav__link-label">Programs</span>
       </a>
 
-      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/profile.html">
-        <div class="student-topnav__link-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <a class="student-topnav__link" href="#">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
         </div>
-        <div class="student-topnav__link-label">Account</div>
+        <span class="student-topnav__link-label">Post</span>
+      </a>
+
+      <button type="button" class="catalog-notification" aria-label="Notifications, 6 unread">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="catalog-notification__badge">6</span>
+      </button>
+
+      <a class="student-topnav__link catalog-account-link" href="../student/profile.html" aria-label="Admin profile">
+        <span class="user-avatar" aria-hidden="true">OV</span>
       </a>
     </div>
-    <div class="student-topnav__actions"></div>
   </nav>
 
-  <!-- =====================================================================
-       LAYOUT BODY
-       ===================================================================== -->
-  <div class="layout-body">
+  <main class="content student-shell admin-shell" id="main-content">
+    <header class="student-hero">
+      <div class="student-hero__copy">
+        <h1 class="student-hero__title">Review Dashboard</h1>
+        <p class="student-hero__subtitle">Review applications, monitor decisions, and manage active exchange programs.</p>
+      </div>
+      <div class="student-hero__art" aria-hidden="true">
+        <svg viewBox="0 0 420 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M82 226C140 149 207 103 337 78" stroke="#B5E4C9" stroke-width="2.5" stroke-dasharray="8 7" stroke-linecap="round" opacity=".7"/>
+          <rect x="116" y="84" width="216" height="136" rx="22" fill="#C8E8D6"/>
+          <rect x="145" y="112" width="158" height="18" rx="9" fill="#9DD4B4"/>
+          <rect x="145" y="148" width="100" height="12" rx="6" fill="#9DD4B4" opacity=".78"/>
+          <rect x="145" y="176" width="126" height="12" rx="6" fill="#9DD4B4" opacity=".55"/>
+          <circle cx="314" cy="90" r="38" fill="#EAF7EF"/>
+          <path d="M296 90l12 12 23-27" stroke="#0F7A3D" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity=".72"/>
+        </svg>
+      </div>
+    </header>
 
-    <!-- =================================================================
-         SIDEBAR — Admin navigation
-         ================================================================= -->
-    <nav class="sidebar" aria-label="Admin navigation">
+    <div class="stat-grid" role="region" aria-label="Pipeline statistics">
+      <div class="stat-card">
+        <div class="stat-card__label">Pending Review</div>
+        <div class="stat-card__value">17</div>
+        <div class="stat-card__sub stat-card__sub--amber">6 urgent · deadline &lt; 7d</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__label">Nominated</div>
+        <div class="stat-card__value">8</div>
+        <div class="stat-card__sub stat-card__sub--blue">Awaiting partner reply</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__label">Accepted</div>
+        <div class="stat-card__value">23</div>
+        <div class="stat-card__sub stat-card__sub--green">AY 2026–27 cohort</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__label">Live Programs</div>
+        <div class="stat-card__value">34</div>
+        <div class="stat-card__sub stat-card__sub--muted">Across 19 countries</div>
+      </div>
+    </div>
 
-      <!-- Logo + system name -->
-      <div class="sidebar__header">
-        <div class="sidebar__logo">G</div>
-        <div>
-          <div class="sidebar__title">GEMS</div>
-          <div class="sidebar__org">DLSU · OVPERI</div>
+    <div class="admin-toolbar" aria-label="Review queue filters">
+      <div class="filter-pills" role="group" aria-label="Filter applications">
+        <button type="button" class="pill pill--active">All · 17</button>
+        <button type="button" class="pill">Urgent · 6</button>
+        <button type="button" class="pill">Incomplete · 2</button>
+      </div>
+      <a class="admin-student-view" href="../student/dashboard.html">Switch to student view &rarr;</a>
+    </div>
+
+    <section class="review-table" aria-labelledby="review-queue-title">
+      <div class="review-table__header">
+        <div class="review-table__header-left">
+          <h2 class="review-table__title" id="review-queue-title">Applicant review queue</h2>
+          <p class="review-table__subtitle">Sorted by urgency · nearest deadline first</p>
+        </div>
+        <div class="review-table__actions">
+          <span class="selection-badge">2 selected</span>
+          <button type="button" class="btn btn--secondary">&#8595; Export list</button>
+          <button type="button" class="btn btn--primary">&#10003; Batch approve</button>
         </div>
       </div>
 
-      <!-- Admin profile -->
-      <div class="sidebar__profile">
-        <div class="sidebar__avatar">OV</div>
-        <div>
-          <div class="sidebar__profile-name">OVPERI Admin</div>
-          <div class="sidebar__profile-role">Records Officer</div>
+      <div class="admin-table-scroll">
+        <div class="table-col-headers" role="row" aria-label="Column headers">
+          <div></div>
+          <div>Student</div>
+          <div>Program</div>
+          <div>CGPA</div>
+          <div>Submitted</div>
+          <div>Documents</div>
+          <div>Status</div>
+        </div>
+
+        <div class="table-row" role="row">
+          <div class="table-checkbox table-checkbox--selected" aria-label="Selected" role="checkbox" aria-checked="true">&#10003;</div>
+          <div><div class="table-cell-primary">Leon G. Pavino</div><div class="table-cell-secondary">120-12345 · CCS</div></div>
+          <div><div class="table-cell-primary">NUS Exchange</div><div class="table-cell-secondary">National University of Singapore</div></div>
+          <div class="table-cell">3.42</div>
+          <div class="table-cell">12 Jun</div>
+          <div><span class="chip chip--green"><span class="chip__dot"></span>Complete</span></div>
+          <div><span class="chip chip--blue"><span class="chip__dot"></span>Under Review</span></div>
+        </div>
+
+        <div class="table-row" role="row">
+          <div class="table-checkbox" aria-label="Not selected" role="checkbox" aria-checked="false"></div>
+          <div><div class="table-cell-primary">Maria C. Santos</div><div class="table-cell-secondary">118-22980 · RVRCOB</div></div>
+          <div><div class="table-cell-primary">Sciences Po Exchange</div><div class="table-cell-secondary">Sciences Po</div></div>
+          <div class="table-cell">3.10</div>
+          <div class="table-cell">11 Jun</div>
+          <div><span class="chip chip--red"><span class="chip__dot"></span>Incomplete</span></div>
+          <div><span class="chip chip--blue"><span class="chip__dot"></span>Under Review</span></div>
+        </div>
+
+        <div class="table-row" role="row">
+          <div class="table-checkbox table-checkbox--selected" aria-label="Selected" role="checkbox" aria-checked="true">&#10003;</div>
+          <div><div class="table-cell-primary">Andrea T. Tan</div><div class="table-cell-secondary">119-77120 · GCOE</div></div>
+          <div><div class="table-cell-primary">Kyoto Research</div><div class="table-cell-secondary">Kyoto University</div></div>
+          <div class="table-cell">3.55</div>
+          <div class="table-cell">10 Jun</div>
+          <div><span class="chip chip--green"><span class="chip__dot"></span>Complete</span></div>
+          <div><span class="chip chip--blue"><span class="chip__dot"></span>Nominated</span></div>
+        </div>
+
+        <div class="table-row" role="row">
+          <div class="table-checkbox" aria-label="Not selected" role="checkbox" aria-checked="false"></div>
+          <div><div class="table-cell-primary">Jorge V. Reyes</div><div class="table-cell-secondary">120-04531 · CLA</div></div>
+          <div><div class="table-cell-primary">Chung-Ang Summer</div><div class="table-cell-secondary">Chung-Ang University</div></div>
+          <div class="table-cell">3.20</div>
+          <div class="table-cell">09 Jun</div>
+          <div><span class="chip chip--green"><span class="chip__dot"></span>Complete</span></div>
+          <div><span class="chip chip--green"><span class="chip__dot"></span>Accepted</span></div>
+        </div>
+
+        <div class="table-row" role="row">
+          <div class="table-checkbox" aria-label="Not selected" role="checkbox" aria-checked="false"></div>
+          <div><div class="table-cell-primary">Paolo R. Medina</div><div class="table-cell-secondary">117-66201 · GCOE</div></div>
+          <div><div class="table-cell-primary">Melbourne Exchange</div><div class="table-cell-secondary">University of Melbourne</div></div>
+          <div class="table-cell">2.95</div>
+          <div class="table-cell">08 Jun</div>
+          <div><span class="chip chip--red"><span class="chip__dot"></span>Incomplete</span></div>
+          <div><span class="chip chip--red"><span class="chip__dot"></span>Rejected</span></div>
+        </div>
+
+        <div class="table-row" role="row">
+          <div class="table-checkbox" aria-label="Not selected" role="checkbox" aria-checked="false"></div>
+          <div><div class="table-cell-primary">Katrina I. Estrella</div><div class="table-cell-secondary">120-33419 · CCS</div></div>
+          <div><div class="table-cell-primary">NTU Exchange</div><div class="table-cell-secondary">Nanyang Technological University</div></div>
+          <div class="table-cell">3.78</div>
+          <div class="table-cell">08 Jun</div>
+          <div><span class="chip chip--green"><span class="chip__dot"></span>Complete</span></div>
+          <div><span class="chip chip--blue"><span class="chip__dot"></span>Under Review</span></div>
         </div>
       </div>
+    </section>
+  </main>
+</div>
 
-      <!-- Overview section -->
-      <div class="sidebar__section">Overview</div>
-        <a href="dashboard.html" class="nav-btn nav-btn--active" aria-current="page">
-          <i data-lucide="layout-dashboard" width="16" height="16"></i>
-          Review Dashboard
-        </a>
-
-      <!-- Manage section -->
-      <div class="sidebar__section">Manage</div>
-
-      <a href="#" class="nav-btn">
-        <i data-lucide="send" width="16" height="16"></i>
-        Post Opportunity
-      </a>
-      <a href="#" class="nav-btn">
-        <i data-lucide="users" width="16" height="16"></i>
-        Applicants
-      </a>
-
-      <a href="#" class="nav-btn">
-        <i data-lucide="earth" width="16" height="16"></i>
-        Programs
-      </a>
-
-      <a href="#" class="nav-btn">
-        <i data-lucide="receipt-text" width="16" height="16"></i>
-        Audit Logs
-      </a>
-    </nav><!-- /sidebar -->
-
-    <!-- =================================================================
-         MAIN
-         ================================================================= -->
-    <div class="main">
-
-      <!-- Topbar removed — using global top navigation to avoid redundancy -->
-
-      <!-- =============================================================
-           CONTENT
-           ============================================================= -->
-      <main class="content" id="main-content">
-
-        <!-- Stat cards -->
-        <div class="stat-grid" role="region" aria-label="Pipeline statistics">
-
-          <!-- Pending Review -->
-          <div class="stat-card">
-            <div class="stat-card__label">Pending Review</div>
-            <div class="stat-card__value">17</div>
-            <div class="stat-card__sub stat-card__sub--amber">6 urgent · deadline &lt; 7d</div>
-          </div>
-
-          <!-- Nominated -->
-          <div class="stat-card">
-            <div class="stat-card__label">Nominated</div>
-            <div class="stat-card__value">8</div>
-            <div class="stat-card__sub stat-card__sub--blue">Awaiting partner reply</div>
-          </div>
-
-          <!-- Accepted -->
-          <div class="stat-card">
-            <div class="stat-card__label">Accepted</div>
-            <div class="stat-card__value">23</div>
-            <div class="stat-card__sub stat-card__sub--green">AY 2026–27 cohort</div>
-          </div>
-
-          <!-- Live Programs -->
-          <div class="stat-card">
-            <div class="stat-card__label">Live Programs</div>
-            <div class="stat-card__value">34</div>
-            <div class="stat-card__sub stat-card__sub--muted">across 19 countries</div>
-          </div>
-
-        </div><!-- /stat-grid -->
-
-        <!-- ============================================================
-             REVIEW QUEUE TABLE
-             ============================================================ -->
-        <div class="review-table" role="region" aria-label="Applicant review queue">
-
-          <!-- Table header -->
-          <div class="review-table__header">
-            <div class="review-table__header-left">
-              <div class="review-table__title">Applicant review queue</div>
-              <div class="review-table__subtitle">Sorted by urgency · nearest deadline first</div>
-            </div>
-
-            <div class="review-table__actions">
-              <span class="selection-badge">2 selected</span>
-              <button class="btn btn--secondary">
-                &#8595; Export list
-              </button>
-              <button class="btn btn--primary">
-                &#10003; Batch approve
-              </button>
-            </div>
-          </div>
-
-          <!-- Column headers -->
-          <div class="table-col-headers" role="row" aria-label="Column headers">
-            <div></div><!-- checkbox col -->
-            <div>Student</div>
-            <div>Program</div>
-            <div>CGPA</div>
-            <div>Submitted</div>
-            <div>Documents</div>
-            <div>Status</div>
-          </div>
-
-          <!-- --------------------------------------------------------
-               Row 1: Leon G. Pavino — CHECKED
-               -------------------------------------------------------- -->
-          <div class="table-row" role="row">
-
-            <!-- Checkbox: checked -->
-            <div class="table-checkbox"
-                 style="background:#006633; border:1.5px solid #006633;"
-                 aria-label="Selected"
-                 role="checkbox"
-                 aria-checked="true">
-              &#10003;
-            </div>
-
-            <!-- Student -->
-            <div>
-              <div class="table-cell-primary">Leon G. Pavino</div>
-              <div class="table-cell-secondary">120-12345 · CCS</div>
-            </div>
-
-            <!-- Program -->
-            <div>
-              <div class="table-cell-primary">NUS Exchange</div>
-              <div class="table-cell-secondary">National University of Singapore</div>
-            </div>
-
-            <!-- CGPA -->
-            <div class="table-cell">3.42</div>
-
-            <!-- Submitted -->
-            <div class="table-cell">12 Jun</div>
-
-            <!-- Documents -->
-            <div>
-              <span class="chip chip--green">
-                <span class="chip__dot"></span>Complete
-              </span>
-            </div>
-
-            <!-- Status -->
-            <div>
-              <span class="chip chip--blue">
-                <span class="chip__dot"></span>Under Review
-              </span>
-            </div>
-
-          </div><!-- /row 1 -->
-
-          <!-- --------------------------------------------------------
-               Row 2: Maria C. Santos — UNCHECKED
-               -------------------------------------------------------- -->
-          <div class="table-row" role="row">
-
-            <!-- Checkbox: unchecked -->
-            <div class="table-checkbox"
-                 style="background:#fff; border:1.5px solid #D1D5DB;"
-                 aria-label="Not selected"
-                 role="checkbox"
-                 aria-checked="false">
-            </div>
-
-            <div>
-              <div class="table-cell-primary">Maria C. Santos</div>
-              <div class="table-cell-secondary">118-22980 · RVRCOB</div>
-            </div>
-
-            <div>
-              <div class="table-cell-primary">Sciences Po Exchange</div>
-              <div class="table-cell-secondary">Sciences Po</div>
-            </div>
-
-            <div class="table-cell">3.10</div>
-            <div class="table-cell">11 Jun</div>
-
-            <div>
-              <span class="chip chip--red">
-                <span class="chip__dot"></span>Incomplete
-              </span>
-            </div>
-
-            <div>
-              <span class="chip chip--blue">
-                <span class="chip__dot"></span>Under Review
-              </span>
-            </div>
-
-          </div><!-- /row 2 -->
-
-          <!-- --------------------------------------------------------
-               Row 3: Andrea T. Tan — CHECKED
-               -------------------------------------------------------- -->
-          <div class="table-row" role="row">
-
-            <!-- Checkbox: checked -->
-            <div class="table-checkbox"
-                 style="background:#006633; border:1.5px solid #006633;"
-                 aria-label="Selected"
-                 role="checkbox"
-                 aria-checked="true">
-              &#10003;
-            </div>
-
-            <div>
-              <div class="table-cell-primary">Andrea T. Tan</div>
-              <div class="table-cell-secondary">119-77120 · GCOE</div>
-            </div>
-
-            <div>
-              <div class="table-cell-primary">Kyoto Research</div>
-              <div class="table-cell-secondary">Kyoto University</div>
-            </div>
-
-            <div class="table-cell">3.55</div>
-            <div class="table-cell">10 Jun</div>
-
-            <div>
-              <span class="chip chip--green">
-                <span class="chip__dot"></span>Complete
-              </span>
-            </div>
-
-            <div>
-              <span class="chip chip--blue">
-                <span class="chip__dot"></span>Nominated
-              </span>
-            </div>
-
-          </div><!-- /row 3 -->
-
-          <!-- --------------------------------------------------------
-               Row 4: Jorge V. Reyes — UNCHECKED
-               -------------------------------------------------------- -->
-          <div class="table-row" role="row">
-
-            <div class="table-checkbox"
-                 style="background:#fff; border:1.5px solid #D1D5DB;"
-                 aria-label="Not selected"
-                 role="checkbox"
-                 aria-checked="false">
-            </div>
-
-            <div>
-              <div class="table-cell-primary">Jorge V. Reyes</div>
-              <div class="table-cell-secondary">120-04531 · CLA</div>
-            </div>
-
-            <div>
-              <div class="table-cell-primary">Chung-Ang Summer</div>
-              <div class="table-cell-secondary">Chung-Ang University</div>
-            </div>
-
-            <div class="table-cell">3.20</div>
-            <div class="table-cell">09 Jun</div>
-
-            <div>
-              <span class="chip chip--green">
-                <span class="chip__dot"></span>Complete
-              </span>
-            </div>
-
-            <div>
-              <span class="chip chip--green">
-                <span class="chip__dot"></span>Accepted
-              </span>
-            </div>
-
-          </div><!-- /row 4 -->
-
-          <!-- --------------------------------------------------------
-               Row 5: Paolo R. Medina — UNCHECKED
-               -------------------------------------------------------- -->
-          <div class="table-row" role="row">
-
-            <div class="table-checkbox"
-                 style="background:#fff; border:1.5px solid #D1D5DB;"
-                 aria-label="Not selected"
-                 role="checkbox"
-                 aria-checked="false">
-            </div>
-
-            <div>
-              <div class="table-cell-primary">Paolo R. Medina</div>
-              <div class="table-cell-secondary">117-66201 · GCOE</div>
-            </div>
-
-            <div>
-              <div class="table-cell-primary">Melbourne Exchange</div>
-              <div class="table-cell-secondary">University of Melbourne</div>
-            </div>
-
-            <div class="table-cell">2.95</div>
-            <div class="table-cell">08 Jun</div>
-
-            <div>
-              <span class="chip chip--red">
-                <span class="chip__dot"></span>Incomplete
-              </span>
-            </div>
-
-            <div>
-              <span class="chip chip--red">
-                <span class="chip__dot"></span>Rejected
-              </span>
-            </div>
-
-          </div><!-- /row 5 -->
-
-          <!-- --------------------------------------------------------
-               Row 6: Katrina I. Estrella — UNCHECKED
-               -------------------------------------------------------- -->
-          <div class="table-row" role="row">
-
-            <div class="table-checkbox"
-                 style="background:#fff; border:1.5px solid #D1D5DB;"
-                 aria-label="Not selected"
-                 role="checkbox"
-                 aria-checked="false">
-            </div>
-
-            <div>
-              <div class="table-cell-primary">Katrina I. Estrella</div>
-              <div class="table-cell-secondary">120-33419 · CCS</div>
-            </div>
-
-            <div>
-              <div class="table-cell-primary">NTU Exchange</div>
-              <div class="table-cell-secondary">Nanyang Technological University</div>
-            </div>
-
-            <div class="table-cell">3.78</div>
-            <div class="table-cell">08 Jun</div>
-
-            <div>
-              <span class="chip chip--green">
-                <span class="chip__dot"></span>Complete
-              </span>
-            </div>
-
-            <div>
-              <span class="chip chip--blue">
-                <span class="chip__dot"></span>Under Review
-              </span>
-            </div>
-
-          </div><!-- /row 6 -->
-
-        </div><!-- /review-table -->
-      </main><!-- /content -->
-    </div><!-- /main -->
-  </div><!-- /layout-body -->
-</div><!-- /app-wrapper -->
-
-<script src="/js/admin-dashboard.js"></script>
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-<script>
-  lucide.createIcons();
-</script>
 </body>
 </html>
