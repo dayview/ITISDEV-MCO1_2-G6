@@ -7,140 +7,103 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../public/css/gems.css" />
+  <link rel="stylesheet" href="../../public/css/gems.css" />
 </head>
-<body>
+<body class="student-page applications-page">
 
 <div class="app-wrapper">
-
-  <!-- =====================================================================
-       PROTO BAR — prototype chrome (non-functional, visual reference only)
-       ===================================================================== -->
-  <div class="proto-bar">
-    <a href="dashboard.html" class="proto-bar__brand">
-      <div class="proto-bar__logo-icon">G</div>
-      <span>GEMS</span>
-      <span class="proto-bar__subtitle">Prototype · MCO1</span>
+  <nav class="student-topnav catalog-nav" aria-label="Student navigation">
+    <a href="dashboard.html" class="student-topnav__brand" aria-label="GEMS dashboard">
+      <div class="student-topnav__logo">
+        <img src="../../public/images/OVPERI-white.png" alt="" class="student-topnav__logo-img">
+      </div>
+      <span class="student-topnav__title">GEMS</span>
     </a>
 
-    <div class="proto-bar__tabs">
-      <a href="dashboard.html" class="proto-tab proto-tab--active">App</a>
-      <span class="proto-tab">Mobile</span>
-      <span class="proto-tab">Registration</span>
-      <span class="proto-tab">Catalog</span>
+    <div class="catalog-nav__search">
+      <label class="topbar-search" for="global-search">
+        <span class="topbar-search__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </span>
+        <input id="global-search" type="search" aria-label="Search programs, countries, and universities" placeholder="Search programs, countries, universities..." autocomplete="off" />
+      </label>
+      <button type="button" class="catalog-icon-btn" aria-label="Open filters">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path>
+        </svg>
+      </button>
     </div>
 
-    <div class="proto-bar__actions">
-      <div class="proto-toggle">
-        <span class="proto-toggle__btn proto-toggle__btn--active">Student</span>
-        <span class="proto-toggle__btn">Admin</span>
-      </div>
-      <a href="login.html" class="proto-login-btn">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5M15 12H3"/></svg>
-        Log in
+    <div class="student-topnav__links catalog-nav__links">
+      <a class="student-topnav__link" href="dashboard.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="8" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="15" width="7" height="6" rx="1.5"></rect></svg>
+        </div>
+        <span class="student-topnav__link-label">Dashboard</span>
+      </a>
+
+      <a class="student-topnav__link" href="catalog.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">Catalog</span>
+      </a>
+
+      <a class="student-topnav__link" href="documents.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">Documents</span>
+      </a>
+
+      <a class="student-topnav__link" href="applications.html" aria-current="page">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">My Applications</span>
+      </a>
+
+      <button type="button" class="catalog-notification" aria-label="Notifications, 3 unread">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="catalog-notification__badge">3</span>
+      </button>
+
+      <a class="student-topnav__link catalog-account-link" href="profile.html">
+        <span class="user-avatar" aria-hidden="true">LP</span>
       </a>
     </div>
-  </div><!-- /proto-bar -->
+  </nav>
 
-  <!-- =====================================================================
-       LAYOUT BODY
-       ===================================================================== -->
-  <div class="layout-body">
-
-    <!-- =================================================================
-         SIDEBAR
-         ================================================================= -->
-    <nav class="sidebar" aria-label="Main navigation">
-
-      <div class="sidebar__header">
-        <div class="sidebar__logo">G</div>
-        <div>
-          <div class="sidebar__title">GEMS</div>
-          <div class="sidebar__org">DLSU · OVPERI</div>
-        </div>
-      </div>
-
-      <div class="sidebar__section">Navigation</div>
-
-      <a href="dashboard.html" class="nav-btn">
-        <span class="nav-icon">&#9783;</span>
-        Dashboard
-      </a>
-
-      <a href="catalog.html" class="nav-btn">
-        <span class="nav-icon">&#128270;</span>
-        Opportunity Catalog
-      </a>
-
-      <a href="applications.html" class="nav-btn nav-btn--active" aria-current="page">
-        <span class="nav-icon">&#128196;</span>
-        My Applications
-      </a>
-
-      <!-- Account section -->
-      <div class="sidebar__section">Account</div>
-      <a href="documents.html" class="nav-btn">
-        <span class="nav-icon">&#128196;</span>
-        My Documents
-      </a>
-
-      <a href="profile.html" class="nav-btn">
-        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-        Profile
-      </a>
-
-      <div class="sidebar__section">Admin</div>
-
-      <a href="admin/dashboard.html" class="nav-btn">
-        <span class="nav-icon">&#9965;</span>
-        Review Dashboard
-      </a>
-
-      <div class="sidebar__logout">
-        <span class="nav-icon">&#8594;</span>
-        Log out
-      </div>
-
-    </nav><!-- /sidebar -->
-
-    <!-- =================================================================
-         MAIN
-         ================================================================= -->
-    <div class="main">
-
-      <!-- Topbar -->
-      <header class="main-topbar">
-        <div>
-          <div class="page-title">My Applications</div>
-          <div class="page-subtitle">Track every submission from review to decision</div>
-        </div>
-
-        <div class="topbar-actions">
-          <div class="topbar-search">
-            <span>&#128269;</span>
-            Search your applications…
-          </div>
-
-          <button class="notif-btn" aria-label="Notifications">
-            &#128276;
-            <span class="notif-dot"></span>
-          </button>
-
-          <div class="user-info">
-            <div class="user-name">Leon G. Pavino</div>
-            <div class="user-role">CCS · 3.42 CGPA</div>
-          </div>
-          <div class="user-avatar" aria-hidden="true">LP</div>
-        </div>
-      </header><!-- /main-topbar -->
 
       <!-- =============================================================
            CONTENT
            ============================================================= -->
-      <main class="content" id="main-content">
+      <main class="content student-shell" id="main-content">
+        <header class="student-hero">
+          <div class="student-hero__copy">
+            <h1 class="student-hero__title">My Applications</h1>
+            <p class="student-hero__subtitle">Follow each program from draft to decision in one consistent tracker.</p>
+          </div>
+          <div class="student-hero__art" aria-hidden="true">
+            <svg viewBox="0 0 420 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M82 226C140 149 207 103 337 78" stroke="#B5E4C9" stroke-width="2.5" stroke-dasharray="8 7" stroke-linecap="round" opacity=".7"/>
+              <rect x="116" y="84" width="216" height="136" rx="22" fill="#C8E8D6"/>
+              <circle cx="160" cy="128" r="22" fill="#EAF7EF"/>
+              <circle cx="226" cy="128" r="22" fill="#EAF7EF"/>
+              <circle cx="292" cy="128" r="22" fill="#EAF7EF"/>
+              <path d="M182 128h22M248 128h22" stroke="#9DD4B4" stroke-width="8" stroke-linecap="round"/>
+              <path d="M150 128l8 8 16-19M216 128l8 8 16-19" stroke="#0F7A3D" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity=".72"/>
+              <path d="M146 178h140" stroke="#0F7A3D" stroke-width="8" stroke-linecap="round" opacity=".35"/>
+              <path d="M146 200h92" stroke="#0F7A3D" stroke-width="8" stroke-linecap="round" opacity=".25"/>
+            </svg>
+          </div>
+        </header>
 
         <!-- Filter pills -->
-        <div class="filter-pills" role="group" aria-label="Filter applications" style="margin-bottom:20px;">
+        <div class="filter-pills" role="group" aria-label="Filter applications">
           <button class="pill pill--active">All · 5</button>
           <button class="pill">Active · 3</button>
           <button class="pill">Drafts · 1</button>
@@ -169,57 +132,53 @@
 
             <!-- Step 1: Submitted — DONE -->
             <div class="step-col" role="listitem">
-              <div class="step-dot"
-                   style="background:#DCFCE7; color:#16A34A; border:2px solid #4ADE80;"
+              <div class="step-dot step-dot--done"
                    aria-label="Submitted: complete">
                 &#10003;
               </div>
-              <div class="step-label" style="color:#16A34A;">Submitted</div>
+              <div class="step-label step-label--done">Submitted</div>
             </div>
 
             <!-- Line 1–2 -->
             <div class="step-wrap">
-              <div class="step-line" style="background:#4ADE80;"></div>
+              <div class="step-line step-line--done"></div>
             </div>
 
             <!-- Step 2: Under Review — CURRENT -->
             <div class="step-col" role="listitem">
-              <div class="step-dot"
-                   style="background:#16A34A; color:#fff; border:2px solid #16A34A;"
+              <div class="step-dot step-dot--current"
                    aria-label="Under Review: current step">
                 &#9679;
               </div>
-              <div class="step-label" style="color:#16A34A;">Under Review</div>
+              <div class="step-label step-label--current">Under Review</div>
             </div>
 
             <!-- Line 2–3 -->
             <div class="step-wrap">
-              <div class="step-line" style="background:#E9ECEF;"></div>
+              <div class="step-line step-line--pending"></div>
             </div>
 
             <!-- Step 3: Nominated — PENDING -->
             <div class="step-col" role="listitem">
-              <div class="step-dot"
-                   style="background:#F4F6F5; color:#9AA3A0; border:2px solid #E9ECEF;"
+              <div class="step-dot step-dot--pending"
                    aria-label="Nominated: pending">
                 &nbsp;
               </div>
-              <div class="step-label" style="color:#9AA3A0;">Nominated</div>
+              <div class="step-label step-label--pending">Nominated</div>
             </div>
 
             <!-- Line 3–4 -->
             <div class="step-wrap">
-              <div class="step-line" style="background:#E9ECEF;"></div>
+              <div class="step-line step-line--pending"></div>
             </div>
 
             <!-- Step 4: Decision — PENDING -->
             <div class="step-col" role="listitem">
-              <div class="step-dot"
-                   style="background:#F4F6F5; color:#9AA3A0; border:2px solid #E9ECEF;"
+              <div class="step-dot step-dot--pending"
                    aria-label="Decision: pending">
                 &nbsp;
               </div>
-              <div class="step-label" style="color:#9AA3A0;">Decision</div>
+              <div class="step-label step-label--pending">Decision</div>
             </div>
 
           </div><!-- /progress-steps -->
@@ -248,46 +207,42 @@
 
             <!-- Step 1: Submitted — DONE -->
             <div class="step-col" role="listitem">
-              <div class="step-dot"
-                   style="background:#DCFCE7; color:#16A34A; border:2px solid #4ADE80;"
+              <div class="step-dot step-dot--done"
                    aria-label="Submitted: complete">&#10003;</div>
-              <div class="step-label" style="color:#16A34A;">Submitted</div>
+              <div class="step-label step-label--done">Submitted</div>
             </div>
 
             <div class="step-wrap">
-              <div class="step-line" style="background:#4ADE80;"></div>
+              <div class="step-line step-line--done"></div>
             </div>
 
             <!-- Step 2: Under Review — DONE -->
             <div class="step-col" role="listitem">
-              <div class="step-dot"
-                   style="background:#DCFCE7; color:#16A34A; border:2px solid #4ADE80;"
+              <div class="step-dot step-dot--done"
                    aria-label="Under Review: complete">&#10003;</div>
-              <div class="step-label" style="color:#16A34A;">Under Review</div>
+              <div class="step-label step-label--done">Under Review</div>
             </div>
 
             <div class="step-wrap">
-              <div class="step-line" style="background:#4ADE80;"></div>
+              <div class="step-line step-line--done"></div>
             </div>
 
             <!-- Step 3: Nominated — CURRENT -->
             <div class="step-col" role="listitem">
-              <div class="step-dot"
-                   style="background:#16A34A; color:#fff; border:2px solid #16A34A;"
+              <div class="step-dot step-dot--current"
                    aria-label="Nominated: current step">&#9679;</div>
-              <div class="step-label" style="color:#16A34A;">Nominated</div>
+              <div class="step-label step-label--current">Nominated</div>
             </div>
 
             <div class="step-wrap">
-              <div class="step-line" style="background:#E9ECEF;"></div>
+              <div class="step-line step-line--pending"></div>
             </div>
 
             <!-- Step 4: Decision — PENDING -->
             <div class="step-col" role="listitem">
-              <div class="step-dot"
-                   style="background:#F4F6F5; color:#9AA3A0; border:2px solid #E9ECEF;"
+              <div class="step-dot step-dot--pending"
                    aria-label="Decision: pending">&nbsp;</div>
-              <div class="step-label" style="color:#9AA3A0;">Decision</div>
+              <div class="step-label step-label--pending">Decision</div>
             </div>
 
           </div><!-- /progress-steps -->
@@ -301,7 +256,7 @@
         <div class="tracker-card">
 
           <div class="tracker-card__header">
-            <div class="tracker-icon" style="font-size:12px;">SP</div>
+            <div class="tracker-icon tracker-icon--small">SP</div>
             <div class="tracker-card__info">
               <div class="tracker-name">Exchange Semester</div>
               <div class="tracker-host">Sciences Po</div>
@@ -316,46 +271,42 @@
 
             <!-- Step 1: Submitted — CURRENT -->
             <div class="step-col" role="listitem">
-              <div class="step-dot"
-                   style="background:#16A34A; color:#fff; border:2px solid #16A34A;"
+              <div class="step-dot step-dot--current"
                    aria-label="Submitted: current step">&#9679;</div>
-              <div class="step-label" style="color:#16A34A;">Submitted</div>
+              <div class="step-label step-label--current">Submitted</div>
             </div>
 
             <div class="step-wrap">
-              <div class="step-line" style="background:#E9ECEF;"></div>
+              <div class="step-line step-line--pending"></div>
             </div>
 
             <!-- Step 2: Under Review — PENDING -->
             <div class="step-col" role="listitem">
-              <div class="step-dot"
-                   style="background:#F4F6F5; color:#9AA3A0; border:2px solid #E9ECEF;"
+              <div class="step-dot step-dot--pending"
                    aria-label="Under Review: pending">&nbsp;</div>
-              <div class="step-label" style="color:#9AA3A0;">Under Review</div>
+              <div class="step-label step-label--pending">Under Review</div>
             </div>
 
             <div class="step-wrap">
-              <div class="step-line" style="background:#E9ECEF;"></div>
+              <div class="step-line step-line--pending"></div>
             </div>
 
             <!-- Step 3: Nominated — PENDING -->
             <div class="step-col" role="listitem">
-              <div class="step-dot"
-                   style="background:#F4F6F5; color:#9AA3A0; border:2px solid #E9ECEF;"
+              <div class="step-dot step-dot--pending"
                    aria-label="Nominated: pending">&nbsp;</div>
-              <div class="step-label" style="color:#9AA3A0;">Nominated</div>
+              <div class="step-label step-label--pending">Nominated</div>
             </div>
 
             <div class="step-wrap">
-              <div class="step-line" style="background:#E9ECEF;"></div>
+              <div class="step-line step-line--pending"></div>
             </div>
 
             <!-- Step 4: Decision — PENDING -->
             <div class="step-col" role="listitem">
-              <div class="step-dot"
-                   style="background:#F4F6F5; color:#9AA3A0; border:2px solid #E9ECEF;"
+              <div class="step-dot step-dot--pending"
                    aria-label="Decision: pending">&nbsp;</div>
-              <div class="step-label" style="color:#9AA3A0;">Decision</div>
+              <div class="step-label step-label--pending">Decision</div>
             </div>
 
           </div><!-- /progress-steps -->
@@ -384,46 +335,42 @@
 
             <!-- Step 1: Submitted — DONE -->
             <div class="step-col" role="listitem">
-              <div class="step-dot"
-                   style="background:#DCFCE7; color:#16A34A; border:2px solid #4ADE80;"
+              <div class="step-dot step-dot--done"
                    aria-label="Submitted: complete">&#10003;</div>
-              <div class="step-label" style="color:#16A34A;">Submitted</div>
+              <div class="step-label step-label--done">Submitted</div>
             </div>
 
             <div class="step-wrap">
-              <div class="step-line" style="background:#4ADE80;"></div>
+              <div class="step-line step-line--done"></div>
             </div>
 
             <!-- Step 2: Under Review — DONE -->
             <div class="step-col" role="listitem">
-              <div class="step-dot"
-                   style="background:#DCFCE7; color:#16A34A; border:2px solid #4ADE80;"
+              <div class="step-dot step-dot--done"
                    aria-label="Under Review: complete">&#10003;</div>
-              <div class="step-label" style="color:#16A34A;">Under Review</div>
+              <div class="step-label step-label--done">Under Review</div>
             </div>
 
             <div class="step-wrap">
-              <div class="step-line" style="background:#4ADE80;"></div>
+              <div class="step-line step-line--done"></div>
             </div>
 
             <!-- Step 3: Nominated — DONE -->
             <div class="step-col" role="listitem">
-              <div class="step-dot"
-                   style="background:#DCFCE7; color:#16A34A; border:2px solid #4ADE80;"
+              <div class="step-dot step-dot--done"
                    aria-label="Nominated: complete">&#10003;</div>
-              <div class="step-label" style="color:#16A34A;">Nominated</div>
+              <div class="step-label step-label--done">Nominated</div>
             </div>
 
             <div class="step-wrap">
-              <div class="step-line" style="background:#4ADE80;"></div>
+              <div class="step-line step-line--done"></div>
             </div>
 
             <!-- Step 4: Decision — ACCEPTED (green filled) -->
             <div class="step-col" role="listitem">
-              <div class="step-dot"
-                   style="background:#16A34A; color:#fff; border:2px solid #16A34A;"
+              <div class="step-dot step-dot--current"
                    aria-label="Decision: Accepted">&#10003;</div>
-              <div class="step-label" style="color:#16A34A;">Accepted</div>
+              <div class="step-label step-label--current">Accepted</div>
             </div>
 
           </div><!-- /progress-steps -->
@@ -434,9 +381,9 @@
         <!-- ===========================================================
              APPLICATION 5: Kyoto — Draft
              =========================================================== -->
-        <div class="tracker-card" style="margin-bottom:0;">
+        <div class="tracker-card mb-0">
 
-          <div class="tracker-card__header" style="margin-bottom:12px;">
+          <div class="tracker-card__header mb-12">
             <div class="tracker-icon">KU</div>
             <div class="tracker-card__info">
               <div class="tracker-name">Research Exchange</div>
@@ -450,10 +397,10 @@
 
           <!-- Draft info bar (replaces progress steps) -->
           <div class="draft-bar">
-            <span style="color:var(--text-mid);">
+            <span class="draft-bar__text">
               Draft started — eligibility passed, not yet submitted.
             </span>
-            <button class="btn btn--primary" style="font-size:12.5px;padding:8px 16px;">
+            <button class="btn btn--primary btn--compact">
               Continue draft
             </button>
           </div>
@@ -461,10 +408,6 @@
         </div><!-- /tracker-card Kyoto -->
 
       </main><!-- /content -->
-
-    </div><!-- /main -->
-
-  </div><!-- /layout-body -->
 
 </div><!-- /app-wrapper -->
 
