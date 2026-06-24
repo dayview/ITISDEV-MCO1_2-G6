@@ -3935,6 +3935,112 @@ body.catalog-page {
   fill: currentColor;
 }
 
+/* ==========================================================================
+   Admin dashboard — student product system
+   ========================================================================== */
+.admin-page .admin-shell {
+  width: min(1480px, calc(100% - 64px));
+}
+
+.admin-page .stat-card,
+.admin-page .review-table {
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  background: #FFFFFF;
+  box-shadow: 0 8px 24px rgba(16, 24, 40, .05);
+}
+
+.admin-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.admin-page .admin-toolbar .filter-pills {
+  margin: 0;
+}
+
+.admin-student-view {
+  flex: none;
+  color: #0F7A3D;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-student-view:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.admin-page .review-table {
+  overflow: hidden;
+}
+
+.admin-page .review-table__header {
+  padding: 22px 24px;
+}
+
+.admin-page .review-table__title {
+  margin: 0;
+  color: #101828;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.admin-page .review-table__subtitle {
+  margin: 4px 0 0;
+  color: #667085;
+  font-size: 13px;
+}
+
+.admin-page .review-table__actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-table-scroll {
+  overflow-x: auto;
+}
+
+.admin-page .table-col-headers,
+.admin-page .table-row {
+  grid-template-columns: 30px minmax(170px, 1.7fr) minmax(190px, 1.5fr) .65fr .8fr 1fr 1fr;
+  min-width: 980px;
+}
+
+.admin-page .table-col-headers {
+  padding: 12px 24px;
+  background: #F8FAFC;
+}
+
+.admin-page .table-row {
+  padding: 16px 24px;
+  transition: background .15s ease;
+}
+
+.admin-page .table-row:hover {
+  background: #FBFDFC;
+}
+
+.admin-page .table-checkbox {
+  border: 1.5px solid #D0D5DD;
+  background: #FFFFFF;
+}
+
+.admin-page .table-checkbox--selected {
+  border-color: #0F7A3D;
+  background: #0F7A3D;
+}
+
+.admin-page .btn--primary,
+.admin-page .btn--secondary {
+  min-height: 40px;
+  border-radius: 10px;
+  font-weight: 800;
+}
+
 @media (max-width: 1180px) {
   .student-page .student-topnav.catalog-nav {
     grid-template-columns: auto 1fr;
@@ -3948,6 +4054,20 @@ body.catalog-page {
 }
 
 @media (max-width: 760px) {
+  .admin-page .admin-shell {
+    width: min(100% - 24px, 1480px);
+  }
+
+  .admin-toolbar,
+  .admin-page .review-table__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-page .review-table__actions {
+    justify-content: flex-start;
+  }
+
   .student-page .student-shell {
     width: min(100% - 24px, 1480px);
     padding-top: 24px;
