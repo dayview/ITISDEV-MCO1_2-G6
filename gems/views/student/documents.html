@@ -7,166 +7,118 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../public/css/gems.css" />
+  <link rel="stylesheet" href="../../public/css/gems.css" />
 </head>
-<body>
+<body class="student-page documents-page">
 
 <div class="app-wrapper">
 
   <!-- =====================================================================
-       PROTO BAR — prototype chrome (non-functional, visual reference only)
+       HEADER
        ===================================================================== -->
-  <div class="proto-bar">
-    <!-- Brand -->
-    <a href="dashboard.html" class="proto-bar__brand">
-      <div class="proto-bar__logo-icon">G</div>
-      <span>GEMS</span>
-      <span class="proto-bar__subtitle">Prototype · MCO1</span>
+  <nav class="student-topnav catalog-nav" aria-label="Student navigation">
+    <a href="dashboard.html" class="student-topnav__brand" aria-label="GEMS dashboard">
+      <div class="student-topnav__logo">
+        <img src="../../public/images/OVPERI-white.png" alt="" class="student-topnav__logo-img">
+      </div>
+      <span class="student-topnav__title">GEMS</span>
     </a>
 
-    <!-- View tabs (non-functional) -->
-    <div class="proto-bar__tabs">
-      <a href="dashboard.html" class="proto-tab proto-tab--active">App</a>
-      <span class="proto-tab">Mobile</span>
-      <span class="proto-tab">Registration</span>
-      <span class="proto-tab">Catalog</span>
+    <div class="catalog-nav__search">
+      <label class="topbar-search" for="global-search">
+        <span class="topbar-search__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </span>
+        <input id="global-search" type="search" aria-label="Search programs, countries, and universities" placeholder="Search programs, countries, universities..." autocomplete="off" />
+      </label>
+      <button type="button" class="catalog-icon-btn" aria-label="Open filters">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path>
+        </svg>
+      </button>
     </div>
 
-    <!-- Role toggle (non-functional) -->
-    <div class="proto-bar__actions">
-      <div class="proto-toggle">
-        <span class="proto-toggle__btn proto-toggle__btn--active">Student</span>
-        <span class="proto-toggle__btn">Admin</span>
-      </div>
-      <a href="login.html" class="proto-login-btn">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5M15 12H3"/></svg>
-        Log in
+    <div class="student-topnav__links catalog-nav__links">
+      <a class="student-topnav__link" href="dashboard.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="8" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="15" width="7" height="6" rx="1.5"></rect></svg>
+        </div>
+        <span class="student-topnav__link-label">Dashboard</span>
+      </a>
+
+      <a class="student-topnav__link" href="catalog.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">Catalog</span>
+      </a>
+
+      <a class="student-topnav__link" href="documents.html" aria-current="page">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">Documents</span>
+      </a>
+
+      <a class="student-topnav__link" href="applications.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">My Applications</span>
+      </a>
+
+      <button type="button" class="catalog-notification" aria-label="Notifications, 3 unread">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="catalog-notification__badge">3</span>
+      </button>
+
+      <a class="student-topnav__link catalog-account-link" href="profile.html">
+        <span class="user-avatar" aria-hidden="true">LP</span>
       </a>
     </div>
-  </div><!-- /proto-bar -->
+  </nav>
 
-  <!-- =====================================================================
-       LAYOUT BODY
-       ===================================================================== -->
-  <div class="layout-body">
-
-    <!-- =================================================================
-         SIDEBAR
-         ================================================================= -->
-    <nav class="sidebar" aria-label="Main navigation">
-
-      <!-- Logo + system name -->
-      <div class="sidebar__header">
-        <div class="sidebar__logo">G</div>
-        <div>
-          <div class="sidebar__title">GEMS</div>
-          <div class="sidebar__org">DLSU · OVPERI</div>
-        </div>
-      </div>
-
-      <!-- Navigation -->
-      <div class="sidebar__section">Navigation</div>
-
-      <a href="dashboard.html" class="nav-btn">
-        <span class="nav-icon">&#9783;</span>
-        Dashboard
-      </a>
-
-      <a href="catalog.html" class="nav-btn">
-        <span class="nav-icon">&#128270;</span>
-        Opportunity Catalog
-      </a>
-
-      <a href="applications.html" class="nav-btn">
-        <span class="nav-icon">&#128196;</span>
-        My Applications
-      </a>
-
-      <!-- Account section -->
-      <div class="sidebar__section">Account</div>
-
-      <a href="documents.html" class="nav-btn nav-btn--active" aria-current="page">
-        <span class="nav-icon">&#128196;</span>
-        My Documents
-      </a>
-
-      <a href="profile.html" class="nav-btn">
-        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-        Profile
-      </a>
-
-      <!-- Admin section -->
-      <div class="sidebar__section">Admin</div>
-
-      <a href="admin/dashboard.html" class="nav-btn">
-        <span class="nav-icon">&#9965;</span>
-        Review Dashboard
-      </a>
-
-      <!-- Logout -->
-      <div class="sidebar__logout">
-        <span class="nav-icon">&#8594;</span>
-        Log out
-      </div>
-
-    </nav><!-- /sidebar -->
-
-    <!-- =================================================================
-         MAIN
-         ================================================================= -->
-    <div class="main">
-
-      <!-- Topbar -->
-      <header class="main-topbar">
-        <div>
-          <div class="page-title">My Documents</div>
-          <div class="page-subtitle">Manage and upload your exchange application documents</div>
-        </div>
-
-        <div class="topbar-actions">
-          <!-- Search -->
-          <div class="topbar-search">
-            <span>&#128269;</span>
-            Search
+      <main class="content student-shell">
+        <header class="student-hero">
+          <div class="student-hero__copy">
+            <h1 class="student-hero__title">Documents</h1>
+            <p class="student-hero__subtitle">Manage required forms, uploads, and verification status.</p>
           </div>
-
-          <!-- Notification -->
-          <button class="notif-btn" aria-label="Notifications">
-            &#128276;
-            <span class="notif-dot"></span>
-          </button>
-
-          <!-- User -->
-          <div class="user-info">
-            <div class="user-name">Leon G. Pavino</div>
-            <div class="user-role">CCS · 3.42 CGPA</div>
+          <div class="student-hero__art" aria-hidden="true">
+            <svg viewBox="0 0 420 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M90 232C143 144 211 92 343 76" stroke="#B5E4C9" stroke-width="2.5" stroke-dasharray="8 7" stroke-linecap="round" opacity=".7"/>
+              <rect x="155" y="54" width="128" height="170" rx="18" fill="#C8E8D6"/>
+              <path d="M251 54v47h32" fill="#EAF7EF"/>
+              <path d="M251 54v47h32" stroke="#9DD4B4" stroke-width="4" stroke-linejoin="round"/>
+              <path d="M181 122h76M181 148h76M181 174h50" stroke="#0F7A3D" stroke-width="8" stroke-linecap="round" opacity=".48"/>
+              <circle cx="303" cy="202" r="44" fill="#EAF7EF"/>
+              <path d="M283 203l14 14 30-34" stroke="#0F7A3D" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".72"/>
+              <rect x="92" y="136" width="72" height="92" rx="16" fill="#DFF0E9" opacity=".82"/>
+              <path d="M111 164h34M111 187h28" stroke="#0F7A3D" stroke-width="7" stroke-linecap="round" opacity=".35"/>
+            </svg>
           </div>
-          <div class="user-avatar" aria-hidden="true">LP</div>
-        </div>
-      </header><!-- /main-topbar -->
-
-      <!-- =============================================================
-           CONTENT
-           ============================================================= -->
-      <main class="content">
+        </header>
 
         <!-- =============================================================
              DOCUMENT CHECKLIST
              ============================================================= -->
-        <div class="card card--table" style="margin-bottom:24px;">
+        <div class="card card--table">
           <div class="card-head">
             <div>
               <div class="card-head__title">Document Checklist</div>
               <div class="card-head__subtitle">Required documents for your exchange application</div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <div class="progress-wrap" style="padding:0;margin:0;">
-                <div class="progress-meta" style="margin-bottom:5px;">
+            <div class="doc-progress-summary">
+              <div class="progress-wrap">
+                <div class="progress-meta">
                   <span>3 of 5 submitted</span>
-                  <span class="progress-meta__pct" style="margin-left:10px;">60%</span>
+                  <span class="progress-meta__pct">60%</span>
                 </div>
-                <div class="progress-track" style="width:160px;">
-                  <div class="progress-fill" style="width:60%"></div>
+                <div class="progress-track">
+                  <div class="progress-fill progress-fill--60"></div>
                 </div>
               </div>
             </div>
@@ -186,81 +138,81 @@
               <!-- Copy of Grades — uploaded -->
               <tr>
                 <td>
-                  <div style="display:flex;align-items:center;gap:9px;">
+                  <div class="doc-name">
                     <div class="check-icon check-icon--pass">&#10003;</div>
                     <div>
-                      <div style="font-weight:600;color:#111827;">Copy of Grades</div>
-                      <div style="font-size:12px;color:#9AA3A0;margin-top:1px;">Official transcript from the Registrar</div>
+                      <div class="doc-primary">Copy of Grades</div>
+                      <div class="doc-secondary">Official transcript from the Registrar</div>
                     </div>
                   </div>
                 </td>
                 <td><span class="badge badge--uploaded"><span class="badge__dot"></span>Uploaded</span></td>
-                <td style="color:#6B7280;font-size:13px;">PDF</td>
-                <td style="color:#6B7280;font-size:13px;">Jun 10, 2026</td>
+                <td class="table-muted">PDF</td>
+                <td class="table-muted">Jun 10, 2026</td>
                 <td><button class="doc-btn" onclick="triggerUpload()">Replace</button></td>
               </tr>
               <!-- Curriculum Audit — uploaded -->
               <tr>
                 <td>
-                  <div style="display:flex;align-items:center;gap:9px;">
+                  <div class="doc-name">
                     <div class="check-icon check-icon--pass">&#10003;</div>
                     <div>
-                      <div style="font-weight:600;color:#111827;">Curriculum Audit Form</div>
-                      <div style="font-size:12px;color:#9AA3A0;margin-top:1px;">Signed by your academic adviser</div>
+                      <div class="doc-primary">Curriculum Audit Form</div>
+                      <div class="doc-secondary">Signed by your academic adviser</div>
                     </div>
                   </div>
                 </td>
                 <td><span class="badge badge--uploaded"><span class="badge__dot"></span>Uploaded</span></td>
-                <td style="color:#6B7280;font-size:13px;">PDF</td>
-                <td style="color:#6B7280;font-size:13px;">Jun 10, 2026</td>
+                <td class="table-muted">PDF</td>
+                <td class="table-muted">Jun 10, 2026</td>
                 <td><button class="doc-btn" onclick="triggerUpload()">Replace</button></td>
               </tr>
               <!-- Passport — expires soon -->
               <tr>
                 <td>
-                  <div style="display:flex;align-items:center;gap:9px;">
+                  <div class="doc-name">
                     <div class="check-icon check-icon--warn">!</div>
                     <div>
-                      <div style="font-weight:600;color:#111827;">Passport Bio-Page</div>
-                      <div style="font-size:12px;color:#B45309;margin-top:1px;">Expires within 6 months — please update</div>
+                      <div class="doc-primary">Passport Bio-Page</div>
+                      <div class="doc-secondary doc-secondary--warning">Expires within 6 months — please update</div>
                     </div>
                   </div>
                 </td>
                 <td><span class="badge badge--expires"><span class="badge__dot"></span>Expires Soon</span></td>
-                <td style="color:#6B7280;font-size:13px;">PDF, JPG, PNG</td>
-                <td style="color:#6B7280;font-size:13px;">Mar 2024</td>
+                <td class="table-muted">PDF, JPG, PNG</td>
+                <td class="table-muted">Mar 2024</td>
                 <td><button class="doc-btn doc-btn--warn" onclick="triggerUpload()">Update</button></td>
               </tr>
               <!-- EAF — missing -->
               <tr>
                 <td>
-                  <div style="display:flex;align-items:center;gap:9px;">
+                  <div class="doc-name">
                     <div class="check-icon check-icon--fail">&#10007;</div>
                     <div>
-                      <div style="font-weight:600;color:#111827;">Exchange Application Form (EAF)</div>
-                      <div style="font-size:12px;color:#B91C1C;margin-top:1px;">Required before nomination can proceed</div>
+                      <div class="doc-primary">Exchange Application Form (EAF)</div>
+                      <div class="doc-secondary doc-secondary--danger">Required before nomination can proceed</div>
                     </div>
                   </div>
                 </td>
                 <td><span class="badge badge--missing"><span class="badge__dot"></span>Missing</span></td>
-                <td style="color:#6B7280;font-size:13px;">PDF</td>
-                <td style="color:#9AA3A0;font-size:13px;">—</td>
+                <td class="table-muted">PDF</td>
+                <td class="table-faint">—</td>
                 <td><button class="doc-btn doc-btn--primary" onclick="triggerUpload()">Upload</button></td>
               </tr>
               <!-- SDFO — missing -->
               <tr>
                 <td>
-                  <div style="display:flex;align-items:center;gap:9px;">
+                  <div class="doc-name">
                     <div class="check-icon check-icon--fail">&#10007;</div>
                     <div>
-                      <div style="font-weight:600;color:#111827;">SDFO Clearance</div>
-                      <div style="font-size:12px;color:#B91C1C;margin-top:1px;">Student Development and Formation Office sign-off</div>
+                      <div class="doc-primary">SDFO Clearance</div>
+                      <div class="doc-secondary doc-secondary--danger">Student Development and Formation Office sign-off</div>
                     </div>
                   </div>
                 </td>
                 <td><span class="badge badge--missing"><span class="badge__dot"></span>Missing</span></td>
-                <td style="color:#6B7280;font-size:13px;">PDF</td>
-                <td style="color:#9AA3A0;font-size:13px;">—</td>
+                <td class="table-muted">PDF</td>
+                <td class="table-faint">—</td>
                 <td><button class="doc-btn doc-btn--primary" onclick="triggerUpload()">Upload</button></td>
               </tr>
             </tbody>
@@ -276,7 +228,7 @@
               <div class="card-head__title">Uploaded Files</div>
               <div class="card-head__subtitle">All documents currently in your vault</div>
             </div>
-            <div style="display:flex;align-items:center;gap:7px;background:#F4F6F5;border:1px solid #E9ECEF;border-radius:8px;padding:7px 12px;color:#9AA3A0;font-size:12.5px;">
+            <div class="doc-filter">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
               Filter files…
             </div>
@@ -303,8 +255,8 @@
                   </div>
                 </td>
                 <td><span class="category-tag">Academic</span></td>
-                <td style="color:#6B7280;">342 KB</td>
-                <td style="color:#6B7280;">Jun 10</td>
+                <td class="table-muted">342 KB</td>
+                <td class="table-muted">Jun 10</td>
                 <td><span class="badge badge--uploaded"><span class="badge__dot"></span>Ready</span></td>
                 <td>
                   <div class="doc-actions">
@@ -333,8 +285,8 @@
                   </div>
                 </td>
                 <td><span class="category-tag">Academic</span></td>
-                <td style="color:#6B7280;">218 KB</td>
-                <td style="color:#6B7280;">Jun 10</td>
+                <td class="table-muted">218 KB</td>
+                <td class="table-muted">Jun 10</td>
                 <td><span class="badge badge--uploaded"><span class="badge__dot"></span>Ready</span></td>
                 <td>
                   <div class="doc-actions">
@@ -354,8 +306,8 @@
                   </div>
                 </td>
                 <td><span class="category-tag">Identity</span></td>
-                <td style="color:#6B7280;">1.1 MB</td>
-                <td style="color:#6B7280;">Mar 2024</td>
+                <td class="table-muted">1.1 MB</td>
+                <td class="table-muted">Mar 2024</td>
                 <td><span class="badge badge--expires"><span class="badge__dot"></span>Expires Soon</span></td>
                 <td>
                   <div class="doc-actions">
@@ -375,8 +327,8 @@
                   </div>
                 </td>
                 <td><span class="category-tag">Supporting</span></td>
-                <td style="color:#6B7280;">480 KB</td>
-                <td style="color:#6B7280;">Jun 8</td>
+                <td class="table-muted">480 KB</td>
+                <td class="table-muted">Jun 8</td>
                 <td><span class="badge badge--uploaded"><span class="badge__dot"></span>Ready</span></td>
                 <td>
                   <div class="doc-actions">
@@ -396,8 +348,8 @@
                   </div>
                 </td>
                 <td><span class="category-tag">Supporting</span></td>
-                <td style="color:#6B7280;">195 KB</td>
-                <td style="color:#6B7280;">Jun 5</td>
+                <td class="table-muted">195 KB</td>
+                <td class="table-muted">Jun 5</td>
                 <td><span class="badge badge--uploaded"><span class="badge__dot"></span>Ready</span></td>
                 <td>
                   <div class="doc-actions">
@@ -417,8 +369,8 @@
                   </div>
                 </td>
                 <td><span class="category-tag">Identity</span></td>
-                <td style="color:#6B7280;">820 KB</td>
-                <td style="color:#6B7280;">Jun 10</td>
+                <td class="table-muted">820 KB</td>
+                <td class="table-muted">Jun 10</td>
                 <td><span class="badge badge--uploaded"><span class="badge__dot"></span>Ready</span></td>
                 <td>
                   <div class="doc-actions">
@@ -433,11 +385,9 @@
         </div>
 
       </main><!-- /content -->
-    </div><!-- /main -->
-  </div><!-- /layout-body -->
 </div><!-- /app-wrapper -->
 
-<input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="handleUpload(this)">
+<input type="file" id="fileInput" class="is-hidden" accept=".pdf,.jpg,.jpeg,.png" onchange="handleUpload(this)">
 
 <script>
   function triggerUpload() {
