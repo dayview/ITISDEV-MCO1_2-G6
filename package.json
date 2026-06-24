@@ -22,8 +22,10 @@
   "homepage": "https://github.com/dayview/ITISDEV-MCO1_2-G6#readme",
   "dependencies": {
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "lucide": "^1.21.0",
-    "mongodb": "^7.3.0"
+    "mongodb": "^7.3.0",
+    "mongoose": "^9.7.2"
   }
 }
