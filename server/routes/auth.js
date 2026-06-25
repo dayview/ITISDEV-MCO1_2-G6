@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Student = require('../models/Student');
+const User = require('../models/User');
 
 router.post('/login', async (req, res, next) => { 
     try {
@@ -16,7 +16,7 @@ router.post('/login', async (req, res, next) => {
         if (user.role !== 'admin')
             return res.status(401).json({ success: false, error: 'Admin access only.' });
 
-        req.session.user = { _id: user._id, email: user.email, name: user.name, role: user.role },
+        req.session.user = { _id: user._id, email: user.email, name: user.name, role: user.role };
         res.json({ success: true, user: req.session.user });
     } catch (err) { next(err); }
 });

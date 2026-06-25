@@ -3,7 +3,6 @@ const connectDB = require('./config/db');
 const User = require('./models/User');
 const Opportunity = require('./models/Opportunity');
 const Application = require('./models/Applications');
-const { Slash } = require('lucide');
 
 const opportunities = [
     { code: 'NUS-EX-01',    name: 'NUS Student Exchange', institution: 'National University of Singapore', country: 'Singapore', type: 'exchange', deadline: '2026-07-15', capacity: 5 },
@@ -13,7 +12,7 @@ const opportunities = [
     { code: 'UNSW-EX-01',   name: 'UNSW Exchange', institution: 'University of New South Wales', country: 'Australia', type: 'exchange', deadline: '2026-10-01', capacity: 4 },
     { code: 'NTU-RS-01',    name: 'NTU Research Internship', institution: 'Nanyang Technological University', country: 'Singapore', type: 'research', deadline: '2026-07-28', capacity: 3 },
     { code: 'YONSEI-SU-01', name: 'Yonsei Summer School', institution: 'Yonsei University', country: 'South Korea', type: 'summer', deadline: '2026-06-28', capacity: 10 },
-    { code: 'HKU-EX-01',    name: 'HKU Exchange', institution: 'University of Hong Kong', country: '2026-08-20', capacity: 5 },
+    { code: 'HKU-EX-01',    name: 'HKU Exchange', institution: 'University of Hong Kong', country: 'Hong Kong', type: 'exchange', deadline: '2026-08-20', capacity: 5 },
     { code: 'NUS-RS-01',    name: 'NUS UROP Research', institution: 'National University of Singapore', country: 'Singapore', type: 'research', deadline: '2026-10-31', capacity: 6 },
     { code: 'POSTECH-EX-01', name: 'POSTECH Exchange', institution: 'POSTECH', country: 'South Korea', type: 'exchange', deadline: '2026-09-30', capacity: 4 },
 ];
@@ -30,8 +29,8 @@ const studentData = [
     { studentId: '12110009', name: 'Rafael Villanueva', college: 'CCS', cgpa: 3.4, email: 'rafael_villaneuva@dlsu.edu.ph', role: 'student' },
     { studentId: '12210010', name: 'Patricia Dela Cruz', college: 'GCOE', cgpa: 3.3, email: 'patricia_delacruz@dlsu.edu.ph', role: 'student' },
     { studentId: '12310011', name: 'Diego Flores', college: 'CLA', cgpa: 3.0, email: 'diego_flores@dlsu.edu.ph', role: 'student' },
-    { student: '12410012',   name: 'Camille Reyes', college: 'RVRCOB', cgpa: 3.7, email: 'camille_reyes@dlsu.edu.ph', role: 'student' },
-    { student: '12510013',   name: 'Marco Aquino', college: 'CCS', cgpa: 3.5, email: 'marco_aquino@dlsu.edu.ph', role: 'student' },
+    { studentId: '12410012',   name: 'Camille Reyes', college: 'RVRCOB', cgpa: 3.7, email: 'camille_reyes@dlsu.edu.ph', role: 'student' },
+    { studentId: '12510013',   name: 'Marco Aquino', college: 'CCS', cgpa: 3.5, email: 'marco_aquino@dlsu.edu.ph', role: 'student' },
     { studentId: '12610014', name: 'Bianca Navarro', college: 'GCOE', cgpa: 3.8, email: 'bianca_navarro@dlsu.edu.ph', role: 'student' },
     { studentId: '12010015', name: 'Andrei Pascual', college: 'CCS', cgpa: 2.8, email: 'andrei_pascual@dlsu.edu.ph', role: 'student' },
     { studentId: '12110016', name: 'Tricia Ong', college: 'RVRCOB', cgpa: 3.6, email: 'tricia_ong@dlsu.edu.ph', role: 'student' },
@@ -59,11 +58,11 @@ async function seed() {
     const nonAdmins = students.filter(s => s.role !== 'admin');
 
     const appDocs = Array.from({ length: 55 }, () => ({
-        student_id: pick(nonAdmins)._id,
-        opportunity_id: pick(opps)._id,
+        studentId: pick(nonAdmins)._id,
+        opportunityId: pick(opps)._id,
         status: pick(STATUSES),
-        submitted_date: randDate(new Date('2026-05-01'), new Date('2026-06-24')),
-        documents_status: pick(DOC_STATUSES),
+        submittedDate: randDate(new Date('2026-05-01'), new Date('2026-06-24')),
+        documentsStatus: pick(DOC_STATUSES),
     }));
 
     await Application.insertMany(appDocs);

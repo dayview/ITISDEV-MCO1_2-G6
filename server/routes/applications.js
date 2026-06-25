@@ -61,7 +61,7 @@ function buildPipeline(query, matchOverride = null) {
         status: 1,
         documents_status: 1,
         submitted_date: 1,
-        deadline: '$opportuity.deadline',
+        deadline: '$opportunity.deadline',
     }});
 
     return pipeline;
