@@ -13,9 +13,9 @@ function buildPipeline(query, matchOverride = null) {
     const { sort = 'recency', status, college, search, dateFrom, dateTo, documents_status } = query;
 
     const pipeline = [
-        { $lookup: { from: 'students', localField: 'student_id', foreignField: '_id', as: 'student' } },
+        { $lookup: { from: 'users', localField: 'studentId', foreignField: '_id', as: 'student' } },
         { $unwind: '$student' },
-        { $lookup: { from: 'opportunities', localField: 'opportunity_id', foreignField: '_id', as: 'opportunity' } },
+        { $lookup: { from: 'opportunities', localField: 'opportunityId', foreignField: '_id', as: 'opportunity' } },
         { $unwind: '$opportunity' },
     ];
 
@@ -26,8 +26,8 @@ function buildPipeline(query, matchOverride = null) {
         if (college) match['student.college'] = college;
         if (dateFrom || dateTo) {
             match.submitted_date = {};
-            if (dateFrom) match.submitted_date.$gte = dateFrom;
-            if (dateTo) match.submitted_date.$lte = dateTo;
+            if (dateFrom) match.submittedDate.$gte = dateFrom;
+            if (dateTo) match.submittedDate.$lte = dateTo;
         }
         if (search) {
             const re = new RegExp(search, 'i');
@@ -41,12 +41,12 @@ function buildPipeline(query, matchOverride = null) {
     if (Object.keys(match).length) pipeline.push({ $match: match });
 
     const sortMap = {
-        recency: { submitted_date: -1 },
+        recency: { submittedDate: -1 },
         urgency: { 'opportunity.deadline': 1 },
         status: { status: 1 },
         college: { 'student.college': 1 },
         cgpa: { 'student.cgpa': -1 },
-        documents: { documents_status: 1 },
+        documents: { documentsStatus: 1 },
     };
     pipeline.push({ $sort: sortMap[sort] || sortMap.recency });
 
@@ -59,8 +59,8 @@ function buildPipeline(query, matchOverride = null) {
         opp_name: '$opportunity.name',
         institution: '$opportunity.institution',
         status: 1,
-        documents_status: 1,
-        submitted_date: 1,
+        documentsStatus: 1,
+        submittedDate: 1,
         deadline: '$opportunity.deadline',
     }});
 
