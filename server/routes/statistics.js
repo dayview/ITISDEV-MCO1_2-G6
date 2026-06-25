@@ -16,7 +16,7 @@ router.get('/', async (req, res, next) => {
         Application.countDocuments({ status: 'accepted' }),
         Application.aggregate([
             { $match: { status: { $in: ['submitted', 'under-review'] } } },
-            { $lookup: { from: 'opportunities', localField: 'opportunity_id', foreignField: '_id', as: 'opp' } },
+            { $lookup: { from: 'opportunities', localField: 'opportunityId', foreignField: '_id', as: 'opp' } },
             { $unwind: '$opp' },
             { $match: { 'opp.deadline': { $gte: today, $lte: in7days } } },
             { $count: 'count' },
@@ -30,7 +30,7 @@ router.get('/', async (req, res, next) => {
         nominated,
         accepted,
         livePrograms: opps.length,
-        countries: new Set(oops.map(o => o.country)).size,
+        countries: new Set(opps.map(o => o.country)).size,
     }});
     } catch (err) { next(err); }
 });
