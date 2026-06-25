@@ -21,7 +21,7 @@ const documentSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-}, { timestamsp: true });
+}, { timestamps: true });
 
 documentSchema.index({ userId: 1, type: 1 });
 
