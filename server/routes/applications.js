@@ -99,13 +99,13 @@ router.post('/bulk-action', async (req, res, next) => {
 
         const apps = await Application.find({ _id: { $in: validIds } });
 
-        await AuditLog.insertMany(apps.map(app => ({
-            application_id: app._id,
-            action: 'bulk_status_change',
-            from_status: app.status,
-            to_status: status,
-            performed_by: req.user?.name || 'admin',
-        })));
+        await AuditLog.create({
+            userId: req.user?._id,
+            action: 'status_change',
+            targetType: 'Application',
+            targetId: app._id,
+            details: { from_status, to_status: status },
+        })
 
         await Application.updateMany({ _id: { $in: validIds } }, { $set: { status } })
 
@@ -118,8 +118,26 @@ router.get('/:id', async (req, res, next) => {
         if (!mongoose.Types.ObjectId.isValid(req.params.id))
             return res.status(400).json({ success: false, error: 'Invalid ID.' });
         const [data] = await Application.aggregate([ 
-            { $match: { _id: new mongoose.Types.ObjectId(req.params.id) } }, ...buildPipeline({}).slice(0, 5),
+            { $match: { _id: new mongoose.Types.ObjectId(req.params.id) } },
+            { $lookup: { from: 'users', localField: 'userId', foreignField: '_id', as: 'student' } },
+            { $unwind: '$student' },
+            { $lookup: { from: 'opportunities', localField: 'opportunityId', foreignField: '_id', as: 'opportunity' } },
+            { $unwind: '$opportunity' },
+            { $project: {
+                id: '$_id',
+                name: '$student.name',
+                student_id: '$student.studentId',
+                college: '$student.college',
+                cgpa: '$student.cgpa',
+                opp_name: '$opportunity.name',
+                institution: '$opportunity.institution',
+                status: 1,
+                documentsStatus: 1,
+                submittedDate: 1,
+                deadline: '$opportunity.deadline',
+            }},
         ]);
+        
         if (!data) return res.status(404).json({ success: false, error: 'Not found.' });
         res.json({ success: true, data });
     } catch (err) { next(err); }
@@ -145,7 +163,7 @@ router.patch('/:id/status', async (req, res, next) => {
             action: 'status_change',
             targetType: 'Application',
             targetId: app._id,
-            performed_by: req.user?.name || 'admin',
+            details: { from_status, to_status: status },
         });
 
         res.json({ success: true, data: app, message: `Status updated to "${status}".` });
