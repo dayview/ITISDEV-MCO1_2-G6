@@ -13,7 +13,7 @@ function buildPipeline(query, matchOverride = null) {
     const { sort = 'recency', status, college, search, dateFrom, dateTo, documentsStatus } = query;
 
     const pipeline = [
-        { $lookup: { from: 'users', localField: 'studentId', foreignField: '_id', as: 'student' } },
+        { $lookup: { from: 'users', localField: 'userId', foreignField: '_id', as: 'student' } },
         { $unwind: '$student' },
         { $lookup: { from: 'opportunities', localField: 'opportunityId', foreignField: '_id', as: 'opportunity' } },
         { $unwind: '$opportunity' },
@@ -97,8 +97,8 @@ router.post('/bulk-action', async (req, res, next) => {
 
         const validIds = ids.filter(id => mongoose.Types.ObjectId.isValid(id));
 
-        await Application.updateMany({ _id: { $in: validIds } }, { $set: { status } });
         const apps = await Application.find({ _id: { $in: validIds } });
+
         await AuditLog.insertMany(apps.map(app => ({
             application_id: app._id,
             action: 'bulk_status_change',
@@ -107,8 +107,9 @@ router.post('/bulk-action', async (req, res, next) => {
             performed_by: req.user?.name || 'admin',
         })));
 
-        const updated = await Application.find({ _id: { $in: validIds } });
-        res.json({ success: true, data: updated, message: `${updated.length} application(s) updated to "${status}".` });
+        await Application.updateMany({ _id: { $in: validIds } }, { $set: { status } })
+
+        res.json({ success: true, count: apps.length, message: `${apps.length} application(s) updated to "${status}".` });
     } catch (err) { next(err); }
 });
 
