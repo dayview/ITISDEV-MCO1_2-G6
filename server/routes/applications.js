@@ -90,6 +90,7 @@ router.get('/export', async (req, res, next) => {
 router.post('/bulk-action', async (req, res, next) => {
     try {
         const { ids, status } = req.body;
+
         if (!Array.isArray(ids) || !ids.length)
             return res.status(400).json({ success: false, error: 'ids must be a non-empty array.' });
         if (!VALID_STATUSES.includes(status))
@@ -99,17 +100,24 @@ router.post('/bulk-action', async (req, res, next) => {
 
         const apps = await Application.find({ _id: { $in: validIds } });
 
-        await AuditLog.create({
-            userId: req.user?._id,
-            action: 'status_change',
+        await AuditLog.insertMany(apps.map(app => ({
+            userId: req.user._id,
+            userRole: req.user.role,
+            action: 'application_bulk_status_changed',
             targetType: 'Application',
             targetId: app._id,
-            details: { from_status, to_status: status },
-        })
+            targetLabel: `Application ${app._id}`,
+            changes: [{ field: 'status', from: app.status, to: status }],
+            ip: req.ip,
+        })));
 
-        await Application.updateMany({ _id: { $in: validIds } }, { $set: { status } })
+        await Application.updateMany({ _id: { $in: validIds } }, { $set: { status } });
 
-        res.json({ success: true, count: apps.length, message: `${apps.length} application(s) updated to "${status}".` });
+        res.json({
+            success: true,
+            count: apps.length,
+            message: `${apps.length} application(s) updated to "${status}".`,
+        });
     } catch (err) { next(err); }
 });
 
@@ -137,7 +145,7 @@ router.get('/:id', async (req, res, next) => {
                 deadline: '$opportunity.deadline',
             }},
         ]);
-        
+
         if (!data) return res.status(404).json({ success: false, error: 'Not found.' });
         res.json({ success: true, data });
     } catch (err) { next(err); }
@@ -159,11 +167,14 @@ router.patch('/:id/status', async (req, res, next) => {
         await app.save();
 
         await AuditLog.create({
-            userId: req.user?._id,
-            action: 'status_change',
+            userId: req.user._id,
+            userRole: req.user.role,
+            action: 'application_status_changed',
             targetType: 'Application',
             targetId: app._id,
-            details: { from_status, to_status: status },
+            targetLabel: `Application ${app._id}`,
+            changes: [{ field: 'status', from: from_status, to: status }],
+            ip: req.ip,
         });
 
         res.json({ success: true, data: app, message: `Status updated to "${status}".` });
