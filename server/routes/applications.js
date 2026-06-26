@@ -141,10 +141,10 @@ router.patch('/:id/status', async (req, res, next) => {
         await app.save();
 
         await AuditLog.create({
-            application_id: app._id,
+            userId: req.user?._id,
             action: 'status_change',
-            from_status,
-            to_status: status,
+            targetType: 'Application',
+            targetId: app._id,
             performed_by: req.user?.name || 'admin',
         });
 

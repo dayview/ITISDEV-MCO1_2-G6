@@ -8,12 +8,12 @@ router.post('/login', async (req, res, next) => {
         if (!email || !password)
             return res.status(400).json({ success: false, error: 'Email and password required.' });
 
-        const user = await Student.findOne({ email });
+        const user = await User.findOne({ email });
         if (!user)
             return res.status(401).json({ success: false, error: 'Invalid credentials.' });
 
         // TODO: replace with bcrypt.compare() once passwordHashed is added to schema
-        if (user.role !== 'admin')
+        if (!['OVPERI_Admin', 'System_Admin'].includes(user.role))
             return res.status(401).json({ success: false, error: 'Admin access only.' });
 
         req.session.user = { _id: user._id, email: user.email, name: user.name, role: user.role };
