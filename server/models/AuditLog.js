@@ -11,7 +11,6 @@ const auditLogSchema = new mongoose.Schema({
             'opportunity_deleted',
             'opportunity_published',
             'opportunity_closed',
-            'opportunity_closed',
             'application_status_changed',
             'application_bulk_status_changed',
         ],
