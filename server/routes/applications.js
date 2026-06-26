@@ -10,7 +10,7 @@ router.use(requireAuth, requireAdmin);
 const VALID_STATUSES = ['submitted', 'under-review', 'nominated', 'accepted', 'rejected'];
 
 function buildPipeline(query, matchOverride = null) {
-    const { sort = 'recency', status, college, search, dateFrom, dateTo, documents_status } = query;
+    const { sort = 'recency', status, college, search, dateFrom, dateTo, documentsStatus } = query;
 
     const pipeline = [
         { $lookup: { from: 'users', localField: 'studentId', foreignField: '_id', as: 'student' } },
@@ -22,10 +22,10 @@ function buildPipeline(query, matchOverride = null) {
     const match = matchOverride || {};
     if (!matchOverride) {
         if (status) match.status = status;
-        if (documents_status) match.documents_status = documents_status;
+        if (documentsStatus) match.documentsStatus = documentsStatus;
         if (college) match['student.college'] = college;
         if (dateFrom || dateTo) {
-            match.submitted_date = {};
+            match.submittedDate = {};
             if (dateFrom) match.submittedDate.$gte = dateFrom;
             if (dateTo) match.submittedDate.$lte = dateTo;
         }
@@ -79,7 +79,7 @@ router.get('/export', async (req, res, next) => {
         const data = await Application.aggregate(buildPipeline(req.query));
         const header = 'Student Name,Student Id,College,CGPA,Program,Institution,Status,Documents,Submitted Date,Deadline';
         const rows = data.map(r => 
-            [`"${r.name}"`, r.student_id, r.college, r.cgpa, `"${r.opp_name}"`, `"${r.institution}"`, r.status, r.documents_status, r.submitted_date, r.deadline].join(',')
+            [`"${r.name}"`, r.student_id, r.college, r.cgpa, `"${r.opp_name}"`, `"${r.institution}"`, r.status, r.documentsStatus, r.submittedDate, r.deadline].join(',')
         );
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', 'attachment; filename="applications.csv"');
@@ -96,7 +96,9 @@ router.post('/bulk-action', async (req, res, next) => {
             return res.status(400).json({ success: false, error: `status must be one of: ${VALID_STATUSES.join(', ')}` });
 
         const validIds = ids.filter(id => mongoose.Types.ObjectId.isValid(id));
-        const apps = await Application.find({ _id: { $in: validIds } }, { $set: { status } });
+
+        await Application.updateMany({ _id: { $in: validIds } }, { $set: { status } });
+        const apps = await Application.find({ _id: { $in: validIds } });
         await AuditLog.insertMany(apps.map(app => ({
             application_id: app._id,
             action: 'bulk_status_change',

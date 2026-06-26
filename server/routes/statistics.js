@@ -8,17 +8,17 @@ router.use(requireAuth, requireAdmin);
 
 router.get('/', async (req, res, next) => {
     try {
-        const today = new Date().toISOString().split('T')[0];
-        const in7days = new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0];
+        const now = new Date();
+        const in7days = new Date(Date.now() + 7*24*60*60*1000);
 
         const [pending, nominated, accepted, urgentAgg, opps] = await Promise.all([Application.countDocuments({ status: { $in: ['submitted', 'under-review'] } }),
         Application.countDocuments({ status: 'nominated' }),
         Application.countDocuments({ status: 'accepted' }),
         Application.aggregate([
             { $match: { status: { $in: ['submitted', 'under-review'] } } },
-            { $lookup: { from: 'opportunities', localField: 'opportunityId', foreignField: '_id', as: 'opp' } },
+            { $lookup: { from: 'opportunities', localField: 'opportunityId', foreignField: '_id', as: 'opp' }, },
             { $unwind: '$opp' },
-            { $match: { 'opp.deadline': { $gte: today, $lte: in7days } } },
+            { $match: { 'opp.deadline': { $gte: now, $lte: in7days } } },
             { $count: 'count' },
         ]),
         Opportunity.find({}, { country: 1 }),
