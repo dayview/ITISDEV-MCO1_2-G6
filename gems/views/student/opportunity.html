@@ -9,104 +9,121 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../public/css/gems.css" />
 </head>
-<body>
+<body class="student-page opportunity-page">
 
 <div class="app-wrapper">
-  <nav class="student-topnav" aria-label="Student navigation">
-    <a href="http://127.0.0.1:5500/gems/views/student/dashboard.html" class="student-topnav__brand">
+  <nav class="student-topnav catalog-nav" aria-label="Student navigation">
+    <a href="dashboard.html" class="student-topnav__brand" aria-label="GEMS dashboard">
       <div class="student-topnav__logo">
-        <img src="../../public/images/OVPERI-white.png" alt="OVPERI" class="student-topnav__logo-img">
+        <img src="../../public/images/OVPERI-white.png" alt="" class="student-topnav__logo-img">
       </div>
       <span class="student-topnav__title">GEMS</span>
     </a>
 
-    <div class="student-topnav__links">
-      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/catalog.html">
-        <div class="student-topnav__link-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v18"/></svg>
+    <div class="catalog-nav__search">
+      <label class="topbar-search" for="global-search">
+        <span class="topbar-search__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </span>
+        <input id="global-search" type="search" aria-label="Search programs, countries, and universities" placeholder="Search programs, countries, universities..." autocomplete="off" />
+      </label>
+      <button type="button" class="catalog-icon-btn" aria-label="Open filters">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="student-topnav__links catalog-nav__links">
+      <a class="student-topnav__link" href="dashboard.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="8" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="15" width="7" height="6" rx="1.5"></rect></svg>
         </div>
-        <div class="student-topnav__link-label">Catalog</div>
+        <span class="student-topnav__link-label">Dashboard</span>
       </a>
 
-      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/documents.html">
-        <div class="student-topnav__link-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+      <a class="student-topnav__link" href="catalog.html" aria-current="page">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
         </div>
-        <div class="student-topnav__link-label">Documents</div>
+        <span class="student-topnav__link-label">Catalog</span>
       </a>
 
-      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/applications.html">
-        <div class="student-topnav__link-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5l4 4L8 20l-4 1 1-4L16.5 3.5z"/></svg>
+      <a class="student-topnav__link" href="documents.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>
         </div>
-        <div class="student-topnav__link-label">My Applications</div>
+        <span class="student-topnav__link-label">Documents</span>
       </a>
 
-      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/profile.html">
-        <div class="student-topnav__link-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <a class="student-topnav__link" href="applications.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
         </div>
-        <div class="student-topnav__link-label">Account</div>
+        <span class="student-topnav__link-label">My Applications</span>
+      </a>
+
+      <button type="button" class="catalog-notification" aria-label="Notifications, 3 unread">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="catalog-notification__badge">3</span>
+      </button>
+
+      <a class="student-topnav__link catalog-account-link" href="profile.html">
+        <span class="user-avatar" aria-hidden="true">LP</span>
       </a>
     </div>
-    <div class="student-topnav__actions"></div>
   </nav>
 
-  <!-- Top navigation (student view) -->
-  <nav class="student-topnav" aria-label="Student navigation">
-    <a href="dashboard.html" class="student-topnav__brand">
-      <div class="student-topnav__logo">G</div>
-      <span>GEMS</span>
+  <main class="content student-shell opportunity-shell" id="main-content">
+    <a class="opportunity-back" href="catalog.html">
+      <span aria-hidden="true">&larr;</span>
+      Back to catalog
     </a>
-    <div class="student-topnav__links">
-      <a href="dashboard.html">Dashboard</a>
-      <a href="catalog.html">Opportunity Catalog</a>
-      <a href="applications.html">My Applications</a>
-      <a href="documents.html">My Documents</a>
-      <a href="profile.html">Account</a>
-    </div>
-    <div class="student-topnav__actions">
-      <a href="admin/dashboard.html">Admin</a>
-    </div>
-  </nav>
 
-  <div class="layout-body">
-    <div class="main">
-      <header class="main-topbar">
-        <div>
-          <div class="page-title">Opportunity Details</div>
-          <div class="page-subtitle">View full requirements and application instructions</div>
-        </div>
+    <header class="student-hero opportunity-hero">
+      <div class="student-hero__copy">
+        <p class="opportunity-hero__eyebrow">Opportunity Catalog</p>
+        <h1 class="student-hero__title">Opportunity Details</h1>
+        <p class="student-hero__subtitle">Review the program, confirm your document bundle, and apply in one click.</p>
+      </div>
+      <div class="student-hero__art" aria-hidden="true">
+        <svg viewBox="0 0 420 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M76 226C129 151 208 99 342 76" stroke="#B5E4C9" stroke-width="2.5" stroke-dasharray="8 7" stroke-linecap="round" opacity=".7"/>
+          <rect x="132" y="73" width="190" height="146" rx="24" fill="#C8E8D6"/>
+          <circle cx="184" cy="125" r="27" fill="#EAF7EF"/>
+          <path d="M169 126l10 10 21-25" stroke="#0F7A3D" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity=".72"/>
+          <path d="M229 112h62M229 136h42M159 177h132" stroke="#0F7A3D" stroke-width="8" stroke-linecap="round" opacity=".35"/>
+          <circle cx="326" cy="77" r="40" fill="#EAF7EF"/>
+          <path d="M326 55v44M304 77h44" stroke="#0F7A3D" stroke-width="7" stroke-linecap="round" opacity=".5"/>
+        </svg>
+      </div>
+    </header>
 
-        <div class="topbar-actions">
-          <div class="topbar-search">
-            <span>&#128269;</span>
-            Search your applications…
-          </div>
-          <button class="notif-btn" aria-label="Notifications">
-            &#128276;
-            <span class="notif-dot"></span>
-          </button>
-          <div class="user-avatar" aria-hidden="true">LP</div>
-        </div>
-      </header>
-
-      <main class="content" id="main-content">
-        <div id="opportunity-loading" class="card">
-          <div class="card__title">Loading opportunity details…</div>
-        </div>
-        <div id="opportunity-error" class="card" style="display:none;">
-          <div class="card__title">Unable to load opportunity</div>
-          <div class="card__subtitle">Please go back to the catalog and try again.</div>
-        </div>
-        <div id="opportunity-detail"></div>
-      </main>
+    <div id="opportunity-loading" class="student-card opportunity-state" role="status">
+      <div class="opportunity-state__icon" aria-hidden="true"></div>
+      <div>
+        <h2>Loading opportunity details…</h2>
+        <p>Gathering the latest program information.</p>
+      </div>
     </div>
-  </div>
+
+    <div id="opportunity-error" class="student-card opportunity-state opportunity-state--error" hidden>
+      <div>
+        <h2>Unable to load opportunity</h2>
+        <p>Please return to the catalog and try again.</p>
+      </div>
+    </div>
+
+    <div id="opportunity-detail" aria-live="polite"></div>
+  </main>
 </div>
 
 <script src="../../public/js/opportunity-data.js"></script>
 <script src="../../public/js/opportunity-api.js"></script>
+<script src="../../public/js/application-store.js"></script>
 <script src="../../public/js/opportunity-detail.js"></script>
 </body>
 </html>

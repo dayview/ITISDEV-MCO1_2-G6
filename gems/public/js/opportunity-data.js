@@ -352,10 +352,26 @@ window.OPPORTUNITY_MOCK_DATA = [
   },
 ];
 
+const OPPORTUNITY_STORAGE_KEY = 'gems-admin-opportunities';
+
+window.getSavedOpportunities = function() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(OPPORTUNITY_STORAGE_KEY) || '[]');
+    return Array.isArray(saved) ? saved : [];
+  } catch (error) {
+    console.warn('Unable to read saved opportunities.', error);
+    return [];
+  }
+};
+
 window.getOpportunities = function() {
-  return window.OPPORTUNITY_MOCK_DATA.slice();
+  const saved = window.getSavedOpportunities();
+  const savedIds = new Set(saved.map(opportunity => String(opportunity.id)));
+  return window.OPPORTUNITY_MOCK_DATA
+    .filter(opportunity => !savedIds.has(String(opportunity.id)))
+    .concat(saved);
 };
 
 window.getOpportunityById = function(id) {
-  return window.OPPORTUNITY_MOCK_DATA.find(opportunity => String(opportunity.id) === String(id));
+  return window.getOpportunities().find(opportunity => String(opportunity.id) === String(id));
 };
