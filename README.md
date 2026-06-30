@@ -3,7 +3,7 @@
 A group repository for **ITISDEV MCO#1 & MCO#2** (Group 6).
 A web-based scholarship and exchange opportunity management platform for DLSU students and administrators.
 
---
+---
 
 ## Tech Stack
 | Layer | Technology |
@@ -17,7 +17,61 @@ A web-based scholarship and exchange opportunity management platform for DLSU st
 ---
 
 ## Repository Structure
-<in progress>
+```text
+ITISDEV-MCO1_2-G6/
+│
+├── .env                        
+├── .env.example
+├── .gitignore
+├── package.json
+├── package-lock.json
+├── README.md
+│
+├── server/                     ← all back-end code
+│   ├── server.js               ← entry point
+│   ├── config/
+│   │   └── db.js
+│   ├── middleware/
+│   │   ├── auth.js
+│   │   └── errorHandler.js
+│   ├── models/
+│   │   ├── AuditLog.js
+│   │   ├── Applications.js
+│   │   ├── Opportunity.js
+│   │   └── User.js
+│   ├── routes/
+│   │   ├── auth.js
+│   │   ├── applications.js
+│   │   ├── opportunities.js    ← future: Opportunity CRUD
+│   │   └── statistics.js
+│   └── scripts/                
+│       └── seed.js
+│
+└── client/                     
+    ├── views/
+    │   ├── admin/
+    │   │   ├── dashboard.html
+    │   │   ├── applicants.html
+    │   │   ├── programs.html
+    │   │   ├── post-opportunity.html
+    │   │   └── admin-profile.html
+    │   └── student/
+    │       ├── dashboard.html
+    │       ├── catalog.html
+    │       └── ...
+    └── public/
+        ├── css/
+        │   └── gems.css
+        ├── js/
+        │   ├── admin-dashboard.js
+        │   ├── catalog.js
+        │   ├── opportunity-api.js
+        │   ├── opportunity-data.js
+        │   ├── opportunity-detail.js
+        │   └── profile.js
+        └── images/
+            └── OVPERI-white.png
+```
 
 ---
 
