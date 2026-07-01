@@ -35,8 +35,9 @@ ITISDEV-MCO1_2-G6/
 │   │   ├── auth.js
 │   │   └── errorHandler.js
 │   ├── models/
-│   │   ├── AuditLog.js
 │   │   ├── Applications.js
+│   │   ├── AuditLog.js
+│   │   ├── Document.js
 │   │   ├── Opportunity.js
 │   │   └── User.js
 │   ├── routes/
@@ -62,15 +63,19 @@ ITISDEV-MCO1_2-G6/
     └── public/
         ├── css/
         │   └── gems.css
-        ├── js/
-        │   ├── admin-dashboard.js
-        │   ├── catalog.js
-        │   ├── opportunity-api.js
-        │   ├── opportunity-data.js
-        │   ├── opportunity-detail.js
-        │   └── profile.js
-        └── images/
-            └── OVPERI-white.png
+        │   └── login.css
+        │   └── profile.css
+        │   └── register.css
+        ├── images/
+        │   └── OVPERI-black.png
+        │   └── OVPERI-white.png
+        └── js/
+            ├── admin-dashboard.js
+            ├── catalog.js
+            ├── opportunity-api.js
+            ├── opportunity-data.js
+            ├── opportunity-detail.js
+            └── profile.js
 ```
 
 ---
