@@ -34,6 +34,14 @@ cd ITISDEV-MCO1_2-G6
 npm install
 ```
 
+### Environment Variables
+Create a `.env` file in the project root:
+```bash
+cp .env.example .env
+```
+
+Then set `MONGO_URI` to your MongoDB connection string.
+
 ### Running the Server
 ```bash
 npm start
@@ -45,4 +53,3 @@ Server runs at: `http://localhost:3000`
 
 ### Seed the Database
 <in progress>
-

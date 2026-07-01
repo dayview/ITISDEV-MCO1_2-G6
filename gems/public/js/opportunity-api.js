@@ -32,7 +32,11 @@
     const deadlineTo = parseDate(query.deadlineTo);
     const eligibleOnly = parseBoolean(query.eligibleOnly);
 
-    return window.OPPORTUNITY_MOCK_DATA
+    const opportunities = typeof window.getOpportunities === 'function'
+      ? window.getOpportunities()
+      : window.OPPORTUNITY_MOCK_DATA;
+
+    return opportunities
       .filter(opportunity => normalizeText(opportunity.status) === 'published')
       .filter(opportunity => {
         const deadlineDate = parseDate(opportunity.deadline);
@@ -111,7 +115,9 @@
     const detailMatch = pathname.match(/^\/api\/opportunities\/(.+)$/);
     if (detailMatch) {
       const id = detailMatch[1];
-      const opportunity = window.OPPORTUNITY_MOCK_DATA.find(item => String(item.id) === String(id));
+      const opportunity = typeof window.getOpportunityById === 'function'
+        ? window.getOpportunityById(id)
+        : window.OPPORTUNITY_MOCK_DATA.find(item => String(item.id) === String(id));
       if (!opportunity || normalizeText(opportunity.status) !== 'published') {
         return createResponse({ message: 'Opportunity not found' }, 404);
       }

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Applicants — GEMS Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/css/gems.css" />
+</head>
+<body class="student-page admin-page applicants-page">
+
+<div class="app-wrapper">
+  <nav class="student-topnav catalog-nav" aria-label="Admin navigation">
+    <a href="dashboard.html" class="student-topnav__brand" aria-label="GEMS admin dashboard">
+      <div class="student-topnav__logo">
+        <img src="../../public/images/OVPERI-white.png" alt="" class="student-topnav__logo-img">
+      </div>
+      <span class="student-topnav__title">GEMS</span>
+    </a>
+
+    <div class="catalog-nav__search">
+      <label class="topbar-search" for="global-search">
+        <span class="topbar-search__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+        </span>
+        <input id="global-search" type="search" aria-label="Search GEMS administration" placeholder="Search administration..." autocomplete="off" />
+      </label>
+    </div>
+
+    <div class="student-topnav__links catalog-nav__links">
+      <a class="student-topnav__link" href="dashboard.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="8" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="15" width="7" height="6" rx="1.5"></rect></svg>
+        </div>
+        <span class="student-topnav__link-label">Dashboard</span>
+      </a>
+      <a class="student-topnav__link" href="programs.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">Programs</span>
+      </a>
+      <a class="student-topnav__link" href="applicants.html" aria-current="page">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">Applicants</span>
+      </a>
+      <a class="student-topnav__link" href="post-opportunity.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">Post</span>
+      </a>
+      <button type="button" class="catalog-notification" aria-label="Notifications, 6 unread">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="catalog-notification__badge">6</span>
+      </button>
+      <a class="student-topnav__link catalog-account-link" href="admin-profile.html" aria-label="Admin profile">
+        <span class="user-avatar" aria-hidden="true">OV</span>
+      </a>
+    </div>
+  </nav>
+
+  <main class="content student-shell admin-shell applicants-shell" id="main-content">
+    <header class="student-hero programs-hero applicants-hero">
+      <div class="student-hero__copy">
+        <p class="programs-eyebrow">Application management</p>
+        <h1 class="student-hero__title">Applicants</h1>
+        <p class="student-hero__subtitle">Review, approve, and manage exchange program applications.</p>
+      </div>
+      <div class="student-hero__art" aria-hidden="true">
+        <svg viewBox="0 0 420 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M78 229C138 151 212 101 344 78" stroke="#B5E4C9" stroke-width="2.5" stroke-dasharray="8 7" stroke-linecap="round"/>
+          <rect x="145" y="69" width="178" height="154" rx="22" fill="#C8E8D6"/>
+          <circle cx="200" cy="119" r="26" fill="#EAF7EF"/>
+          <circle cx="200" cy="111" r="9" fill="#9DD4B4"/>
+          <path d="M180 141c4-14 12-21 20-21s16 7 20 21" fill="#9DD4B4"/>
+          <path d="M243 104h52M243 128h39M171 173h124M171 195h82" stroke="#0F7A3D" stroke-width="8" stroke-linecap="round" opacity=".35"/>
+          <circle cx="319" cy="83" r="38" fill="#EAF7EF"/>
+          <path d="M302 83l11 11 23-27" stroke="#0F7A3D" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+        </svg>
+      </div>
+    </header>
+
+    <section class="program-summary-grid applicant-summary-grid" aria-label="Applicant summary">
+      <article class="stat-card"><div class="stat-card__label">Total Applicants</div><div class="stat-card__value">28</div><div class="stat-card__sub stat-card__sub--muted">Across active programs</div></article>
+      <article class="stat-card"><div class="stat-card__label">Pending Review</div><div class="stat-card__value">12</div><div class="stat-card__sub stat-card__sub--amber">Requires OVPERI action</div></article>
+      <article class="stat-card"><div class="stat-card__label">Approved</div><div class="stat-card__value">11</div><div class="stat-card__sub stat-card__sub--green">Ready for nomination</div></article>
+      <article class="stat-card"><div class="stat-card__label">Rejected</div><div class="stat-card__value">5</div><div class="stat-card__sub stat-card__sub--red">Closed decisions</div></article>
+    </section>
+
+    <section class="applicant-toolbar" aria-label="Applicant actions">
+      <label class="program-search" for="applicant-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+        <input id="applicant-search" type="search" placeholder="Search applicants, IDs, programs..." autocomplete="off" />
+      </label>
+      <button type="button" class="btn btn--secondary" id="applicant-filter-button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"></path></svg> Filter
+      </button>
+      <label class="applicant-sort-control">
+        <span class="sr-only">Sort applicants</span>
+        <select id="applicant-sort"><option value="newest">Sort: Newest</option><option value="oldest">Sort: Oldest</option><option value="name">Sort: Name</option><option value="status">Sort: Status</option></select>
+      </label>
+      <button type="button" class="btn btn--secondary" id="applicant-export">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg> Export
+      </button>
+      <button type="button" class="btn btn--secondary" id="applicant-batch-button">Batch Actions</button>
+    </section>
+
+    <section class="applicant-filter-panel" id="applicant-filter-panel" aria-label="Applicant filters">
+      <label><span>Status</span><select id="applicant-status-filter"><option value="">All statuses</option><option>Pending Review</option><option>Approved</option><option>Rejected</option><option>Needs Revision</option></select></label>
+      <label><span>Documents</span><select id="applicant-documents-filter"><option value="">All document states</option><option>Complete</option><option>Incomplete</option></select></label>
+      <label><span>Program</span><select id="applicant-program-filter"><option value="">All programs</option><option>NUS Exchange Semester</option><option>Chung-Ang Summer Program</option><option>Kyoto Research Exchange</option><option>Melbourne Global Semester</option></select></label>
+    </section>
+
+    <section class="applicant-bulk-bar" id="applicant-bulk-bar" hidden aria-live="polite">
+      <strong><span id="selected-applicant-count">0</span> selected</strong>
+      <div>
+        <button type="button" data-applicant-bulk="approve">Approve Selected</button>
+        <button type="button" data-applicant-bulk="reject" class="applicant-danger-action">Reject Selected</button>
+        <button type="button" data-applicant-bulk="export">Export Selected</button>
+      </div>
+    </section>
+
+    <section class="applicant-management-card" aria-labelledby="applicant-table-title">
+      <div class="program-table-heading">
+        <div>
+          <h2 id="applicant-table-title">All applications</h2>
+          <p id="applicant-result-count">Showing 8 of 28 applicants</p>
+        </div>
+      </div>
+
+      <div class="applicant-table" role="table" aria-label="Applicant review table">
+        <div class="applicant-table__head" role="row">
+          <label class="program-checkbox"><input id="select-all-applicants" type="checkbox" aria-label="Select all visible applicants"><span></span></label>
+          <div>Student</div><div>Student ID</div><div>Program</div><div>University</div>
+          <div>Submitted Date</div><div>Status</div><div>Documents</div><div>Actions</div>
+        </div>
+        <div id="applicant-table-body"></div>
+      </div>
+
+      <div class="applicant-empty-state" id="applicant-empty-state" hidden>
+        <div class="program-empty-state__icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none"><circle cx="25" cy="23" r="10" fill="#C8E8D6"/><path d="M9 48c3-11 9-16 16-16s13 5 16 16" fill="#EAF7EF"/><rect x="36" y="16" width="20" height="28" rx="5" fill="#EAF7EF"/><path d="M41 24h10M41 31h10M41 38h6" stroke="#0F7A3D" stroke-width="3" stroke-linecap="round"/></svg>
+        </div>
+        <h3>No applicants found.</h3>
+        <p>Try adjusting the search or filters.</p>
+      </div>
+
+      <div class="program-pagination applicant-pagination">
+        <p id="applicant-page-summary">Page 1 of 4</p>
+        <nav class="pagination" aria-label="Applicants pagination">
+          <button type="button" class="btn btn--secondary" id="applicant-prev" aria-label="Previous page">&larr;</button>
+          <div class="pagination-pages" id="applicant-pages"></div>
+          <button type="button" class="btn btn--secondary" id="applicant-next" aria-label="Next page">&rarr;</button>
+        </nav>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="../../public/js/admin-applicants.js"></script>
+</body>
+</html>

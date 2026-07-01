@@ -831,13 +831,16 @@
     if (resetButton) resetButton.addEventListener('click', resetFilters);
   }
 
-  function init() {
+  async function init() {
     syncFormFromUrl();
     if (deadlineRangeSelect && deadlineRangeSelect.value !== 'any') {
       applyDeadlineRange();
     }
     attachEvents();
     updateCalendarModeLabel();
+    if (typeof window.loadOpportunitiesFromApi === 'function') {
+      await window.loadOpportunitiesFromApi();
+    }
     renderResults();
   }
 
