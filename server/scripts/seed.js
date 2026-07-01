@@ -1,8 +1,8 @@
 require('dotenv').config();
-const connectDB = require('./config/db');
-const User = require('./models/User');
-const Opportunity = require('./models/Opportunity');
-const Application = require('./models/Applications');
+const connectDB = require('../config/db');
+const User = require('../models/User');
+const Opportunity = require('../models/Opportunity');
+const Application = require('../models/Applications');
 
 const opportunities = [
     { code: 'NUS-EX-01',    name: 'NUS Student Exchange', institution: 'National University of Singapore', country: 'Singapore', type: 'exchange', deadline: '2026-07-15', capacity: 5 },
