@@ -434,7 +434,7 @@ function capitalize(str) {
  * Initialize dashboard on page load
  */
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('🎯 Initializing GEMS Admin Dashboard...');
+  console.log('Initializing GEMS Admin Dashboard...');
 
   setupSortButtons();
   setupFilterPills();

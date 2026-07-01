@@ -29,7 +29,7 @@ app.use(session({
     cookie: { secure: process.env.NODE_ENV === 'production', httpOnly: true, maxAge: 86400000 },
 }));
 
-app.use(express.static(path.join(__dirname, '../gems/public')));
+app.use(express.static(path.join(__dirname, '../public')));
 
 app.use('/auth', authRouter);
 app.use('/api/applications', appsRouter);
@@ -37,14 +37,14 @@ app.use('/api/statistics', statsRouter);
 
 if (process.env.NODE_ENV !== 'production') {
     app.post('/api/seed', async (req, res, next) => {
-        try { require('child_process').exec('node server/seed.js', (err, stdout) => {
+        try { require('child_process').exec('node server/scripts/seed.js', (err, stdout) => {
             if (err) return next(err);
             res.json({ success: true, message: stdout.trim() });
         }); } catch (err) { next(err); }
     });
 }
 
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../gems/public/index.html')));
+app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../client/views/student/login.html')));
 app.use(errorHandler);
 
 app.listen(PORT, () => console.log(`GEMS running on http://localhost:${PORT}`));
