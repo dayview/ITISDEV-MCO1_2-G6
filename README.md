@@ -32,7 +32,10 @@ A web-based scholarship and exchange opportunity management platform for DLSU st
 git clone https://github.com/dayview/ITISDEV-MCO1_2-G6.git
 cd ITISDEV-MCO1_2-G6
 npm install
+cp .env.example .env
 ```
+
+Open `.env` and replace `MONGO_URI` with your MongoDB connection string.
 
 ### Running the Server
 ```bash
@@ -45,4 +48,3 @@ Server runs at: `http://localhost:3000`
 
 ### Seed the Database
 <in progress>
-

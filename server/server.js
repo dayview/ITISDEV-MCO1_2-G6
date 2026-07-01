@@ -13,6 +13,12 @@ const statsRouter = require('./routes/statistics');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const mongoUri = process.env.MONGO_URI;
+
+if (!mongoUri) {
+    console.error('Missing MONGO_URI. Copy .env.example to .env and set MONGO_URI to your MongoDB connection string.');
+    process.exit(1);
+}
 
 connectDB();
 
@@ -25,7 +31,7 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'gems_dev_secret',
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: process.env.MONGO_URI, ttl: 86400 }),
+    store: MongoStore.create({ mongoUrl: mongoUri, ttl: 86400 }),
     cookie: { secure: process.env.NODE_ENV === 'production', httpOnly: true, maxAge: 86400000 },
 }));
 
@@ -44,7 +50,7 @@ if (process.env.NODE_ENV !== 'production') {
     });
 }
 
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../client/views/student/login.html')));
+app.use((req, res) => res.sendFile(path.join(__dirname, '../client/views/student/login.html')));
 app.use(errorHandler);
 
 app.listen(PORT, () => console.log(`GEMS running on http://localhost:${PORT}`));
