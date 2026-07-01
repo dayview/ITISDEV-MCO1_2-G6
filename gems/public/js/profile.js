@@ -21,8 +21,10 @@
       message: 'Please enter a valid email address'
     },
     phone: {
-      // Allows formats like +63 917 123 4567 or 9171234567
-      validate: (val) => /^(\+?\d{1,3}[-\s]?)?\d{9,10}$/.test(val.trim()),
+      validate: (val) => {
+        const digits = val.replace(/\D/g, '');
+        return /^\+?[\d\s-]+$/.test(val.trim()) && digits.length >= 10 && digits.length <= 13;
+      },
       message: 'Please enter a valid phone number (e.g., +63 917 123 4567)'
     },
     gender: {

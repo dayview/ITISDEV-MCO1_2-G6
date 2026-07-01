@@ -352,10 +352,43 @@ window.OPPORTUNITY_MOCK_DATA = [
   },
 ];
 
+const OPPORTUNITY_STORAGE_KEY = 'gems-admin-opportunities';
+let apiOpportunities = [];
+
+window.getSavedOpportunities = function() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(OPPORTUNITY_STORAGE_KEY) || '[]');
+    return Array.isArray(saved) ? saved : [];
+  } catch (error) {
+    console.warn('Unable to read saved opportunities.', error);
+    return [];
+  }
+};
+
 window.getOpportunities = function() {
-  return window.OPPORTUNITY_MOCK_DATA.slice();
+  const saved = window.getSavedOpportunities();
+  const savedIds = new Set(saved.map(opportunity => String(opportunity.id)));
+  const base = apiOpportunities.length ? apiOpportunities : window.OPPORTUNITY_MOCK_DATA;
+
+  return base
+    .filter(opportunity => !savedIds.has(String(opportunity.id)))
+    .concat(saved);
 };
 
 window.getOpportunityById = function(id) {
-  return window.OPPORTUNITY_MOCK_DATA.find(opportunity => String(opportunity.id) === String(id));
+  return window.getOpportunities().find(opportunity => String(opportunity.id) === String(id));
+};
+
+window.loadOpportunitiesFromApi = async function() {
+  try {
+    const response = await fetch('/api/opportunities?pageSize=100');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const result = await response.json();
+    apiOpportunities = Array.isArray(result.data) ? result.data : [];
+    return apiOpportunities;
+  } catch (error) {
+    console.warn('Using local opportunity data because the API is unavailable.', error);
+    apiOpportunities = [];
+    return apiOpportunities;
+  }
 };
