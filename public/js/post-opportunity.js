@@ -1,5 +1,4 @@
 (function() {
-  const STORAGE_KEY = 'gems-admin-opportunities';
   const form = document.getElementById('opportunity-form');
   const workspace = document.getElementById('post-workspace');
   const accessDenied = document.getElementById('access-denied');
@@ -7,19 +6,12 @@
   const list = document.getElementById('admin-opportunity-list');
   const searchInput = document.getElementById('opportunity-search');
   const fields = Array.from(form.querySelectorAll('[required]'));
+  let opportunities = [];
 
   if (document.body.dataset.userRole !== 'administrator') {
     workspace.hidden = true;
     accessDenied.hidden = false;
     return;
-  }
-
-  function getSaved() {
-    return typeof window.getSavedOpportunities === 'function' ? window.getSavedOpportunities() : [];
-  }
-
-  function writeSaved(items) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }
 
   function lines(value) {
@@ -31,9 +23,8 @@
   }
 
   function getRecord(status) {
-    const id = formValue('opportunity-id') || `admin-${Date.now()}`;
     return {
-      id,
+      id: formValue('opportunity-id'),
       programName: formValue('program-name'),
       hostInstitution: formValue('host-institution'),
       location: formValue('location'),
@@ -41,31 +32,41 @@
       region: formValue('region'),
       category: formValue('category'),
       description: formValue('description'),
-      shortDescription: formValue('description').slice(0, 145),
       eligibilityCriteria: lines(formValue('eligibility-criteria')),
       requiredDocuments: lines(formValue('required-documents')),
       deadline: formValue('deadline'),
       benefits: lines(formValue('benefits')),
-      status,
-      eligible: true,
-      applicationInstructions: 'Prepare all required documents and submit your application through the GEMS portal.',
-      updatedAt: new Date().toISOString()
+      status
     };
   }
 
-  function saveRecord(status) {
+  async function requestJson(url, options) {
+    const response = await fetch(url, {
+      headers: { 'Content-Type': 'application/json' },
+      ...options
+    });
+    const result = await response.json();
+    if (!response.ok || result.success === false) {
+      throw new Error(result.error || result.message || `HTTP ${response.status}`);
+    }
+    return result;
+  }
+
+  async function saveRecord(status) {
     const record = getRecord(status);
-    const saved = getSaved();
-    const index = saved.findIndex(item => String(item.id) === String(record.id));
-    if (index >= 0) saved[index] = record;
-    else saved.unshift(record);
-    writeSaved(saved);
-    document.getElementById('opportunity-id').value = record.id;
-    setEditingState(record);
-    renderList(searchInput.value);
+    const isUpdate = /^[a-f\d]{24}$/i.test(record.id);
+    const result = await requestJson(isUpdate ? `/api/opportunities/${record.id}` : '/api/opportunities', {
+      method: isUpdate ? 'PATCH' : 'POST',
+      body: JSON.stringify(record)
+    });
+
+    const saved = result.adminData || result.data;
+    document.getElementById('opportunity-id').value = saved.id;
+    await loadOpportunities();
+    populate(saved, false);
     showConfirmation(status === 'published'
-      ? 'Opportunity published successfully. It is now visible in the Opportunity Catalog.'
-      : 'Draft saved successfully. You can return and publish it later.');
+      ? 'Opportunity published successfully. It is now saved in MongoDB and visible in the Opportunity Catalog.'
+      : 'Draft saved successfully in MongoDB. You can return and publish it later.');
   }
 
   function validateForPublish() {
@@ -110,24 +111,24 @@
   function setEditingState(record) {
     document.getElementById('form-title').textContent = record ? 'Edit Opportunity' : 'Post an Opportunity';
     document.getElementById('editing-status').textContent = record
-      ? `${record.status === 'published' ? 'Published' : 'Draft'} · Editing`
+      ? `${record.status === 'Published' || record.status === 'published' ? 'Published' : 'Draft'} · Editing`
       : 'New opportunity';
     document.getElementById('publish-opportunity').textContent =
-      record && record.status === 'published' ? 'Update published opportunity' : 'Publish opportunity';
+      record && (record.status === 'Published' || record.status === 'published') ? 'Update published opportunity' : 'Publish opportunity';
   }
 
-  function populate(record) {
+  function populate(record, scroll = true) {
     const values = {
       'opportunity-id': record.id,
-      'program-name': record.programName,
-      'host-institution': record.hostInstitution,
-      location: record.location,
+      'program-name': record.programName || record.name,
+      'host-institution': record.hostInstitution || record.university,
+      location: record.location || record.country,
       region: record.region,
-      category: record.category,
+      category: record.category || record.type,
       description: record.description,
       'eligibility-criteria': (record.eligibilityCriteria || []).join('\n'),
       'required-documents': (record.requiredDocuments || []).join('\n'),
-      deadline: record.deadline,
+      deadline: record.deadline || record.period,
       benefits: (record.benefits || []).join('\n')
     };
     Object.entries(values).forEach(([id, value]) => {
@@ -139,7 +140,7 @@
     });
     confirmation.hidden = true;
     setEditingState(record);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (scroll) window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function resetForm() {
@@ -156,9 +157,9 @@
 
   function renderList(query = '') {
     const normalized = query.trim().toLowerCase();
-    const items = getSaved()
-      .filter(item => [item.programName, item.hostInstitution, item.location].join(' ').toLowerCase().includes(normalized))
-      .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+    const items = opportunities
+      .filter(item => [item.programName, item.hostInstitution, item.country].join(' ').toLowerCase().includes(normalized))
+      .sort((a, b) => new Date(b.updated || 0) - new Date(a.updated || 0));
 
     list.replaceChildren();
     if (!items.length) {
@@ -174,13 +175,14 @@
       card.className = 'admin-opportunity-item';
       const info = document.createElement('div');
       const name = document.createElement('h3');
-      name.textContent = item.programName || 'Untitled opportunity';
+      name.textContent = item.programName || item.name || 'Untitled opportunity';
       const host = document.createElement('p');
-      host.textContent = item.hostInstitution || 'Host institution not added';
+      host.textContent = item.hostInstitution || item.university || 'Host institution not added';
       const meta = document.createElement('div');
       const status = document.createElement('span');
-      status.className = `post-item-status post-item-status--${item.status}`;
-      status.textContent = item.status === 'published' ? 'Published' : 'Draft';
+      const normalizedStatus = String(item.status || '').toLowerCase();
+      status.className = `post-item-status post-item-status--${normalizedStatus === 'published' ? 'published' : 'draft'}`;
+      status.textContent = normalizedStatus === 'published' ? 'Published' : item.status || 'Draft';
       const deadline = document.createElement('span');
       deadline.textContent = item.deadline ? `Deadline ${new Date(`${item.deadline}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : 'No deadline';
       meta.append(status, deadline);
@@ -195,11 +197,29 @@
     });
   }
 
-  form.addEventListener('submit', event => {
+  async function loadOpportunities() {
+    const result = await requestJson('/api/admin/opportunities');
+    opportunities = result.data || [];
+    renderList(searchInput.value);
+  }
+
+  form.addEventListener('submit', async event => {
     event.preventDefault();
-    if (validateForPublish()) saveRecord('published');
+    if (!validateForPublish()) return;
+    try {
+      await saveRecord('published');
+    } catch (error) {
+      showConfirmation(`Unable to save opportunity: ${error.message}`, true);
+    }
   });
-  document.getElementById('save-draft').addEventListener('click', () => saveRecord('draft'));
+
+  document.getElementById('save-draft').addEventListener('click', async () => {
+    try {
+      await saveRecord('draft');
+    } catch (error) {
+      showConfirmation(`Unable to save draft: ${error.message}`, true);
+    }
+  });
   document.getElementById('new-opportunity').addEventListener('click', resetForm);
   searchInput.addEventListener('input', () => renderList(searchInput.value));
   fields.forEach(field => field.addEventListener('input', () => {
@@ -209,8 +229,11 @@
     }
   }));
 
-  const requestedId = new URLSearchParams(window.location.search).get('id');
-  const requested = requestedId && getSaved().find(item => String(item.id) === requestedId);
-  if (requested) populate(requested);
-  renderList();
+  loadOpportunities().then(() => {
+    const requestedId = new URLSearchParams(window.location.search).get('id');
+    const requested = requestedId && opportunities.find(item => String(item.id) === requestedId);
+    if (requested) populate(requested);
+  }).catch(error => {
+    showConfirmation(`Unable to load opportunities: ${error.message}`, true);
+  });
 })();
