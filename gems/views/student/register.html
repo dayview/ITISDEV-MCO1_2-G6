@@ -125,19 +125,21 @@
         <div class="reg-section">
           <div class="reg-section__title">Account Credentials</div>
 
+          <div id="register-error" style="display:none;color:#f87171;font-size:13px;margin-bottom:8px;"></div>
+
           <div class="field">
             <div class="field__label">DLSU Email Address</div>
-            <input type="email" placeholder="lastname_firstname@dlsu.edu.ph" />
+            <input id="reg-email" type="email" placeholder="lastname_firstname@dlsu.edu.ph" />
           </div>
 
           <div class="field-row">
             <div class="field">
               <div class="field__label">Password</div>
-              <input type="password" placeholder="••••••••" />
+              <input id="reg-password" type="password" placeholder="••••••••" />
             </div>
             <div class="field">
               <div class="field__label">Confirm Password</div>
-              <input type="password" placeholder="••••••••" />
+              <input id="reg-password-confirm" type="password" placeholder="••••••••" />
             </div>
           </div>
         </div>
@@ -148,7 +150,7 @@
 
           <div class="field">
             <div class="field__label">Full Name</div>
-            <input type="text" placeholder="e.g. Katrina Isabel Estrella" />
+            <input id="reg-name" type="text" placeholder="e.g. Katrina Isabel Estrella" />
           </div>
 
           <div class="field">
@@ -184,7 +186,7 @@
 
           <div class="field">
             <div class="field__label">Student ID Number</div>
-            <input type="text" placeholder="e.g. 2023-04589" />
+            <input id="reg-student-id" type="text" placeholder="e.g. 2023-04589" />
           </div>
 
           <div class="field-row" style="margin-bottom:16px;">
@@ -231,12 +233,10 @@
             Already have an account? <a href="login.html">Log in</a>
           </div>
           <div class="reg-footer__btns">
-            <a href="dashboard.html" style="text-decoration:none;">
+            <a href="login.html" style="text-decoration:none;">
               <button class="btn-cancel">Cancel</button>
             </a>
-            <a href="dashboard.html" style="text-decoration:none;">
-              <button class="btn-create">Create account</button>
-            </a>
+            <button id="btn-create" class="btn-create">Create account</button>
           </div>
         </div>
 
@@ -247,5 +247,57 @@
 
 </div><!-- /app-wrapper -->
 
+<script>
+  document.getElementById('btn-create').addEventListener('click', async () => {
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const confirm = document.getElementById('reg-password-confirm').value;
+    const name = document.getElementById('reg-name').value.trim();
+    const studentId = document.getElementById('reg-student-id').value.trim();
+    const errorEl = document.getElementById('register-error');
+
+    errorEl.style.display = 'none';
+    errorEl.textContent = '';
+
+    if (!email || !password || !name) {
+      errorEl.textContent = 'Email, password, and full name are required.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    if (password !== confirm) {
+      errorEl.textContent = 'Passwords do not match.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    if (password.length < 8) {
+      errorEl.textContent = 'Password must be at least 8 characters.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name, studentId }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        errorEl.textContent = data.message || 'Registration failed.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      window.location.href = '/dashboard.html';
+    } catch {
+      errorEl.textContent = 'Network error. Please try again.';
+      errorEl.style.display = 'block';
+    }
+  });
+</script>
 </body>
 </html>

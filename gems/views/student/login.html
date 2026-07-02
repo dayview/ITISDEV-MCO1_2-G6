@@ -82,9 +82,11 @@
       <!-- Body -->
       <div class="login-card__body">
 
+        <div id="login-error" style="display:none;color:#f87171;font-size:13px;margin-bottom:8px;"></div>
+
         <div class="field">
           <div class="field__label">DLSU Email Address</div>
-          <input type="email" placeholder="lastname_firstname@dlsu.edu.ph" />
+          <input id="login-email" type="email" placeholder="lastname_firstname@dlsu.edu.ph" />
         </div>
 
         <div class="field">
@@ -92,7 +94,7 @@
             <div class="field__label" style="margin-bottom:0;">Password</div>
             <a href="#" class="field__forgot">Forgot password?</a>
           </div>
-          <input type="password" placeholder="••••••••" />
+          <input id="login-password" type="password" placeholder="••••••••" />
         </div>
 
         <label class="keep-signed">
@@ -100,9 +102,7 @@
           Keep me signed in
         </label>
 
-        <a href="dashboard.html" style="display:block;text-decoration:none;">
-          <button class="btn-login">Log in</button>
-        </a>
+        <button id="btn-login" class="btn-login">Log in</button>
 
         <div class="login-footer">
           New to GEMS? <a href="register.html">Create an account</a>
@@ -115,5 +115,52 @@
 
 </div><!-- /app-wrapper -->
 
+<script>
+  document.getElementById('btn-login').addEventListener('click', async () => {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errorEl = document.getElementById('login-error');
+
+    errorEl.style.display = 'none';
+    errorEl.textContent = '';
+
+    if (!email || !password) {
+      errorEl.textContent = 'Please enter your email and password.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        errorEl.textContent = data.message || 'Login failed.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      const role = data.user?.role;
+      if (role === 'OVPERI_Admin' || role === 'System_Admin') {
+        window.location.href = '/admin/dashboard.html';
+      } else {
+        window.location.href = '/dashboard.html';
+      }
+    } catch {
+      errorEl.textContent = 'Network error. Please try again.';
+      errorEl.style.display = 'block';
+    }
+  });
+
+  // Allow Enter key to submit
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('btn-login').click();
+  });
+</script>
 </body>
 </html>
