@@ -5,10 +5,12 @@ function requireAuth(req, res, next) {
     next();
 }
 
+const ADMIN_ROLES = ['OVPERI_Admin', 'System_Admin'];
+
 function requireAdmin(req, res, next) {
-    if (req.user?.role !== 'admin')
+    if (!ADMIN_ROLES.includes(req.user?.role))
         return res.status(403).json({ success: false, error: 'Forbidden. Admin access required.' });
     next();
 }
 
-module.exports = { requireAuth, requireAdmin };
+module.exports = { requireAuth, requireAdmin, ADMIN_ROLES };

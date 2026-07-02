@@ -2,27 +2,9 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const router = express.Router();
 const User = require('../models/User');
+const { roleHome, sanitizeUser, isDlsuEmail, isValidPassword } = require('../lib/authValidation');
 
-function roleHome(role) {
-    return ['OVPERI_Admin', 'System_Admin'].includes(role) ? '/admin/dashboard.html' : '/dashboard.html';
-}
-
-function sanitizeUser(user) {
-    return {
-        _id: user._id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        studentId: user.studentId,
-        college: user.college,
-        major: user.major,
-        cgpa: user.cgpa,
-        isGraduating: user.isGraduating,
-        sdfoCleared: user.sdfoCleared
-    };
-}
-
-router.post('/login', async (req, res, next) => { 
+router.post('/login', async (req, res, next) => {
     try {
         const { email, password } = req.body;
         if (!email || !password)
@@ -49,9 +31,9 @@ router.post('/register', async (req, res, next) => {
         const { email, password, name, studentId, college, major, cgpa, graduatingTerm } = req.body;
         if (!email || !password || !name || !studentId)
             return res.status(400).json({ success: false, error: 'Email, password, name, and student ID are required.' });
-        if (!String(email).toLowerCase().endsWith('@dlsu.edu.ph'))
+        if (!isDlsuEmail(email))
             return res.status(400).json({ success: false, error: 'Use a valid DLSU email address.' });
-        if (String(password).length < 8)
+        if (!isValidPassword(password))
             return res.status(400).json({ success: false, error: 'Password must be at least 8 characters.' });
 
         const passwordHashed = await bcrypt.hash(password, 10);

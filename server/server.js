@@ -9,6 +9,12 @@ const Application = require('./models/Applications');
 const Document = require('./models/Document');
 const AuditLog = require('./models/AuditLog');
 const authRoutes = require('./routes/auth');
+const { mapOpportunity, normalizeOpportunityInput, mapAdminOpportunity } = require('./lib/opportunities');
+const { normalizeDocumentType } = require('./lib/documents');
+const { evaluateStudentEligibility, isOpportunityOpenForApplication } = require('./lib/eligibility');
+const { applicationPipeline, buildApplicationPayload, toApplicationsCsv, isValidStatus, APPLICATION_STATUSES } = require('./lib/applications');
+const { computeStatisticsSummary, getUrgentCutoff } = require('./lib/statistics');
+const { determineOpportunityUpdateAction } = require('./lib/audit');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -88,171 +94,6 @@ app.get('/admin/:page', (req, res, next) => {
     if (!isAdminRole(req.session.user.role)) return res.status(403).send('Admin access required.');
     res.sendFile(path.join(adminViewsRoot, req.params.page));
 });
-
-const oneLineArray = (value) => {
-    if (Array.isArray(value)) return value.filter(Boolean);
-    if (!value) return [];
-    return String(value).split('\n').map(item => item.trim()).filter(Boolean);
-};
-
-const mapOpportunity = (opportunity) => {
-    const plain = typeof opportunity.toObject === 'function' ? opportunity.toObject() : opportunity;
-    return {
-        id: String(plain._id),
-        code: plain.code,
-        programName: plain.name,
-        title: plain.name,
-        hostInstitution: plain.institution,
-        institution: plain.institution,
-        country: plain.country,
-        location: plain.country || plain.region || '',
-        region: plain.region,
-        category: plain.category,
-        status: plain.status,
-        deadline: plain.deadline,
-        capacity: plain.capacity,
-        description: plain.description,
-        shortDescription: plain.description,
-        benefits: oneLineArray(plain.benefits),
-        fees: plain.fees,
-        credits: plain.credits,
-        requiredDocuments: plain.requiredDocumentTypes || [],
-        eligibility: plain.eligibility,
-        eligible: true,
-        createdAt: plain.createdAt,
-        updatedAt: plain.updatedAt
-    };
-};
-
-const normalizeOpportunityInput = (body) => {
-    const name = body.name || body.programName;
-    const institution = body.institution || body.hostInstitution;
-    const country = body.country || body.location?.split(',').pop()?.trim();
-    const requiredDocumentTypes = body.requiredDocumentTypes || body.requiredDocuments || [];
-    const benefits = Array.isArray(body.benefits) ? body.benefits.join('\n') : body.benefits;
-    const codeBase = String(name || 'OPP')
-        .toUpperCase()
-        .replace(/[^A-Z0-9]+/g, '-')
-        .replace(/^-|-$/g, '')
-        .slice(0, 24);
-
-    return {
-        code: body.code || `GEMS-${codeBase || 'OPP'}-${Date.now()}`,
-        name,
-        description: body.description,
-        institution,
-        country,
-        region: body.region,
-        category: body.category || body.type,
-        status: body.status || 'draft',
-        deadline: body.deadline,
-        capacity: body.capacity,
-        benefits,
-        fees: body.fees,
-        credits: body.credits,
-        requiredDocumentTypes,
-        eligibility: body.eligibility || {
-            nonGraduatingRequired: false,
-            sdfoClearanceRequired: false,
-            notes: oneLineArray(body.eligibilityCriteria).join('\n')
-        }
-    };
-};
-
-const mapAdminOpportunity = (opportunity, applicationCount = 0) => {
-    const plain = typeof opportunity.toObject === 'function' ? opportunity.toObject() : opportunity;
-    const status = plain.status === 'published' ? 'Published' : plain.status === 'closed' ? 'Closed' : 'Draft';
-    const deadline = plain.deadline ? new Date(plain.deadline) : null;
-    const now = new Date();
-    const periodState = !deadline || deadline < now
-        ? 'Closed'
-        : deadline.getTime() - now.getTime() <= 30 * 24 * 60 * 60 * 1000
-            ? 'Open'
-            : 'Upcoming';
-
-    return {
-        id: String(plain._id),
-        name: plain.name,
-        programName: plain.name,
-        type: plain.category,
-        category: plain.category,
-        university: plain.institution,
-        hostInstitution: plain.institution,
-        country: plain.country,
-        region: plain.region,
-        period: deadline ? deadline.toISOString().slice(0, 10) : '',
-        deadline: deadline ? deadline.toISOString().slice(0, 10) : '',
-        periodState,
-        applications: applicationCount,
-        status,
-        rawStatus: plain.status,
-        updated: plain.updatedAt || plain.createdAt,
-        description: plain.description,
-        benefits: oneLineArray(plain.benefits),
-        requiredDocuments: plain.requiredDocumentTypes || [],
-        eligibilityCriteria: oneLineArray(plain.eligibility?.notes)
-    };
-};
-
-const applicationPipeline = ({ status = '', college = '', search = '', sort = 'recency', documentsStatus = '', ids = [] } = {}) => {
-    const pipeline = [
-        { $addFields: { studentRef: { $ifNull: ['$userId', '$studentId'] } } },
-        { $lookup: { from: 'users', localField: 'studentRef', foreignField: '_id', as: 'student' } },
-        { $unwind: { path: '$student', preserveNullAndEmptyArrays: true } },
-        { $lookup: { from: 'opportunities', localField: 'opportunityId', foreignField: '_id', as: 'opportunity' } },
-        { $unwind: { path: '$opportunity', preserveNullAndEmptyArrays: true } }
-    ];
-
-    const match = {};
-    const idList = Array.isArray(ids) ? ids : ids ? [ids] : [];
-    if (idList.length) {
-        const validIds = idList
-            .filter(id => mongoose.Types.ObjectId.isValid(id))
-            .map(id => new mongoose.Types.ObjectId(id));
-        match._id = validIds.length ? { $in: validIds } : { $in: [] };
-    }
-    if (status) match.status = status;
-    if (documentsStatus) match.documentsStatus = documentsStatus;
-    if (college) match['student.college'] = new RegExp(`^${college}$`, 'i');
-    if (search) {
-        const pattern = new RegExp(search, 'i');
-        match.$or = [
-            { 'student.name': pattern },
-            { 'student.studentId': pattern },
-            { 'opportunity.name': pattern },
-            { 'opportunity.institution': pattern }
-        ];
-    }
-    if (Object.keys(match).length) pipeline.push({ $match: match });
-
-    const sortMap = {
-        recency: { createdAt: -1, submittedDate: -1 },
-        oldest: { createdAt: 1, submittedDate: 1 },
-        urgency: { 'opportunity.deadline': 1 },
-        status: { status: 1 },
-        college: { 'student.college': 1 },
-        cgpa: { 'student.cgpa': -1 },
-        documents: { documentsStatus: 1 }
-    };
-    pipeline.push({ $sort: sortMap[sort] || sortMap.recency });
-
-    pipeline.push({
-        $project: {
-            id: { $toString: '$_id' },
-            name: { $ifNull: ['$student.name', 'Unknown student'] },
-            student_id: '$student.studentId',
-            college: '$student.college',
-            cgpa: '$student.cgpa',
-            opp_name: { $ifNull: ['$opportunity.name', 'Unknown opportunity'] },
-            institution: '$opportunity.institution',
-            submitted_date: { $ifNull: ['$submittedDate', '$createdAt'] },
-            documents_status: '$documentsStatus',
-            status: 1
-        }
-    });
-
-    return pipeline;
-};
 
 app.get('/api/admin/opportunities', requireAdminSession, async (_req, res) => {
     try {
@@ -372,11 +213,7 @@ app.patch('/api/opportunities/:id', requireAdminSession, async (req, res) => {
             return res.status(404).json({ success: false, error: 'Opportunity not found' });
         }
         const statusChanged = existing && existing.status !== opportunity.status;
-        const action = statusChanged && opportunity.status === 'published'
-            ? 'opportunity_published'
-            : statusChanged && opportunity.status === 'closed'
-                ? 'opportunity_closed'
-                : 'opportunity_updated';
+        const action = determineOpportunityUpdateAction(existing?.status, opportunity.status);
         await AuditLog.create({
             userId: req.session.user._id,
             userRole: req.session.user.role,
@@ -396,39 +233,6 @@ app.patch('/api/opportunities/:id', requireAdminSession, async (req, res) => {
         res.status(400).json({ success: false, error: err.message });
     }
 });
-
-const normalizeDocumentType = (value) => {
-    const text = String(value || '').toLowerCase();
-    if (text.includes('transcript') || text.includes('grade')) return 'transcript';
-    if (text.includes('recommendation') || text.includes('reference')) return 'recommendation';
-    if (text.includes('passport')) return 'passport';
-    if (text.includes('eaf') || text.includes('application form')) return 'EAF';
-    if (text.includes('curriculum')) return 'curriculumAudit';
-    if (text.includes('id')) return 'validId';
-    return 'other';
-};
-
-const evaluateStudentEligibility = (student, opportunity, documents = []) => {
-    const missing = [];
-    const eligibility = opportunity.eligibility || {};
-    if (eligibility.minCgpa && Number(student.cgpa || 0) < eligibility.minCgpa) {
-        missing.push(`Minimum CGPA of ${eligibility.minCgpa}`);
-    }
-    if (eligibility.nonGraduatingRequired === true && student.isGraduating) {
-        missing.push('Applicant must not be graduating this term');
-    }
-    if (eligibility.sdfoClearanceRequired === true && !student.sdfoCleared) {
-        missing.push('SDFO clearance');
-    }
-
-    const documentTypes = new Set(documents.map(document => document.type));
-    (opportunity.requiredDocumentTypes || []).forEach(requirement => {
-        const type = normalizeDocumentType(requirement);
-        if (!documentTypes.has(type)) missing.push(requirement);
-    });
-
-    return { eligible: missing.length === 0, missing };
-};
 
 app.get('/api/documents', requireStudentSession, async (req, res) => {
     try {
@@ -483,7 +287,7 @@ app.post('/api/applications', requireStudentSession, async (req, res) => {
             return res.status(400).json({ success: false, error: 'Valid opportunity ID is required.' });
         }
         const opportunity = await Opportunity.findById(opportunityId);
-        if (!opportunity || opportunity.status !== 'published' || opportunity.deadline < new Date()) {
+        if (!isOpportunityOpenForApplication(opportunity)) {
             return res.status(400).json({ success: false, error: 'Opportunity is not open for applications.' });
         }
         const documents = await Document.find({ userId: req.session.user._id });
@@ -495,14 +299,9 @@ app.post('/api/applications', requireStudentSession, async (req, res) => {
                 missing: evaluation.missing
             });
         }
-        const application = await Application.create({
-            userId: req.session.user._id,
-            opportunityId,
-            documents: documents.map(document => document._id),
-            documentsStatus: 'complete',
-            submittedDate: new Date().toISOString().slice(0, 10),
-            statusHistory: [{ status: 'submitted', changedAt: new Date(), changedBy: req.session.user._id }]
-        });
+        const application = await Application.create(
+            buildApplicationPayload({ userId: req.session.user._id, opportunityId, documents })
+        );
         res.status(201).json({ success: true, data: application });
     } catch (err) {
         if (err.code === 11000) {
@@ -528,22 +327,9 @@ app.get('/api/applications', requireAdminSession, async (req, res) => {
 app.get('/api/applications/export', requireAdminSession, async (req, res) => {
     try {
         const data = await Application.aggregate(applicationPipeline(req.query));
-        const header = 'Student Name,Student Id,College,CGPA,Program,Institution,Status,Documents,Submitted Date';
-        const rows = data.map(row => [
-            `"${String(row.name || '').replaceAll('"', '""')}"`,
-            row.student_id || '',
-            row.college || '',
-            row.cgpa ?? '',
-            `"${String(row.opp_name || '').replaceAll('"', '""')}"`,
-            `"${String(row.institution || '').replaceAll('"', '""')}"`,
-            row.status || '',
-            row.documents_status || '',
-            row.submitted_date ? new Date(row.submitted_date).toISOString() : ''
-        ].join(','));
-
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');
         res.setHeader('Content-Disposition', 'attachment; filename="applications.csv"');
-        res.send([header, ...rows].join('\n'));
+        res.send(toApplicationsCsv(data));
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -554,9 +340,8 @@ app.patch('/api/applications/:id/status', requireAdminSession, async (req, res) 
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ success: false, error: 'Invalid application id.' });
         }
-        const allowed = ['submitted', 'under-review', 'nominated', 'accepted', 'rejected'];
-        if (!allowed.includes(req.body.status)) {
-            return res.status(400).json({ success: false, error: `Status must be one of: ${allowed.join(', ')}` });
+        if (!isValidStatus(req.body.status)) {
+            return res.status(400).json({ success: false, error: `Status must be one of: ${APPLICATION_STATUSES.join(', ')}` });
         }
         const previous = await Application.findById(req.params.id).select('status');
         const application = await Application.findByIdAndUpdate(
@@ -589,12 +374,11 @@ app.patch('/api/applications/:id/status', requireAdminSession, async (req, res) 
 app.post('/api/applications/bulk-action', requireAdminSession, async (req, res) => {
     try {
         const ids = Array.isArray(req.body.ids) ? req.body.ids.filter(id => mongoose.Types.ObjectId.isValid(id)) : [];
-        const allowed = ['submitted', 'under-review', 'nominated', 'accepted', 'rejected'];
         if (!ids.length) {
             return res.status(400).json({ success: false, error: 'Select at least one application.' });
         }
-        if (!allowed.includes(req.body.status)) {
-            return res.status(400).json({ success: false, error: `Status must be one of: ${allowed.join(', ')}` });
+        if (!isValidStatus(req.body.status)) {
+            return res.status(400).json({ success: false, error: `Status must be one of: ${APPLICATION_STATUSES.join(', ')}` });
         }
         const targets = await Application.find({ _id: { $in: ids } }).select('status');
         await Application.updateMany(
@@ -626,7 +410,7 @@ app.post('/api/applications/bulk-action', requireAdminSession, async (req, res) 
 app.get('/api/statistics', requireAdminSession, async (_req, res) => {
     try {
         const now = new Date();
-        const urgentCutoff = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        const urgentCutoff = getUrgentCutoff(now);
         const [statusAgg, urgentAgg, livePrograms, countries] = await Promise.all([
             Application.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
             Application.aggregate([
@@ -639,18 +423,10 @@ app.get('/api/statistics', requireAdminSession, async (_req, res) => {
             Opportunity.countDocuments({ status: 'published', deadline: { $gte: now } }),
             Opportunity.distinct('country', { status: 'published' })
         ]);
-        const counts = { submitted: 0, 'under-review': 0, nominated: 0, accepted: 0, rejected: 0 };
-        statusAgg.forEach(item => { if (item._id in counts) counts[item._id] = item.count; });
 
         res.json({
             success: true,
-            data: {
-                ...counts,
-                pending: counts.submitted + counts['under-review'],
-                urgent: urgentAgg[0]?.urgent || 0,
-                livePrograms,
-                countries: countries.filter(Boolean).length
-            }
+            data: computeStatisticsSummary(statusAgg, urgentAgg[0]?.urgent, livePrograms, countries)
         });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
