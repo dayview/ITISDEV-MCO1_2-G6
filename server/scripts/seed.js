@@ -5,25 +5,39 @@ const Opportunity = require('../models/Opportunity');
 const Application = require('../models/Applications');
 
 const opportunities = [
-    { code: 'NUS-EX-01', name: 'NUS Student Exchange', institution: 'National University of Singapore', country: 'Singapore', region: 'Asia', category: 'Exchange', status: 'published', deadline: '2026-07-15', capacity: 5, description: 'Semester exchange program in Singapore.', benefits: 'Partner university support.', requiredDocumentTypes: ['transcript', 'passport'] },
-    { code: 'KAIST-SU-01', name: 'KAIST Summer Program', institution: 'KAIST', country: 'South Korea', region: 'Asia', category: 'Summer', status: 'published', deadline: '2026-07-30', capacity: 8, description: 'Short summer program in Korea.', benefits: 'Program advising.', requiredDocumentTypes: ['transcript', 'validId'] },
-    { code: 'UTOKYO-EX-01', name: 'UTokyo Exchange', institution: 'University of Tokyo', country: 'Japan', region: 'Asia', category: 'Exchange', status: 'published', deadline: '2026-08-01', capacity: 4, description: 'Exchange term in Tokyo.', benefits: 'Tuition waiver.', requiredDocumentTypes: ['transcript', 'recommendation'] },
-    { code: 'TUM-EX-01', name: 'TUM Exchange Program', institution: 'Technical University of Munich', country: 'Germany', region: 'Europe', category: 'Exchange', status: 'published', deadline: '2026-09-15', capacity: 6, description: 'Engineering exchange program.', benefits: 'Academic mobility support.', requiredDocumentTypes: ['transcript', 'passport'] },
-    { code: 'UNSW-EX-01', name: 'UNSW Exchange', institution: 'University of New South Wales', country: 'Australia', region: 'Oceania', category: 'Exchange', status: 'published', deadline: '2026-10-01', capacity: 4, description: 'Exchange opportunity in Australia.', benefits: 'Credit transfer guidance.', requiredDocumentTypes: ['transcript'] },
-    { code: 'NTU-RS-01', name: 'NTU Research Internship', institution: 'Nanyang Technological University', country: 'Singapore', region: 'Asia', category: 'Research', status: 'published', deadline: '2026-07-28', capacity: 3, description: 'Research internship with faculty mentors.', benefits: 'Research placement.', requiredDocumentTypes: ['transcript', 'recommendation'] },
-    { code: 'YONSEI-SU-01', name: 'Yonsei Summer School', institution: 'Yonsei University', country: 'South Korea', region: 'Asia', category: 'Summer', status: 'published', deadline: '2026-07-28', capacity: 10, description: 'Summer school in Seoul.', benefits: 'Short-term mobility support.', requiredDocumentTypes: ['validId'] },
-    { code: 'HKU-EX-01', name: 'HKU Exchange', institution: 'University of Hong Kong', country: 'Hong Kong', region: 'Asia', category: 'Exchange', status: 'published', deadline: '2026-08-20', capacity: 5, description: 'Exchange term in Hong Kong.', benefits: 'Partner coordination.', requiredDocumentTypes: ['transcript', 'passport'] },
-    { code: 'NUS-RS-01', name: 'NUS UROP Research', institution: 'National University of Singapore', country: 'Singapore', region: 'Asia', category: 'Research', status: 'draft', deadline: '2026-10-31', capacity: 6, description: 'Draft research listing.', benefits: 'Research advising.', requiredDocumentTypes: ['transcript'] },
-    { code: 'POSTECH-EX-01', name: 'POSTECH Exchange', institution: 'POSTECH', country: 'South Korea', region: 'Asia', category: 'Exchange', status: 'published', deadline: '2026-09-30', capacity: 4, description: 'Exchange opportunity at POSTECH.', benefits: 'Mobility support.', requiredDocumentTypes: ['transcript', 'passport'] },
+    { code: 'NUS-EX-01',    name: 'NUS Student Exchange', institution: 'National University of Singapore', country: 'Singapore', type: 'exchange', deadline: '2026-07-15', capacity: 5 },
+    { code: 'KAIST-SU-01',  name: 'KAIST Summer Program', institution: 'KAIST', country: 'South Korea', type: 'summer', deadline: '2026-06-30', capacity: 8 },
+    { code: 'UTOKYO-EX-01', name: 'UTokyo Exchange', institution: 'University of Tokyo', country: 'Japan', type: 'exchange', deadline: '2026-08-01', capacity: 4 },
+    { code: 'TUM-EX-01',    name: 'TUM Exchange Program', institution: 'Technical University of Munich', country: 'Germany', type: 'exchange', deadline: '2026-09-15', capacity: 6 },
+    { code: 'UNSW-EX-01',   name: 'UNSW Exchange', institution: 'University of New South Wales', country: 'Australia', type: 'exchange', deadline: '2026-10-01', capacity: 4 },
+    { code: 'NTU-RS-01',    name: 'NTU Research Internship', institution: 'Nanyang Technological University', country: 'Singapore', type: 'research', deadline: '2026-07-28', capacity: 3 },
+    { code: 'YONSEI-SU-01', name: 'Yonsei Summer School', institution: 'Yonsei University', country: 'South Korea', type: 'summer', deadline: '2026-06-28', capacity: 10 },
+    { code: 'HKU-EX-01',    name: 'HKU Exchange', institution: 'University of Hong Kong', country: 'Hong Kong', type: 'exchange', deadline: '2026-08-20', capacity: 5 },
+    { code: 'NUS-RS-01',    name: 'NUS UROP Research', institution: 'National University of Singapore', country: 'Singapore', type: 'research', deadline: '2026-10-31', capacity: 6 },
+    { code: 'POSTECH-EX-01', name: 'POSTECH Exchange', institution: 'POSTECH', country: 'South Korea', type: 'exchange', deadline: '2026-09-30', capacity: 4 },
 ];
 
 const studentData = [
-    { studentId: '12010001', name: 'Leon Pavino', college: 'CCS', cgpa: 3.7, email: 'leon_pavino@dlsu.edu.ph', role: 'Student', passwordHashed: 'seed-only' },
-    { studentId: '12110002', name: 'Maria Santos', college: 'GCOE', cgpa: 3.5, email: 'maria_santos@dlsu.edu.ph', role: 'Student', passwordHashed: 'seed-only' },
-    { studentId: '12210003', name: 'James Lim', college: 'CLA', cgpa: 3.2, email: 'james_lim@dlsu.edu.ph', role: 'Student', passwordHashed: 'seed-only' },
-    { studentId: '12310004', name: 'Angela Cruz', college: 'RVRCOB', cgpa: 3.8, email: 'angela_cruz@dlsu.edu.ph', role: 'Student', passwordHashed: 'seed-only' },
-    { studentId: '12410005', name: 'Miguel Torres', college: 'CCS', cgpa: 3.1, email: 'miguel_torres@dlsu.edu.ph', role: 'Student', passwordHashed: 'seed-only' },
-    { studentId: '12510020', name: 'Admin User', college: 'CCS', cgpa: 4.0, email: 'admin@dlsu.edu.ph', role: 'OVPERI_Admin', passwordHashed: 'seed-only' },
+    { studentId: '12010001', name: 'Leon Pavino', college: 'CCS', cgpa: 3.7, email: 'leon_pavino@dlsu.edu.ph', role: 'student' },
+    { studentId: '12110002', name: 'Maria Santos', college: 'GCOE', cgpa: 3.5, email: 'maria_santos@dlsu.edu.ph', role: 'student' },
+    { studentId: '12210003', name: 'James Lim', college: 'CLA', cgpa: 3.2, email: 'james_lim@dlsu.edu.ph', role: 'student' },
+    { studentId: '12310004', name: 'Angela Cruz', college: 'RVRCOB', cgpa: 3.8, email: 'angela_cruz@dlsu.edu.ph', role: 'student' },
+    { studentId: '12410005', name: 'Miguel Torres', college: 'CCS', cgpa: 3.1, email: 'miguel_torres@dlsu.edu.ph', role: 'student' },
+    { studentId: '12510006', name: 'Sofia Garcia', college: 'GCOE', cgpa: 3.9, email: 'sofia_garcia@dlsu.edu.ph', role: 'student' },
+    { studentId: '12610007', name: 'Carlos Mendoza', college: 'CLA', cgpa: 2.9, email: 'carlos_mendoza@dlsu.edu.ph', role: 'student' },
+    { studentId: '12010008', name: 'Isabelle Tan', college: 'RVRCOB', cgpa: 3.6, email: 'isabelle_tan@dlsu.edu.ph', role: 'student' },
+    { studentId: '12110009', name: 'Rafael Villanueva', college: 'CCS', cgpa: 3.4, email: 'rafael_villaneuva@dlsu.edu.ph', role: 'student' },
+    { studentId: '12210010', name: 'Patricia Dela Cruz', college: 'GCOE', cgpa: 3.3, email: 'patricia_delacruz@dlsu.edu.ph', role: 'student' },
+    { studentId: '12310011', name: 'Diego Flores', college: 'CLA', cgpa: 3.0, email: 'diego_flores@dlsu.edu.ph', role: 'student' },
+    { studentId: '12410012',   name: 'Camille Reyes', college: 'RVRCOB', cgpa: 3.7, email: 'camille_reyes@dlsu.edu.ph', role: 'student' },
+    { studentId: '12510013',   name: 'Marco Aquino', college: 'CCS', cgpa: 3.5, email: 'marco_aquino@dlsu.edu.ph', role: 'student' },
+    { studentId: '12610014', name: 'Bianca Navarro', college: 'GCOE', cgpa: 3.8, email: 'bianca_navarro@dlsu.edu.ph', role: 'student' },
+    { studentId: '12010015', name: 'Andrei Pascual', college: 'CCS', cgpa: 2.8, email: 'andrei_pascual@dlsu.edu.ph', role: 'student' },
+    { studentId: '12110016', name: 'Tricia Ong', college: 'RVRCOB', cgpa: 3.6, email: 'tricia_ong@dlsu.edu.ph', role: 'student' },
+    { studentId: '12210017', name: 'Zachary Fernandez', college: 'CLA', cgpa: 3.1, email: 'zachary_fernandez@dlsu.edu.ph', role: 'student' },
+    { studentId: '12310018', name: 'Natalie Gomez', college: 'GCOE', cgpa: 3.1, email: 'natalie_gomez@dlsu.edu.ph', role: 'student' },
+    { studentId: '12410019', name: 'Kevin Bautista', college: 'CCS', cgpa: 3.2, email: 'kevin_bautista@dlsu.edu.ph', role: 'student' },
+    { studentId: '12510020', name: 'Admin User', college: 'CCS', cgpa: 4.0, email: 'admin@dlsu.edu.ph', role: 'admin' },
 ];
 
 const STATUSES = ['submitted', 'submitted', 'submitted', 'submitted', 'under-review', 'under-review', 'under-review', 'nominated', 'nominated', 'accepted', 'rejected'];
@@ -41,20 +55,15 @@ async function seed() {
 
     const opps = await Opportunity.insertMany(opportunities);
     const students = await User.insertMany(studentData);
-    const nonAdmins = students.filter(s => s.role === 'Student');
+    const nonAdmins = students.filter(s => s.role !== 'admin');
 
-    const appDocs = [];
-    nonAdmins.forEach((student, studentIndex) => {
-        opps.slice(0, 6).forEach((opportunity, oppIndex) => {
-            appDocs.push({
-                userId: student._id,
-                opportunityId: opportunity._id,
-                status: STATUSES[(studentIndex + oppIndex) % STATUSES.length],
-                submittedDate: randDate(new Date('2026-05-01'), new Date('2026-06-24')),
-                documentsStatus: pick(DOC_STATUSES),
-            });
-        });
-    });
+    const appDocs = Array.from({ length: 55 }, () => ({
+        studentId: pick(nonAdmins)._id,
+        opportunityId: pick(opps)._id,
+        status: pick(STATUSES),
+        submittedDate: randDate(new Date('2026-05-01'), new Date('2026-06-24')),
+        documentsStatus: pick(DOC_STATUSES),
+    }));
 
     await Application.insertMany(appDocs);
     console.log(`Done: ${opps.length} opportunities | ${students.length} students | ${appDocs.length} applications`);

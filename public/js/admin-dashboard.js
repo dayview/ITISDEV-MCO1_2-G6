@@ -114,7 +114,7 @@ function attachCheckboxListeners() {
 
   checkboxes.forEach(checkbox => {
     checkbox.addEventListener('change', (e) => {
-      const appId = parseInt(e.target.value);
+      const appId = e.target.value;
       if (e.target.checked) {
         selectedIds.add(appId);
       } else {
@@ -128,9 +128,8 @@ function attachCheckboxListeners() {
     });
   });
 
-  // Select all checkbox
   if (selectAll) {
-    selectAll.addEventListener('change', (e) => {
+    selectAll.onchange = (e) => {
       if (e.target.checked) {
         currentApplications.forEach(app => selectedIds.add(app.id));
       } else {
@@ -140,7 +139,7 @@ function attachCheckboxListeners() {
         checkbox.checked = e.target.checked;
       });
       updateBulkActionButtons();
-    });
+    };
   }
 }
 
@@ -203,6 +202,8 @@ function updateBulkActionButtons() {
   const batchApproveBtn = document.getElementById('batch-approve-btn');
   const count = selectedIds.size;
 
+  if (!badge || !exportBtn || !batchApproveBtn) return;
+
   if (count > 0) {
     badge.style.display = 'inline-block';
     document.getElementById('selection-count').textContent = count;
@@ -252,9 +253,11 @@ async function batchApprove() {
 async function exportCSV() {
   try {
     const params = new URLSearchParams();
+    Array.from(selectedIds).forEach(id => params.append('ids', id));
     if (currentFilters.status) params.append('status', currentFilters.status);
     if (currentFilters.college) params.append('college', currentFilters.college);
     if (currentFilters.search) params.append('search', currentFilters.search);
+    if (currentFilters.documentsStatus) params.append('documentsStatus', currentFilters.documentsStatus);
 
     window.location.href = `${API_BASE}/applications/export?${params}`;
   } catch (err) {
@@ -341,19 +344,30 @@ function setupFilterPills() {
       const filterType = pill.dataset.filterType;
       const filterValue = pill.dataset.filterValue;
 
-      // Toggle active state
-      filterPills.forEach(p => {
-        if (p.dataset.filterType === filterType) {
-          p.classList.remove('pill--active');
+      if (filterType === 'sort') {
+        currentSort = filterValue || 'recency';
+        delete currentFilters.documentsStatus;
+        delete currentFilters.status;
+      } else {
+        currentSort = 'recency';
+        if (filterValue) {
+          currentFilters[filterType] = filterValue;
+        } else {
+          delete currentFilters[filterType];
+          delete currentFilters.documentsStatus;
         }
-      });
+      }
+
+      filterPills.forEach(p => p.classList.remove('pill--active'));
       pill.classList.add('pill--active');
 
-      // Update filter
-      if (filterValue) {
-        currentFilters[filterType] = filterValue;
-      } else {
-        delete currentFilters[filterType];
+      const subtitle = document.getElementById('queue-subtitle');
+      if (subtitle) {
+        subtitle.textContent = filterType === 'sort'
+          ? 'Sorted by urgency · nearest deadline first'
+          : filterValue === 'incomplete'
+            ? 'Showing applications with incomplete documents'
+            : 'Sorted by recency · newest first';
       }
 
       await fetchApplications();
@@ -383,6 +397,35 @@ function setupSearchInput() {
       await fetchApplications();
     }, 500);
   });
+}
+
+/**
+ * Setup compact topbar actions.
+ */
+function setupTopbarActions() {
+  const filterToggle = document.getElementById('admin-filter-toggle');
+  const notificationBtn = document.getElementById('admin-notification-btn');
+  const incompletePill = document.querySelector('.pill--filter[data-filter-type="documentsStatus"]');
+
+  if (filterToggle && incompletePill) {
+    filterToggle.addEventListener('click', () => incompletePill.click());
+  }
+
+  if (notificationBtn) {
+    notificationBtn.addEventListener('click', () => {
+      let notice = document.getElementById('admin-notification-status');
+      if (!notice) {
+        notice = document.createElement('div');
+        notice.id = 'admin-notification-status';
+        notice.setAttribute('role', 'status');
+        notice.style.cssText = 'position:fixed;top:76px;right:24px;z-index:30;padding:12px 14px;border-radius:8px;background:#ffffff;border:1px solid rgba(15,122,61,.18);box-shadow:0 16px 40px rgba(15,23,42,.14);color:#123524;font-size:14px;';
+        document.body.appendChild(notice);
+      }
+      notice.textContent = 'No new admin notifications in this test environment.';
+      window.clearTimeout(notice._hideTimer);
+      notice._hideTimer = window.setTimeout(() => notice.remove(), 2500);
+    });
+  }
 }
 
 /**
@@ -440,6 +483,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupFilterPills();
   setupSearchInput();
   setupBatchActionButtons();
+  setupTopbarActions();
 
   await fetchApplications();
 
