@@ -1,10 +1,13 @@
 require('dotenv').config();
 const express = require('express');
+const session = require('express-session');
 const path = require('path');
 const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const Opportunity = require('./models/Opportunity');
 const Application = require('./models/Applications');
+const Document = require('./models/Document');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,7 +16,34 @@ const studentViewsRoot = path.join(root, 'client', 'views', 'student');
 const adminViewsRoot = path.join(root, 'gems', 'views', 'admin');
 
 app.use(express.json());
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'gems-dev-session-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { httpOnly: true, sameSite: 'lax' }
+}));
 app.use('/public', express.static(path.join(root, 'public')));
+
+const isAdminRole = (role) => ['OVPERI_Admin', 'System_Admin'].includes(role);
+
+const requireSession = (req, res, next) => {
+    if (!req.session?.user) return res.status(401).json({ success: false, error: 'Please log in.' });
+    next();
+};
+
+const requireAdminSession = (req, res, next) => {
+    if (!req.session?.user) return res.status(401).json({ success: false, error: 'Please log in.' });
+    if (!isAdminRole(req.session.user.role)) return res.status(403).json({ success: false, error: 'Admin access required.' });
+    next();
+};
+
+const requireStudentSession = (req, res, next) => {
+    if (!req.session?.user) return res.status(401).json({ success: false, error: 'Please log in.' });
+    if (req.session.user.role !== 'Student') return res.status(403).json({ success: false, error: 'Student access required.' });
+    next();
+};
+
+app.use('/api/auth', authRoutes);
 
 app.get('/', (_req, res) => {
     res.sendFile(path.join(studentViewsRoot, 'login.html'));
@@ -53,6 +83,8 @@ const adminPages = new Set([
 
 app.get('/admin/:page', (req, res, next) => {
     if (!adminPages.has(req.params.page)) return next();
+    if (!req.session?.user) return res.redirect('/login.html');
+    if (!isAdminRole(req.session.user.role)) return res.status(403).send('Admin access required.');
     res.sendFile(path.join(adminViewsRoot, req.params.page));
 });
 
@@ -119,6 +151,8 @@ const normalizeOpportunityInput = (body) => {
         credits: body.credits,
         requiredDocumentTypes,
         eligibility: body.eligibility || {
+            nonGraduatingRequired: false,
+            sdfoClearanceRequired: false,
             notes: oneLineArray(body.eligibilityCriteria).join('\n')
         }
     };
@@ -219,7 +253,7 @@ const applicationPipeline = ({ status = '', college = '', search = '', sort = 'r
     return pipeline;
 };
 
-app.get('/api/admin/opportunities', async (_req, res) => {
+app.get('/api/admin/opportunities', requireAdminSession, async (_req, res) => {
     try {
         const opportunities = await Opportunity.find({}).sort({ updatedAt: -1 });
         const counts = await Application.aggregate([
@@ -244,6 +278,10 @@ app.get('/api/admin/opportunities', async (_req, res) => {
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
+});
+
+app.get('/api/me', requireSession, (req, res) => {
+    res.json({ success: true, user: req.session.user });
 });
 
 app.get('/api/opportunities', async (req, res) => {
@@ -280,7 +318,7 @@ app.get('/api/opportunities', async (req, res) => {
     }
 });
 
-app.post('/api/opportunities', async (req, res) => {
+app.post('/api/opportunities', requireAdminSession, async (req, res) => {
     try {
         const opportunity = await Opportunity.create(normalizeOpportunityInput(req.body));
         res.status(201).json({
@@ -308,7 +346,7 @@ app.get('/api/opportunities/:id', async (req, res) => {
     }
 });
 
-app.patch('/api/opportunities/:id', async (req, res) => {
+app.patch('/api/opportunities/:id', requireAdminSession, async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ success: false, error: 'Invalid opportunity id.' });
@@ -333,7 +371,122 @@ app.patch('/api/opportunities/:id', async (req, res) => {
     }
 });
 
-app.get('/api/applications', async (req, res) => {
+const normalizeDocumentType = (value) => {
+    const text = String(value || '').toLowerCase();
+    if (text.includes('transcript') || text.includes('grade')) return 'transcript';
+    if (text.includes('recommendation') || text.includes('reference')) return 'recommendation';
+    if (text.includes('passport')) return 'passport';
+    if (text.includes('eaf') || text.includes('application form')) return 'EAF';
+    if (text.includes('curriculum')) return 'curriculumAudit';
+    if (text.includes('id')) return 'validId';
+    return 'other';
+};
+
+const evaluateStudentEligibility = (student, opportunity, documents = []) => {
+    const missing = [];
+    const eligibility = opportunity.eligibility || {};
+    if (eligibility.minCgpa && Number(student.cgpa || 0) < eligibility.minCgpa) {
+        missing.push(`Minimum CGPA of ${eligibility.minCgpa}`);
+    }
+    if (eligibility.nonGraduatingRequired === true && student.isGraduating) {
+        missing.push('Applicant must not be graduating this term');
+    }
+    if (eligibility.sdfoClearanceRequired === true && !student.sdfoCleared) {
+        missing.push('SDFO clearance');
+    }
+
+    const documentTypes = new Set(documents.map(document => document.type));
+    (opportunity.requiredDocumentTypes || []).forEach(requirement => {
+        const type = normalizeDocumentType(requirement);
+        if (!documentTypes.has(type)) missing.push(requirement);
+    });
+
+    return { eligible: missing.length === 0, missing };
+};
+
+app.get('/api/documents', requireStudentSession, async (req, res) => {
+    try {
+        const data = await Document.find({ userId: req.session.user._id }).sort({ uploadedAt: -1 });
+        res.json({ success: true, data });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/documents', requireStudentSession, async (req, res) => {
+    try {
+        const { type, fileName, filePath, fileFormat } = req.body;
+        if (!type || !fileName) return res.status(400).json({ success: false, error: 'Document type and file name are required.' });
+        const document = await Document.create({
+            userId: req.session.user._id,
+            type: normalizeDocumentType(type),
+            fileName,
+            filePath: filePath || `uploads/${req.session.user._id}/${fileName}`,
+            fileFormat
+        });
+        res.status(201).json({ success: true, data: document });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+app.get('/api/applications/my', requireStudentSession, async (req, res) => {
+    try {
+        const data = await Application.find({ userId: req.session.user._id })
+            .populate('opportunityId')
+            .sort({ createdAt: -1 });
+        res.json({ success: true, data: data.map(application => ({
+            id: String(application._id),
+            opportunityId: String(application.opportunityId?._id || application.opportunityId),
+            programName: application.opportunityId?.name || 'Unknown opportunity',
+            hostInstitution: application.opportunityId?.institution || '',
+            deadline: application.opportunityId?.deadline,
+            status: application.status,
+            documentsStatus: application.documentsStatus,
+            submittedAt: application.submittedDate || application.createdAt
+        })) });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/applications', requireStudentSession, async (req, res) => {
+    try {
+        const { opportunityId } = req.body;
+        if (!mongoose.Types.ObjectId.isValid(opportunityId)) {
+            return res.status(400).json({ success: false, error: 'Valid opportunity ID is required.' });
+        }
+        const opportunity = await Opportunity.findById(opportunityId);
+        if (!opportunity || opportunity.status !== 'published' || opportunity.deadline < new Date()) {
+            return res.status(400).json({ success: false, error: 'Opportunity is not open for applications.' });
+        }
+        const documents = await Document.find({ userId: req.session.user._id });
+        const evaluation = evaluateStudentEligibility(req.session.user, opportunity, documents);
+        if (!evaluation.eligible) {
+            return res.status(400).json({
+                success: false,
+                error: 'Application requirements are incomplete.',
+                missing: evaluation.missing
+            });
+        }
+        const application = await Application.create({
+            userId: req.session.user._id,
+            opportunityId,
+            documents: documents.map(document => document._id),
+            documentsStatus: 'complete',
+            submittedDate: new Date().toISOString().slice(0, 10),
+            statusHistory: [{ status: 'submitted', changedAt: new Date(), changedBy: req.session.user._id }]
+        });
+        res.status(201).json({ success: true, data: application });
+    } catch (err) {
+        if (err.code === 11000) {
+            return res.status(409).json({ success: false, error: 'You already applied to this opportunity.' });
+        }
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+app.get('/api/applications', requireAdminSession, async (req, res) => {
     try {
         const data = await Application.aggregate(applicationPipeline(req.query));
         res.json({
@@ -346,7 +499,7 @@ app.get('/api/applications', async (req, res) => {
     }
 });
 
-app.get('/api/applications/export', async (req, res) => {
+app.get('/api/applications/export', requireAdminSession, async (req, res) => {
     try {
         const data = await Application.aggregate(applicationPipeline(req.query));
         const header = 'Student Name,Student Id,College,CGPA,Program,Institution,Status,Documents,Submitted Date';
@@ -370,7 +523,7 @@ app.get('/api/applications/export', async (req, res) => {
     }
 });
 
-app.patch('/api/applications/:id/status', async (req, res) => {
+app.patch('/api/applications/:id/status', requireAdminSession, async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ success: false, error: 'Invalid application id.' });
@@ -396,7 +549,7 @@ app.patch('/api/applications/:id/status', async (req, res) => {
     }
 });
 
-app.post('/api/applications/bulk-action', async (req, res) => {
+app.post('/api/applications/bulk-action', requireAdminSession, async (req, res) => {
     try {
         const ids = Array.isArray(req.body.ids) ? req.body.ids.filter(id => mongoose.Types.ObjectId.isValid(id)) : [];
         const allowed = ['submitted', 'under-review', 'nominated', 'accepted', 'rejected'];
@@ -420,7 +573,7 @@ app.post('/api/applications/bulk-action', async (req, res) => {
     }
 });
 
-app.get('/api/statistics', async (_req, res) => {
+app.get('/api/statistics', requireAdminSession, async (_req, res) => {
     try {
         const now = new Date();
         const urgentCutoff = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);

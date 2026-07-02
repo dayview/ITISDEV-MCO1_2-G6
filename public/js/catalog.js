@@ -831,13 +831,26 @@
     if (resetButton) resetButton.addEventListener('click', resetFilters);
   }
 
-  function init() {
+  async function loadBackendOpportunities() {
+    try {
+      const response = await fetch('/api/opportunities?pageSize=100');
+      const result = await response.json();
+      if (response.ok && Array.isArray(result.data)) {
+        window.GEMS_BACKEND_OPPORTUNITIES = result.data;
+      }
+    } catch (error) {
+      console.warn('Using local opportunity fallback:', error);
+    }
+  }
+
+  async function init() {
     syncFormFromUrl();
     if (deadlineRangeSelect && deadlineRangeSelect.value !== 'any') {
       applyDeadlineRange();
     }
     attachEvents();
     updateCalendarModeLabel();
+    await loadBackendOpportunities();
     renderResults();
   }
 

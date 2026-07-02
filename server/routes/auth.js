@@ -1,6 +1,26 @@
 const express = require('express');
+const bcrypt = require('bcrypt');
 const router = express.Router();
 const User = require('../models/User');
+
+function roleHome(role) {
+    return ['OVPERI_Admin', 'System_Admin'].includes(role) ? '/admin/dashboard.html' : '/dashboard.html';
+}
+
+function sanitizeUser(user) {
+    return {
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        studentId: user.studentId,
+        college: user.college,
+        major: user.major,
+        cgpa: user.cgpa,
+        isGraduating: user.isGraduating,
+        sdfoCleared: user.sdfoCleared
+    };
+}
 
 router.post('/login', async (req, res, next) => { 
     try {
@@ -12,13 +32,49 @@ router.post('/login', async (req, res, next) => {
         if (!user)
             return res.status(401).json({ success: false, error: 'Invalid credentials.' });
 
-        // TODO: replace with bcrypt.compare() once passwordHashed is added to schema
-        if (!['OVPERI_Admin', 'System_Admin'].includes(user.role))
-            return res.status(401).json({ success: false, error: 'Admin access only.' });
+        let passwordMatches = user.passwordHashed === password;
+        if (!passwordMatches && /^\$2[aby]\$/.test(user.passwordHashed || '')) {
+            passwordMatches = await bcrypt.compare(password, user.passwordHashed);
+        }
+        if (!passwordMatches)
+            return res.status(401).json({ success: false, error: 'Invalid credentials.' });
 
-        req.session.user = { _id: user._id, email: user.email, name: user.name, role: user.role };
-        res.json({ success: true, user: req.session.user });
+        req.session.user = sanitizeUser(user);
+        res.json({ success: true, user: req.session.user, redirectTo: roleHome(user.role) });
     } catch (err) { next(err); }
+});
+
+router.post('/register', async (req, res, next) => {
+    try {
+        const { email, password, name, studentId, college, major, cgpa, graduatingTerm } = req.body;
+        if (!email || !password || !name || !studentId)
+            return res.status(400).json({ success: false, error: 'Email, password, name, and student ID are required.' });
+        if (!String(email).toLowerCase().endsWith('@dlsu.edu.ph'))
+            return res.status(400).json({ success: false, error: 'Use a valid DLSU email address.' });
+        if (String(password).length < 8)
+            return res.status(400).json({ success: false, error: 'Password must be at least 8 characters.' });
+
+        const passwordHashed = await bcrypt.hash(password, 10);
+        const user = await User.create({
+            email,
+            passwordHashed,
+            name,
+            studentId,
+            college: college || 'CCS',
+            major,
+            cgpa: cgpa ? Number(cgpa) : undefined,
+            graduatingTerm,
+            role: 'Student'
+        });
+
+        req.session.user = sanitizeUser(user);
+        res.status(201).json({ success: true, user: req.session.user, redirectTo: roleHome(user.role) });
+    } catch (err) {
+        if (err.code === 11000) {
+            return res.status(409).json({ success: false, error: 'An account with this email or student ID already exists.' });
+        }
+        next(err);
+    }
 });
 
 router.post('/logout', (req, res) => {

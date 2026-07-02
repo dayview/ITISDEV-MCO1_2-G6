@@ -150,21 +150,31 @@
     button.addEventListener('click', () => handleQuickApply(opportunity, button));
   }
 
-  function handleQuickApply(opportunity, button) {
-    const result = window.GEMSApplicationStore.submitApplication(opportunity);
+  async function handleQuickApply(opportunity, button) {
+    button.disabled = true;
+    let result;
+    try {
+      result = await window.GEMSApplicationStore.submitApplicationToBackend(opportunity);
+    } catch (error) {
+      result = window.GEMSApplicationStore.submitApplication(opportunity);
+    }
     const feedback = document.getElementById('quick-apply-feedback');
 
     if (!result.ok) {
       feedback.innerHTML = renderBundle(result.evaluation);
+      if (result.error) {
+        feedback.insertAdjacentHTML('afterbegin', `<div class="quick-apply-alert quick-apply-alert--warning"><strong>${escapeHtml(result.error)}</strong></div>`);
+      }
       const uploadLink = feedback.querySelector('a');
       if (uploadLink) uploadLink.focus();
+      button.disabled = false;
       return;
     }
 
     feedback.innerHTML = `
       <div class="quick-apply-alert quick-apply-alert--success" role="status">
         <strong>${result.duplicate ? 'Already submitted' : 'Application submitted successfully!'}</strong>
-        <span>Your ${result.application.bundle.length}-document package was sent to OVPERI. A confirmation email was sent to ${escapeHtml(result.application.student.email)}.</span>
+        <span>Your application was sent to OVPERI for review.</span>
         <a href="applications.html">View application and bundle &rarr;</a>
       </div>
     `;

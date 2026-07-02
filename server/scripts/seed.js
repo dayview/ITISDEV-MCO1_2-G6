@@ -4,6 +4,7 @@ const User = require('../models/User');
 const Opportunity = require('../models/Opportunity');
 const Application = require('../models/Applications');
 
+const baseEligibility = { nonGraduatingRequired: false, sdfoClearanceRequired: false };
 const opportunities = [
     { code: 'NUS-EX-01',    name: 'NUS Student Exchange', institution: 'National University of Singapore', country: 'Singapore', category: 'Student Exchange', deadline: '2026-07-15', capacity: 5 },
     { code: 'KAIST-SU-01',  name: 'KAIST Summer Program', institution: 'KAIST', country: 'South Korea', category: 'Short-Term Program', deadline: '2026-06-30', capacity: 8 },
@@ -15,7 +16,11 @@ const opportunities = [
     { code: 'HKU-EX-01',    name: 'HKU Exchange', institution: 'University of Hong Kong', country: 'Hong Kong', category: 'Student Exchange', deadline: '2026-08-20', capacity: 5 },
     { code: 'NUS-RS-01',    name: 'NUS UROP Research', institution: 'National University of Singapore', country: 'Singapore', category: 'Research Program', deadline: '2026-10-31', capacity: 6 },
     { code: 'POSTECH-EX-01', name: 'POSTECH Exchange', institution: 'POSTECH', country: 'South Korea', category: 'Student Exchange', deadline: '2026-09-30', capacity: 4 },
-];
+].map(opportunity => ({
+    ...opportunity,
+    status: 'published',
+    eligibility: baseEligibility
+}));
 
 const DEFAULT_PASSWORD_HASH = 'seed-password-placeholder';
 

@@ -82,9 +82,10 @@
       <!-- Body -->
       <div class="login-card__body">
 
+        <form id="login-form">
         <div class="field">
           <div class="field__label">DLSU Email Address</div>
-          <input type="email" placeholder="lastname_firstname@dlsu.edu.ph" />
+          <input id="login-email" name="email" type="email" placeholder="lastname_firstname@dlsu.edu.ph" required />
         </div>
 
         <div class="field">
@@ -92,7 +93,7 @@
             <div class="field__label" style="margin-bottom:0;">Password</div>
             <a href="#" class="field__forgot">Forgot password?</a>
           </div>
-          <input type="password" placeholder="••••••••" />
+          <input id="login-password" name="password" type="password" placeholder="••••••••" required />
         </div>
 
         <label class="keep-signed">
@@ -100,9 +101,10 @@
           Keep me signed in
         </label>
 
-        <a href="dashboard.html" style="display:block;text-decoration:none;">
-          <button class="btn-login">Log in</button>
-        </a>
+        <div id="login-message" class="login-footer" role="alert" aria-live="polite" hidden></div>
+
+        <button class="btn-login" type="submit">Log in</button>
+        </form>
 
         <div class="login-footer">
           New to GEMS? <a href="register.html">Create an account</a>
@@ -115,5 +117,6 @@
 
 </div><!-- /app-wrapper -->
 
+<script src="../../public/js/auth-pages.js"></script>
 </body>
 </html>

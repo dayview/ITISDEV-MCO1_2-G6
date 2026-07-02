@@ -116,7 +116,7 @@
 
     <!-- ---- Main content ---- -->
     <main class="reg-main">
-      <div class="reg-inner">
+      <form id="register-form" class="reg-inner">
 
         <div class="reg-heading">Create your GEMS account</div>
         <div class="reg-subheading">Set up your profile once — your details auto-fill every application.</div>
@@ -127,17 +127,17 @@
 
           <div class="field">
             <div class="field__label">DLSU Email Address</div>
-            <input type="email" placeholder="lastname_firstname@dlsu.edu.ph" />
+            <input id="register-email" name="email" type="email" placeholder="lastname_firstname@dlsu.edu.ph" required />
           </div>
 
           <div class="field-row">
             <div class="field">
               <div class="field__label">Password</div>
-              <input type="password" placeholder="••••••••" />
+              <input id="register-password" name="password" type="password" placeholder="••••••••" required />
             </div>
             <div class="field">
               <div class="field__label">Confirm Password</div>
-              <input type="password" placeholder="••••••••" />
+              <input id="register-confirm-password" name="confirmPassword" type="password" placeholder="••••••••" required />
             </div>
           </div>
         </div>
@@ -148,7 +148,7 @@
 
           <div class="field">
             <div class="field__label">Full Name</div>
-            <input type="text" placeholder="e.g. Katrina Isabel Estrella" />
+            <input id="register-name" name="name" type="text" placeholder="e.g. Katrina Isabel Estrella" required />
           </div>
 
           <div class="field">
@@ -184,7 +184,7 @@
 
           <div class="field">
             <div class="field__label">Student ID Number</div>
-            <input type="text" placeholder="e.g. 2023-04589" />
+            <input id="register-student-id" name="studentId" type="text" placeholder="e.g. 2023-04589" required />
           </div>
 
           <div class="field-row" style="margin-bottom:16px;">
@@ -211,7 +211,7 @@
           <div class="field-row">
             <div class="field">
               <div class="field__label">Current Major / Program</div>
-              <input type="text" placeholder="e.g. BS Computer Science" />
+              <input id="register-major" name="major" type="text" placeholder="e.g. BS Computer Science" />
             </div>
             <div class="field">
               <div class="field__label">Expected Graduation Term</div>
@@ -232,20 +232,20 @@
           </div>
           <div class="reg-footer__btns">
             <a href="dashboard.html" style="text-decoration:none;">
-              <button class="btn-cancel">Cancel</button>
+              <button class="btn-cancel" type="button">Cancel</button>
             </a>
-            <a href="dashboard.html" style="text-decoration:none;">
-              <button class="btn-create">Create account</button>
-            </a>
+            <button class="btn-create" type="submit">Create account</button>
           </div>
+          <div id="register-message" class="reg-footer__login" role="alert" aria-live="polite" hidden></div>
         </div>
 
-      </div>
+      </form>
     </main><!-- /reg-main -->
 
   </div><!-- /reg-body -->
 
 </div><!-- /app-wrapper -->
 
+<script src="../../public/js/auth-pages.js"></script>
 </body>
 </html>

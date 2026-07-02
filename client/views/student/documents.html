@@ -411,11 +411,16 @@
 <input type="file" id="fileInput" class="is-hidden" accept=".pdf,.jpg,.jpeg,.png" onchange="handleUpload(this)">
 
 <script>
+  let pendingDocumentType = 'other';
+
   function triggerUpload() {
+    const row = document.activeElement && document.activeElement.closest('tr');
+    const label = row && row.querySelector('.doc-primary');
+    pendingDocumentType = label ? label.textContent : 'other';
     document.getElementById('fileInput').click();
   }
 
-  function handleUpload(input) {
+  async function handleUpload(input) {
     const file = input.files[0];
     if (!file) return;
     const maxSize = 5 * 1024 * 1024;
@@ -430,8 +435,24 @@
       input.value = '';
       return;
     }
-    alert('Uploaded: ' + file.name);
-    input.value = '';
+    try {
+      const response = await fetch('/api/documents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: pendingDocumentType,
+          fileName: file.name,
+          fileFormat: file.type
+        })
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || `HTTP ${response.status}`);
+      alert('Uploaded: ' + file.name);
+    } catch (error) {
+      alert('Upload reference was not saved: ' + error.message);
+    } finally {
+      input.value = '';
+    }
   }
 
   function confirmDelete(name) {

@@ -365,6 +365,9 @@ window.getSavedOpportunities = function() {
 };
 
 window.getOpportunities = function() {
+  if (Array.isArray(window.GEMS_BACKEND_OPPORTUNITIES)) {
+    return window.GEMS_BACKEND_OPPORTUNITIES;
+  }
   const saved = window.getSavedOpportunities();
   const savedIds = new Set(saved.map(opportunity => String(opportunity.id)));
   return window.OPPORTUNITY_MOCK_DATA

@@ -100,11 +100,33 @@
     return { ok: true, duplicate: false, application, evaluation };
   }
 
+  async function submitApplicationToBackend(opportunity) {
+    const evaluation = evaluateOpportunity(opportunity);
+    const response = await fetch('/api/applications', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ opportunityId: opportunity.id })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      return {
+        ok: false,
+        error: result.error || `HTTP ${response.status}`,
+        evaluation: {
+          ...evaluation,
+          missing: Array.isArray(result.missing) ? result.missing : evaluation.missing
+        }
+      };
+    }
+    return { ok: true, duplicate: false, application: result.data, evaluation };
+  }
+
   window.GEMSApplicationStore = {
     student,
     documentVault,
     getApplications: readApplications,
     evaluateOpportunity,
-    submitApplication
+    submitApplication,
+    submitApplicationToBackend
   };
 })();

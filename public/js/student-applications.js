@@ -1,8 +1,17 @@
-(function() {
+(async function() {
   const container = document.getElementById('quick-application-list');
   if (!container || !window.GEMSApplicationStore) return;
 
-  const applications = window.GEMSApplicationStore.getApplications();
+  let applications = window.GEMSApplicationStore.getApplications();
+  try {
+    const response = await fetch('/api/applications/my');
+    const result = await response.json();
+    if (response.ok && result.success) {
+      applications = result.data;
+    }
+  } catch (error) {
+    console.warn('Using local application fallback:', error);
+  }
   if (!applications.length) {
     container.hidden = true;
     return;
@@ -19,8 +28,8 @@
   }
 
   container.innerHTML = applications.map(application => {
-    const initials = application.hostInstitution.split(' ').map(word => word[0]).slice(0, 3).join('');
-    const submitted = new Date(application.submittedAt).toLocaleDateString('en-US', {
+    const initials = String(application.hostInstitution || '').split(' ').map(word => word[0]).slice(0, 3).join('') || 'OV';
+    const submitted = new Date(application.submittedAt || application.submittedDate).toLocaleDateString('en-US', {
       day: '2-digit',
       month: 'short',
       year: 'numeric'
@@ -34,7 +43,7 @@
             <div class="tracker-host">${escapeHtml(application.hostInstitution)}</div>
             <div class="tracker-submitted">submitted ${submitted} via 1-Click Apply</div>
           </div>
-          <span class="chip chip--blue"><span class="chip__dot"></span>Submitted</span>
+          <span class="chip chip--blue"><span class="chip__dot"></span>${escapeHtml(application.status || 'submitted')}</span>
         </div>
         <div class="progress-steps" role="list" aria-label="Application progress">
           <div class="step-col" role="listitem"><div class="step-dot step-dot--current">&#10003;</div><div class="step-label step-label--current">Submitted</div></div>
@@ -46,13 +55,13 @@
           <div class="step-col" role="listitem"><div class="step-dot step-dot--pending">&nbsp;</div><div class="step-label step-label--pending">Decision</div></div>
         </div>
         <details class="application-bundle">
-          <summary>View submitted document bundle (${application.bundle.length})</summary>
+          <summary>View submitted document bundle (${application.bundle?.length || 0})</summary>
           <div class="application-bundle__files">
-            ${application.bundle.map(document => `
+            ${(application.bundle || []).map(document => `
               <div><span aria-hidden="true">&#10003;</span><p><strong>${escapeHtml(document.requirement)}</strong><small>${escapeHtml(document.fileName)}</small></p></div>
             `).join('')}
           </div>
-          <p class="application-bundle__email">Confirmation sent to ${escapeHtml(application.student.email)}</p>
+          <p class="application-bundle__email">Documents status: ${escapeHtml(application.documentsStatus || 'incomplete')}</p>
         </details>
       </article>
     `;

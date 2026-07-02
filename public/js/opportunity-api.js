@@ -93,6 +93,12 @@
     const searchParams = parsed.searchParams;
 
     if (pathname === '/api/opportunities') {
+      try {
+        const response = await window.fetch(url);
+        if (response.ok) return response;
+      } catch (error) {
+        console.warn('Backend opportunities unavailable, using local data.', error);
+      }
       const allMatches = filterOpportunities(Object.fromEntries(searchParams.entries()));
       const page = Math.max(1, Number(searchParams.get('page')) || 1);
       const pageSize = Math.min(50, Math.max(1, Number(searchParams.get('pageSize')) || 10));
@@ -114,6 +120,12 @@
 
     const detailMatch = pathname.match(/^\/api\/opportunities\/(.+)$/);
     if (detailMatch) {
+      try {
+        const response = await window.fetch(url);
+        if (response.ok) return response;
+      } catch (error) {
+        console.warn('Backend opportunity detail unavailable, using local data.', error);
+      }
       const id = detailMatch[1];
       const opportunity = typeof window.getOpportunityById === 'function'
         ? window.getOpportunityById(id)
