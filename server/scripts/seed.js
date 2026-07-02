@@ -5,17 +5,19 @@ const Opportunity = require('../models/Opportunity');
 const Application = require('../models/Applications');
 
 const opportunities = [
-    { code: 'NUS-EX-01',    name: 'NUS Student Exchange', institution: 'National University of Singapore', country: 'Singapore', type: 'exchange', deadline: '2026-07-15', capacity: 5 },
-    { code: 'KAIST-SU-01',  name: 'KAIST Summer Program', institution: 'KAIST', country: 'South Korea', type: 'summer', deadline: '2026-06-30', capacity: 8 },
-    { code: 'UTOKYO-EX-01', name: 'UTokyo Exchange', institution: 'University of Tokyo', country: 'Japan', type: 'exchange', deadline: '2026-08-01', capacity: 4 },
-    { code: 'TUM-EX-01',    name: 'TUM Exchange Program', institution: 'Technical University of Munich', country: 'Germany', type: 'exchange', deadline: '2026-09-15', capacity: 6 },
-    { code: 'UNSW-EX-01',   name: 'UNSW Exchange', institution: 'University of New South Wales', country: 'Australia', type: 'exchange', deadline: '2026-10-01', capacity: 4 },
-    { code: 'NTU-RS-01',    name: 'NTU Research Internship', institution: 'Nanyang Technological University', country: 'Singapore', type: 'research', deadline: '2026-07-28', capacity: 3 },
-    { code: 'YONSEI-SU-01', name: 'Yonsei Summer School', institution: 'Yonsei University', country: 'South Korea', type: 'summer', deadline: '2026-06-28', capacity: 10 },
-    { code: 'HKU-EX-01',    name: 'HKU Exchange', institution: 'University of Hong Kong', country: 'Hong Kong', type: 'exchange', deadline: '2026-08-20', capacity: 5 },
-    { code: 'NUS-RS-01',    name: 'NUS UROP Research', institution: 'National University of Singapore', country: 'Singapore', type: 'research', deadline: '2026-10-31', capacity: 6 },
-    { code: 'POSTECH-EX-01', name: 'POSTECH Exchange', institution: 'POSTECH', country: 'South Korea', type: 'exchange', deadline: '2026-09-30', capacity: 4 },
+    { code: 'NUS-EX-01',    name: 'NUS Student Exchange', institution: 'National University of Singapore', country: 'Singapore', category: 'Student Exchange', deadline: '2026-07-15', capacity: 5 },
+    { code: 'KAIST-SU-01',  name: 'KAIST Summer Program', institution: 'KAIST', country: 'South Korea', category: 'Short-Term Program', deadline: '2026-06-30', capacity: 8 },
+    { code: 'UTOKYO-EX-01', name: 'UTokyo Exchange', institution: 'University of Tokyo', country: 'Japan', category: 'Student Exchange', deadline: '2026-08-01', capacity: 4 },
+    { code: 'TUM-EX-01',    name: 'TUM Exchange Program', institution: 'Technical University of Munich', country: 'Germany', category: 'Student Exchange', deadline: '2026-09-15', capacity: 6 },
+    { code: 'UNSW-EX-01',   name: 'UNSW Exchange', institution: 'University of New South Wales', country: 'Australia', category: 'Student Exchange', deadline: '2026-10-01', capacity: 4 },
+    { code: 'NTU-RS-01',    name: 'NTU Research Internship', institution: 'Nanyang Technological University', country: 'Singapore', category: 'Internship', deadline: '2026-07-28', capacity: 3 },
+    { code: 'YONSEI-SU-01', name: 'Yonsei Summer School', institution: 'Yonsei University', country: 'South Korea', category: 'Short-Term Program', deadline: '2026-06-28', capacity: 10 },
+    { code: 'HKU-EX-01',    name: 'HKU Exchange', institution: 'University of Hong Kong', country: 'Hong Kong', category: 'Student Exchange', deadline: '2026-08-20', capacity: 5 },
+    { code: 'NUS-RS-01',    name: 'NUS UROP Research', institution: 'National University of Singapore', country: 'Singapore', category: 'Research Program', deadline: '2026-10-31', capacity: 6 },
+    { code: 'POSTECH-EX-01', name: 'POSTECH Exchange', institution: 'POSTECH', country: 'South Korea', category: 'Student Exchange', deadline: '2026-09-30', capacity: 4 },
 ];
+
+const DEFAULT_PASSWORD_HASH = 'seed-password-placeholder';
 
 const studentData = [
     { studentId: '12010001', name: 'Leon Pavino', college: 'CCS', cgpa: 3.7, email: 'leon_pavino@dlsu.edu.ph', role: 'student' },
@@ -38,7 +40,11 @@ const studentData = [
     { studentId: '12310018', name: 'Natalie Gomez', college: 'GCOE', cgpa: 3.1, email: 'natalie_gomez@dlsu.edu.ph', role: 'student' },
     { studentId: '12410019', name: 'Kevin Bautista', college: 'CCS', cgpa: 3.2, email: 'kevin_bautista@dlsu.edu.ph', role: 'student' },
     { studentId: '12510020', name: 'Admin User', college: 'CCS', cgpa: 4.0, email: 'admin@dlsu.edu.ph', role: 'admin' },
-];
+].map(user => ({
+    ...user,
+    role: user.role === 'admin' ? 'OVPERI_Admin' : 'Student',
+    passwordHashed: DEFAULT_PASSWORD_HASH,
+}));
 
 const STATUSES = ['submitted', 'submitted', 'submitted', 'submitted', 'under-review', 'under-review', 'under-review', 'nominated', 'nominated', 'accepted', 'rejected'];
 const DOC_STATUSES = ['incomplete', 'incomplete', 'complete'];
@@ -49,24 +55,27 @@ async function seed() {
     await connectDB();
     console.log('Seeding...');
 
+    await Application.syncIndexes();
+
     await Application.deleteMany({});
     await Opportunity.deleteMany({});
     await User.deleteMany({});
 
     const opps = await Opportunity.insertMany(opportunities);
     const students = await User.insertMany(studentData);
-    const nonAdmins = students.filter(s => s.role !== 'admin');
+    const nonAdmins = students.filter(s => s.role === 'Student');
 
-    const appDocs = Array.from({ length: 55 }, () => ({
-        studentId: pick(nonAdmins)._id,
-        opportunityId: pick(opps)._id,
+    const appDocs = Array.from({ length: 55 }, (_, index) => ({
+        userId: nonAdmins[index % nonAdmins.length]._id,
+        opportunityId: opps[Math.floor(index / nonAdmins.length) % opps.length]._id,
         status: pick(STATUSES),
         submittedDate: randDate(new Date('2026-05-01'), new Date('2026-06-24')),
         documentsStatus: pick(DOC_STATUSES),
     }));
 
     await Application.insertMany(appDocs);
-    console.log(`Done: ${opps.length} opportunities | ${students.length} students | ${appDocs.length} applications`);
+    console.log(`Done: ${opps.length} opportunities | ${students.length} students`);
+    console.log(`Applications: ${appDocs.length}`);
     process.exit(0);
 }
 
