@@ -157,9 +157,23 @@
         if (action === 'edit') window.location.href = `post-opportunity.html?id=${program.id}`;
         else if (action === 'view' && program.rawStatus === 'published') window.location.href = `../student/opportunity.html?id=${program.id}`;
         else if (action === 'view') alert('Draft programs are not visible to students yet.');
+        else if (action === 'delete') deleteProgram(program);
         else alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action selected for "${program.name}".`);
       });
     });
+  }
+
+  async function deleteProgram(program) {
+    if (!confirm(`Delete "${program.name}"? Linked applications will also be removed.`)) return;
+    try {
+      const response = await fetch(`/api/opportunities/${encodeURIComponent(program.id)}`, { method: 'DELETE' });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || `HTTP ${response.status}`);
+      selected.delete(program.id);
+      await loadPrograms();
+    } catch (error) {
+      alert(`Unable to delete program: ${error.message}`);
+    }
   }
 
   function closeMenus() {

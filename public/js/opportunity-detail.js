@@ -65,10 +65,14 @@
     `;
   }
 
+  function getApplicationOpportunityId(application) {
+    return application.opportunityId || application.opportunity_id || application.opportunity;
+  }
+
   function renderOpportunity(opportunity) {
     const evaluation = window.GEMSApplicationStore.evaluateOpportunity(opportunity);
     const existing = window.GEMSApplicationStore.getApplications()
-      .find(application => String(application.opportunityId) === String(opportunity.id));
+      .find(application => String(getApplicationOpportunityId(application)) === String(opportunity.id));
     const icon = opportunity.hostInstitution.split(' ').map(word => word[0]).slice(0, 3).join('').toUpperCase();
     const eligibleLabel = opportunity.eligible ? 'Eligible' : 'Not eligible';
     const eligibleClass = opportunity.eligible ? 'chip--green' : 'chip--ineligible';
@@ -150,26 +154,40 @@
     button.addEventListener('click', () => handleQuickApply(opportunity, button));
   }
 
-  function handleQuickApply(opportunity, button) {
-    const result = window.GEMSApplicationStore.submitApplication(opportunity);
+  async function handleQuickApply(opportunity, button) {
     const feedback = document.getElementById('quick-apply-feedback');
-
-    if (!result.ok) {
-      feedback.innerHTML = renderBundle(result.evaluation);
-      const uploadLink = feedback.querySelector('a');
-      if (uploadLink) uploadLink.focus();
-      return;
-    }
-
-    feedback.innerHTML = `
-      <div class="quick-apply-alert quick-apply-alert--success" role="status">
-        <strong>${result.duplicate ? 'Already submitted' : 'Application submitted successfully!'}</strong>
-        <span>Your ${result.application.bundle.length}-document package was sent to OVPERI. A confirmation email was sent to ${escapeHtml(result.application.student.email)}.</span>
-        <a href="applications.html">View application and bundle &rarr;</a>
-      </div>
-    `;
-    button.textContent = 'Application submitted';
     button.disabled = true;
+    button.textContent = 'Submitting...';
+
+    try {
+      const result = await window.GEMSApplicationStore.submitApplication(opportunity);
+      if (!result.ok) {
+        feedback.innerHTML = renderBundle(result.evaluation);
+        const uploadLink = feedback.querySelector('a');
+        if (uploadLink) uploadLink.focus();
+        button.disabled = false;
+        button.innerHTML = '<span>Quick Apply</span>';
+        return;
+      }
+
+      feedback.innerHTML = `
+        <div class="quick-apply-alert quick-apply-alert--success" role="status">
+          <strong>${result.duplicate ? 'Already submitted' : 'Application submitted successfully!'}</strong>
+          <span>Your application was sent to OVPERI for review.</span>
+          <a href="applications.html">View application and bundle &rarr;</a>
+        </div>
+      `;
+      button.textContent = 'Application submitted';
+    } catch (error) {
+      feedback.innerHTML = `
+        <div class="quick-apply-alert quick-apply-alert--warning" role="status">
+          <strong>Unable to submit application</strong>
+          <span>${escapeHtml(error.message)}</span>
+        </div>
+      `;
+      button.disabled = false;
+      button.innerHTML = '<span>Quick Apply</span>';
+    }
   }
 
   async function loadDetail() {
@@ -183,7 +201,8 @@
     }
 
     try {
-      const response = await window.fakeApiFetch(`/api/opportunities/${encodeURIComponent(id)}`);
+      await window.GEMSApplicationStore.init();
+      const response = await fetch(`/api/opportunities/${encodeURIComponent(id)}`);
       const data = await response.json();
       loadingState.hidden = true;
       if (!response.ok) {

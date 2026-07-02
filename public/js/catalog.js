@@ -24,6 +24,7 @@
   let calendarFocusDate = getToday();
   let timelineFocusDate = getToday();
   let searchTimer;
+  let catalogOpportunities = [];
 
   function normalizeText(value) {
     return String(value || '').trim().toLowerCase();
@@ -435,9 +436,7 @@
   }
 
   function getFilteredOpportunities() {
-    const opportunities = typeof window.getOpportunities === 'function'
-      ? window.getOpportunities()
-      : [];
+    const opportunities = catalogOpportunities;
     const filters = getFormData();
     const today = getToday();
 
@@ -707,6 +706,26 @@
     updateFilterControls();
   }
 
+  function renderLoadingState() {
+    resultsContainer.innerHTML = '<div class="card"><div class="card__title">Loading opportunities...</div><div class="card__subtitle">Fetching current programs from the database.</div></div>';
+    paginationContainer.innerHTML = '';
+    if (countLabel) countLabel.textContent = 'Loading opportunities...';
+  }
+
+  function renderErrorState(message) {
+    resultsContainer.innerHTML = `<div class="card"><div class="card__title">Unable to load opportunities.</div><div class="card__subtitle">${message}</div></div>`;
+    paginationContainer.innerHTML = '';
+    if (countLabel) countLabel.textContent = 'Opportunity data is unavailable.';
+  }
+
+  async function loadOpportunities() {
+    renderLoadingState();
+    const response = await fetch('/api/opportunities?pageSize=100');
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || `HTTP ${response.status}`);
+    catalogOpportunities = Array.isArray(result.data) ? result.data : [];
+  }
+
   function syncFormFromUrl() {
     const params = new URLSearchParams(window.location.search);
     const searchValue = params.get('search') || '';
@@ -831,14 +850,19 @@
     if (resetButton) resetButton.addEventListener('click', resetFilters);
   }
 
-  function init() {
+  async function init() {
     syncFormFromUrl();
     if (deadlineRangeSelect && deadlineRangeSelect.value !== 'any') {
       applyDeadlineRange();
     }
     attachEvents();
     updateCalendarModeLabel();
-    renderResults();
+    try {
+      await loadOpportunities();
+      renderResults();
+    } catch (error) {
+      renderErrorState(error.message);
+    }
   }
 
   document.addEventListener('DOMContentLoaded', init);

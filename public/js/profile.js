@@ -10,6 +10,44 @@
   const navLinks = document.querySelectorAll('.nav-item a');
   const sections = document.querySelectorAll('.section-card');
 
+  function setValue(id, value) {
+    const input = document.getElementById(id);
+    if (input && value != null) input.value = value;
+  }
+
+  async function hydrateProfile() {
+    try {
+      const isAdmin = document.body.classList.contains('admin-page');
+      const response = await fetch(isAdmin ? '/api/admin/summary' : '/api/student/summary');
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || `HTTP ${response.status}`);
+
+      if (isAdmin) {
+        const { admin, programs, applicants } = result.data;
+        setValue('fullname', admin.name);
+        setValue('email', admin.email);
+        const summaryValues = document.querySelectorAll('.admin-profile-summary-card__value');
+        if (summaryValues[0]) summaryValues[0].textContent = programs.total;
+        if (summaryValues[1]) summaryValues[1].textContent = applicants.total;
+        if (summaryValues[2]) summaryValues[2].textContent = applicants.reviewed;
+        if (summaryValues[3]) summaryValues[3].textContent = programs.recent.length ? 'Today' : 'None';
+      } else {
+        const { student, documents } = result.data;
+        setValue('fullname', student.name);
+        setValue('email', student.email);
+        setValue('student-id', student.studentId);
+        setValue('major', student.major);
+        setValue('grad-term', student.graduatingTerm);
+        const avatar = document.querySelector('.user-avatar');
+        if (avatar && student.name) avatar.textContent = student.name.split(' ').map(part => part[0]).slice(0, 2).join('');
+        const pendingBadge = document.querySelector('#section-documents .status-badge');
+        if (pendingBadge) pendingBadge.textContent = `${documents.length} Uploaded`;
+      }
+    } catch (error) {
+      console.warn('Unable to hydrate profile from backend.', error);
+    }
+  }
+
   // Validation Rules
   const rules = {
     fullname: {
@@ -95,7 +133,7 @@
   });
 
   // Event Listener: Cancel Button
-  btnCancel.addEventListener('click', () => {
+  if (btnCancel) btnCancel.addEventListener('click', () => {
     if (confirm('Are you sure? Any unsaved changes will be lost.')) {
       form.reset();
       // Reset validation styles
@@ -174,5 +212,7 @@
       link.classList.add('active');
     });
   });
+
+  hydrateProfile();
 
 })();
