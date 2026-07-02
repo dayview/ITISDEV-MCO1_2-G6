@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Create Account — GEMS</title>
+  <title>Create An Account — GEMS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -12,240 +12,152 @@
 </head>
 <body>
 
-<div class="app-wrapper">
-
-  <!-- =====================================================================
-       PROTO BAR
-       ===================================================================== -->
-  <nav class="student-topnav" aria-label="Student navigation">
-    <a href="http://127.0.0.1:5500/gems/views/student/dashboard.html" class="student-topnav__brand">
-      <div class="student-topnav__logo">
-        <img src="../../public/images/OVPERI-white.png" alt="OVPERI" class="student-topnav__logo-img">
+<!-- ============================================== -->
+<!-- REGISTRATION MODAL OVERLAY BACKGROUND          -->
+<!-- ============================================== -->
+<div class="login-bg" id="auth-modal" onclick="closeAuthModal(event)">
+  
+  <!-- auth-container is centered but allowed to scroll if it exceeds screen height -->
+  <div class="auth-container" id="auth-container" onclick="event.stopPropagation()">
+    <div class="card">
+      
+      <!-- Close Button ✕ -->
+      <button class="modal-close-btn" onclick="closeAuthModal(event, true)">✕</button>
+      
+      <!-- Shared Brand Header Symbol -->
+      <div class="brand-logo">
+        <img src="../../public/images/OVPERI-white.png" alt="OVPERI Logo" class="brand-logo-img">
       </div>
-      <span class="student-topnav__title">GEMS</span>
-    </a>
 
-    <div class="student-topnav__links">
-      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/catalog.html">
-        <div class="student-topnav__link-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v18"/></svg>
-        </div>
-        <div class="student-topnav__link-label">Catalog</div>
-      </a>
+      <!-- REGISTRATION VIEW -->
+      <div id="register-view" class="view active">
+        <h2>Create An Account</h2>
+        <p class="subtext">Register your academic profile in GEMS</p>
 
-      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/documents.html">
-        <div class="student-topnav__link-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-        </div>
-        <div class="student-topnav__link-label">Documents</div>
-      </a>
+        <form action="dashboard.html" onsubmit="event.preventDefault();">
+          
+          <!-- SECTION 1: Account Credentials -->
+          <div class="section-heading">Account Credentials</div>
+          <div class="form-group">
+            <label class="form-label">DLSU Email Address</label>
+            <input type="email" class="mock-field" placeholder="lastname_firstname@dlsu.edu.ph" required>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <input type="password" class="mock-field" placeholder="••••••••" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirm Password</label>
+              <input type="password" class="mock-field" placeholder="••••••••" required>
+            </div>
+          </div>
 
-      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/applications.html">
-        <div class="student-topnav__link-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5l4 4L8 20l-4 1 1-4L16.5 3.5z"/></svg>
-        </div>
-        <div class="student-topnav__link-label">My Applications</div>
-      </a>
+          <!-- SECTION 2: Personal Information -->
+          <div class="section-heading">Personal Information</div>
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="mock-field" placeholder="e.g. Juan Dela Cruz" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" class="mock-field" placeholder="+63 9XX XXX XXXX" required>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Gender</label>
+              <select class="mock-field" required>
+                <option value="" disabled selected>Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Non-binary">Non-binary</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date of Birth</label>
+              <input type="date" class="mock-field" required>
+            </div>
+          </div>
 
-      <a class="student-topnav__link" href="http://127.0.0.1:5500/gems/views/student/profile.html">
-        <div class="student-topnav__link-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <!-- SECTION 3: Academic Details -->
+          <div class="section-heading">Academic Details</div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Student ID Number</label>
+              <input type="text" class="mock-field mono" placeholder="12306533" maxlength="8" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">College</label>
+              <select class="mock-field" required>
+                <option value="" disabled selected>Select College</option>
+                <option value="CCS">CCS</option>
+                <option value="BAGCED">BAGCED</option>
+                <option value="CLA">CLA</option>
+                <option value="COS">COS</option>
+                <option value="GCOE">GCOE</option>
+                <option value="RVRCOB">RVRCOB</option>
+                <option value="SOE">SOE</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Enrollment Status</label>
+              <select class="mock-field" required>
+                <option value="" disabled selected>Select Status</option>
+                <option value="Full-time">Full-time</option>
+                <option value="Part-time">Part-time</option>
+                <option value="Leave of Absence">Leave of Absence</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Current Major / Program</label>
+              <input type="text" class="mock-field" placeholder="e.g. BSCS-ST" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Expected Graduation Term</label>
+            <input type="text" class="mock-field" placeholder="e.g. Term 3, AY 2025-2026" required>
+          </div>
+
+          <!-- Submit Action -->
+          <button type="submit" class="btn btn-primary" style="margin-top: 2rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M5 12l5 5l10 -10" />
+            </svg> Complete Registration
+          </button>
+        </form>
+
+        <!-- redirects back to the login modal file -->
+        <div class="toggle-link">
+          Already have an account? <a href="#" onclick="event.preventDefault(); if (window.loadAuthContent) { window.loadAuthContent('login.html'); } else { window.location.href = 'login.html'; }">Sign in</a>
         </div>
-        <div class="student-topnav__link-label">Account</div>
-      </a>
+      </div>
+
     </div>
-    <div class="student-topnav__actions"></div>
-  </nav>
+  </div>
+</div>
 
-  <!-- =====================================================================
-       REGISTRATION BODY
-       ===================================================================== -->
-  <div class="reg-body">
+<script>
+  function openAuthModal() {
+    document.getElementById('auth-modal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
 
-    <!-- ---- Sidebar ---- -->
-    <aside class="reg-sidebar">
+  function closeAuthModal(event, force = false) {
+    if (force || event.target === document.getElementById('auth-modal')) {
+      document.getElementById('auth-modal').classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+  }
 
-      <div class="reg-sidebar__brand">
-        <div class="reg-sidebar__logo">G</div>
-        <div>
-          <div class="reg-sidebar__name">New applicant</div>
-          <div class="reg-sidebar__sub">Create your profile</div>
-        </div>
-      </div>
-
-      <div class="reg-steps">
-
-        <!-- Step 1: Personal Info — active -->
-        <div class="reg-step reg-step--active">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>
-          </svg>
-          Personal Info
-        </div>
-
-        <!-- Step 2: Academic Details -->
-        <div class="reg-step reg-step--idle">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 10L12 5 2 10l10 5 10-5z"/>
-            <path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>
-          </svg>
-          Academic Details
-        </div>
-
-        <!-- Step 3: Documents -->
-        <div class="reg-step reg-step--idle">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 3v4a1 1 0 0 0 1 1h4"/>
-            <path d="M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
-          </svg>
-          Documents
-        </div>
-
-      </div>
-
-      <!-- "Log in instead" card -->
-      <div class="reg-sidebar__cta">
-        <div class="reg-sidebar__cta-title">Already registered?</div>
-        <div class="reg-sidebar__cta-sub">Log in to track your applications.</div>
-        <a href="login.html" style="display:block;text-decoration:none;">
-          <button class="btn-login-instead">Log in instead</button>
-        </a>
-      </div>
-
-    </aside><!-- /reg-sidebar -->
-
-    <!-- ---- Main content ---- -->
-    <main class="reg-main">
-      <div class="reg-inner">
-
-        <div class="reg-heading">Create your GEMS account</div>
-        <div class="reg-subheading">Set up your profile once — your details auto-fill every application.</div>
-
-        <!-- Account Credentials -->
-        <div class="reg-section">
-          <div class="reg-section__title">Account Credentials</div>
-
-          <div class="field">
-            <div class="field__label">DLSU Email Address</div>
-            <input type="email" placeholder="lastname_firstname@dlsu.edu.ph" />
-          </div>
-
-          <div class="field-row">
-            <div class="field">
-              <div class="field__label">Password</div>
-              <input type="password" placeholder="••••••••" />
-            </div>
-            <div class="field">
-              <div class="field__label">Confirm Password</div>
-              <input type="password" placeholder="••••••••" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Personal Information -->
-        <div class="reg-section">
-          <div class="reg-section__title">Personal Information</div>
-
-          <div class="field">
-            <div class="field__label">Full Name</div>
-            <input type="text" placeholder="e.g. Katrina Isabel Estrella" />
-          </div>
-
-          <div class="field">
-            <div class="field__label">Phone Number</div>
-            <input type="tel" placeholder="+63 9XX XXX XXXX" />
-          </div>
-
-          <div class="field-row">
-            <div class="field">
-              <div class="field__label">Gender</div>
-              <div class="fake-select">
-                Select
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M6 9l6 6 6-6"/>
-                </svg>
-              </div>
-            </div>
-            <div class="field">
-              <div class="field__label">Date of Birth</div>
-              <div class="fake-select">
-                DD / MM / YYYY
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Academic Details -->
-        <div class="reg-section">
-          <div class="reg-section__title">Academic Details</div>
-
-          <div class="field">
-            <div class="field__label">Student ID Number</div>
-            <input type="text" placeholder="e.g. 2023-04589" />
-          </div>
-
-          <div class="field-row" style="margin-bottom:16px;">
-            <div class="field">
-              <div class="field__label">College</div>
-              <div class="fake-select">
-                Select college
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M6 9l6 6 6-6"/>
-                </svg>
-              </div>
-            </div>
-            <div class="field">
-              <div class="field__label">Enrollment Status</div>
-              <div class="fake-select">
-                Full-time
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M6 9l6 6 6-6"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div class="field-row">
-            <div class="field">
-              <div class="field__label">Current Major / Program</div>
-              <input type="text" placeholder="e.g. BS Computer Science" />
-            </div>
-            <div class="field">
-              <div class="field__label">Expected Graduation Term</div>
-              <div class="fake-select">
-                Select term
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M6 9l6 6 6-6"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="reg-footer">
-          <div class="reg-footer__login">
-            Already have an account? <a href="login.html">Log in</a>
-          </div>
-          <div class="reg-footer__btns">
-            <a href="dashboard.html" style="text-decoration:none;">
-              <button class="btn-cancel">Cancel</button>
-            </a>
-            <a href="dashboard.html" style="text-decoration:none;">
-              <button class="btn-create">Create account</button>
-            </a>
-          </div>
-        </div>
-
-      </div>
-    </main><!-- /reg-main -->
-
-  </div><!-- /reg-body -->
-
-</div><!-- /app-wrapper -->
-
+  window.onload = function() {
+    openAuthModal();
+  };
+</script>
 </body>
 </html>
