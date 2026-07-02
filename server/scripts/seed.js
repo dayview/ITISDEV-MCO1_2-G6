@@ -6,16 +6,16 @@ const Application = require('../models/Applications');
 
 const baseEligibility = { nonGraduatingRequired: false, sdfoClearanceRequired: false };
 const opportunities = [
-    { code: 'NUS-EX-01',    name: 'NUS Student Exchange', institution: 'National University of Singapore', country: 'Singapore', category: 'Student Exchange', deadline: '2026-07-15', capacity: 5 },
-    { code: 'KAIST-SU-01',  name: 'KAIST Summer Program', institution: 'KAIST', country: 'South Korea', category: 'Short-Term Program', deadline: '2026-06-30', capacity: 8 },
-    { code: 'UTOKYO-EX-01', name: 'UTokyo Exchange', institution: 'University of Tokyo', country: 'Japan', category: 'Student Exchange', deadline: '2026-08-01', capacity: 4 },
-    { code: 'TUM-EX-01',    name: 'TUM Exchange Program', institution: 'Technical University of Munich', country: 'Germany', category: 'Student Exchange', deadline: '2026-09-15', capacity: 6 },
-    { code: 'UNSW-EX-01',   name: 'UNSW Exchange', institution: 'University of New South Wales', country: 'Australia', category: 'Student Exchange', deadline: '2026-10-01', capacity: 4 },
-    { code: 'NTU-RS-01',    name: 'NTU Research Internship', institution: 'Nanyang Technological University', country: 'Singapore', category: 'Internship', deadline: '2026-07-28', capacity: 3 },
-    { code: 'YONSEI-SU-01', name: 'Yonsei Summer School', institution: 'Yonsei University', country: 'South Korea', category: 'Short-Term Program', deadline: '2026-06-28', capacity: 10 },
-    { code: 'HKU-EX-01',    name: 'HKU Exchange', institution: 'University of Hong Kong', country: 'Hong Kong', category: 'Student Exchange', deadline: '2026-08-20', capacity: 5 },
-    { code: 'NUS-RS-01',    name: 'NUS UROP Research', institution: 'National University of Singapore', country: 'Singapore', category: 'Research Program', deadline: '2026-10-31', capacity: 6 },
-    { code: 'POSTECH-EX-01', name: 'POSTECH Exchange', institution: 'POSTECH', country: 'South Korea', category: 'Student Exchange', deadline: '2026-09-30', capacity: 4 },
+    { code: 'NUS-EX-01',    name: 'NUS Student Exchange', institution: 'National University of Singapore', country: 'Singapore', region: 'Asia', category: 'Exchange', deadline: '2026-07-15', capacity: 5 },
+    { code: 'KAIST-SU-01',  name: 'KAIST Summer Program', institution: 'KAIST', country: 'South Korea', region: 'Asia', category: 'Summer', deadline: '2026-06-30', capacity: 8 },
+    { code: 'UTOKYO-EX-01', name: 'UTokyo Exchange', institution: 'University of Tokyo', country: 'Japan', region: 'Asia', category: 'Exchange', deadline: '2026-08-01', capacity: 4 },
+    { code: 'TUM-EX-01',    name: 'TUM Exchange Program', institution: 'Technical University of Munich', country: 'Germany', region: 'Europe', category: 'Exchange', deadline: '2026-09-15', capacity: 6 },
+    { code: 'UNSW-EX-01',   name: 'UNSW Exchange', institution: 'University of New South Wales', country: 'Australia', region: 'Australia', category: 'Exchange', deadline: '2026-10-01', capacity: 4 },
+    { code: 'NTU-RS-01',    name: 'NTU Research Internship', institution: 'Nanyang Technological University', country: 'Singapore', region: 'Asia', category: 'Internship', deadline: '2026-07-28', capacity: 3 },
+    { code: 'YONSEI-SU-01', name: 'Yonsei Summer School', institution: 'Yonsei University', country: 'South Korea', region: 'Asia', category: 'Summer', deadline: '2026-06-28', capacity: 10 },
+    { code: 'HKU-EX-01',    name: 'HKU Exchange', institution: 'University of Hong Kong', country: 'Hong Kong', region: 'Asia', category: 'Exchange', deadline: '2026-08-20', capacity: 5 },
+    { code: 'NUS-RS-01',    name: 'NUS UROP Research', institution: 'National University of Singapore', country: 'Singapore', region: 'Asia', category: 'Research', deadline: '2026-10-31', capacity: 6 },
+    { code: 'POSTECH-EX-01', name: 'POSTECH Exchange', institution: 'POSTECH', country: 'South Korea', region: 'Asia', category: 'Exchange', deadline: '2026-09-30', capacity: 4 },
 ].map(opportunity => ({
     ...opportunity,
     status: 'published',

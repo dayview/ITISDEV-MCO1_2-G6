@@ -7,6 +7,7 @@ const connectDB = require('./config/db');
 const Opportunity = require('./models/Opportunity');
 const Application = require('./models/Applications');
 const Document = require('./models/Document');
+const AuditLog = require('./models/AuditLog');
 const authRoutes = require('./routes/auth');
 
 const app = express();
@@ -321,6 +322,15 @@ app.get('/api/opportunities', async (req, res) => {
 app.post('/api/opportunities', requireAdminSession, async (req, res) => {
     try {
         const opportunity = await Opportunity.create(normalizeOpportunityInput(req.body));
+        await AuditLog.create({
+            userId: req.session.user._id,
+            userRole: req.session.user.role,
+            action: 'opportunity_created',
+            targetType: 'Opportunity',
+            targetId: opportunity._id,
+            targetLabel: opportunity.name,
+            ip: req.ip
+        });
         res.status(201).json({
             success: true,
             data: mapOpportunity(opportunity),
@@ -351,7 +361,7 @@ app.patch('/api/opportunities/:id', requireAdminSession, async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ success: false, error: 'Invalid opportunity id.' });
         }
-        const existing = await Opportunity.findById(req.params.id).select('code');
+        const existing = await Opportunity.findById(req.params.id).select('code status');
         const updates = normalizeOpportunityInput({ ...req.body, code: req.body.code || existing?.code });
         const opportunity = await Opportunity.findByIdAndUpdate(
             req.params.id,
@@ -361,6 +371,22 @@ app.patch('/api/opportunities/:id', requireAdminSession, async (req, res) => {
         if (!opportunity) {
             return res.status(404).json({ success: false, error: 'Opportunity not found' });
         }
+        const statusChanged = existing && existing.status !== opportunity.status;
+        const action = statusChanged && opportunity.status === 'published'
+            ? 'opportunity_published'
+            : statusChanged && opportunity.status === 'closed'
+                ? 'opportunity_closed'
+                : 'opportunity_updated';
+        await AuditLog.create({
+            userId: req.session.user._id,
+            userRole: req.session.user.role,
+            action,
+            targetType: 'Opportunity',
+            targetId: opportunity._id,
+            targetLabel: opportunity.name,
+            changes: statusChanged ? [{ field: 'status', from: existing.status, to: opportunity.status }] : [],
+            ip: req.ip
+        });
         res.json({
             success: true,
             data: mapOpportunity(opportunity),
@@ -532,6 +558,7 @@ app.patch('/api/applications/:id/status', requireAdminSession, async (req, res) 
         if (!allowed.includes(req.body.status)) {
             return res.status(400).json({ success: false, error: `Status must be one of: ${allowed.join(', ')}` });
         }
+        const previous = await Application.findById(req.params.id).select('status');
         const application = await Application.findByIdAndUpdate(
             req.params.id,
             {
@@ -543,6 +570,16 @@ app.patch('/api/applications/:id/status', requireAdminSession, async (req, res) 
         if (!application) {
             return res.status(404).json({ success: false, error: 'Application not found' });
         }
+        await AuditLog.create({
+            userId: req.session.user._id,
+            userRole: req.session.user.role,
+            action: 'application_status_changed',
+            targetType: 'Application',
+            targetId: application._id,
+            targetLabel: `Application ${application._id}`,
+            changes: [{ field: 'status', from: previous?.status, to: application.status }],
+            ip: req.ip
+        });
         res.json({ success: true, data: application });
     } catch (err) {
         res.status(400).json({ success: false, error: err.message });
@@ -559,6 +596,7 @@ app.post('/api/applications/bulk-action', requireAdminSession, async (req, res) 
         if (!allowed.includes(req.body.status)) {
             return res.status(400).json({ success: false, error: `Status must be one of: ${allowed.join(', ')}` });
         }
+        const targets = await Application.find({ _id: { $in: ids } }).select('status');
         await Application.updateMany(
             { _id: { $in: ids } },
             {
@@ -566,6 +604,18 @@ app.post('/api/applications/bulk-action', requireAdminSession, async (req, res) 
                 $push: { statusHistory: { status: req.body.status, changedAt: new Date() } }
             }
         );
+        if (targets.length) {
+            await AuditLog.insertMany(targets.map(app => ({
+                userId: req.session.user._id,
+                userRole: req.session.user.role,
+                action: 'application_bulk_status_changed',
+                targetType: 'Application',
+                targetId: app._id,
+                targetLabel: `Application ${app._id}`,
+                changes: [{ field: 'status', from: app.status, to: req.body.status }],
+                ip: req.ip
+            })));
+        }
         const data = await Application.find({ _id: { $in: ids } });
         res.json({ success: true, data });
     } catch (err) {

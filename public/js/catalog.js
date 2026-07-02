@@ -803,6 +803,20 @@
       });
     }
 
+    if (formFields.category) {
+      formFields.category.addEventListener('change', function() {
+        if (formFields.page) formFields.page.value = '1';
+        renderResults();
+      });
+    }
+
+    if (formFields.region) {
+      formFields.region.addEventListener('change', function() {
+        if (formFields.page) formFields.page.value = '1';
+        renderResults();
+      });
+    }
+
     if (globalSearchInput) {
       globalSearchInput.addEventListener('input', function() {
         if (formFields.search) formFields.search.value = this.value;
