@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
-const MongoStore = require('connect-mongo');
+const { MongoStore } = require('connect-mongo');
 const connectDB = require('./config/db');
 const Opportunity = require('./models/Opportunity');
 const { requireAuth, requireAdmin } = require('./middleware/auth');
