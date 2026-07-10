@@ -155,7 +155,7 @@
         const program = programs.find(item => item.id === row.dataset.programId);
         const action = button.dataset.action;
         if (action === 'edit') window.location.href = `post-opportunity.html?id=${program.id}`;
-        else if (action === 'view' && program.rawStatus === 'published') window.location.href = `../student/opportunity.html?id=${program.id}`;
+        else if (action === 'view' && program.rawStatus === 'published') window.location.href = `../opportunity.html?id=${program.id}`;
         else if (action === 'view') alert('Draft programs are not visible to students yet.');
         else alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action selected for "${program.name}".`);
       });
