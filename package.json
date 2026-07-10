@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server/server.js",
     "seed": "node server/seed.js",
+    "seed:quickapply": "node server/seed-quickapply.js",
     "dev": "node server/server.js"
   },
   "repository": {

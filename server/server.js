@@ -5,6 +5,7 @@ const session = require('express-session');
 const { MongoStore } = require('connect-mongo');
 const connectDB = require('./config/db');
 const Opportunity = require('./models/Opportunity');
+const User = require('./models/Users');
 const { requireAuth, requireAdmin } = require('./middleware/auth');
 
 const authRouter = require('./routes/auth');
@@ -50,7 +51,8 @@ app.get('/api/opportunities', async (req, res) => {
             page: Number(req.query.page) || 1,
             pageSize: Number(req.query.pageSize) || 50,
         });
-        res.json({ data: result.data.map(mapOpportunity), meta: result.meta });
+        const data = await Promise.all(result.data.map(opp => mapOpportunity(opp, req.session)));
+        res.json({ data, meta: result.meta });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -60,7 +62,7 @@ app.get('/api/opportunities/:id', async (req, res) => {
     try {
         const opportunity = await Opportunity.findOpportunityById(req.params.id);
         if (!opportunity) return res.status(404).json({ message: 'Opportunity not found' });
-        res.json(mapOpportunity(opportunity));
+        res.json(await mapOpportunity(opportunity, req.session));
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -143,8 +145,14 @@ app.get('/admin/:page', (req, res, next) => {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const mapOpportunity = (opportunity) => {
+const mapOpportunity = async (opportunity, session) => {
     const plain = typeof opportunity.toObject === 'function' ? opportunity.toObject() : opportunity;
+
+    let eligibility = { eligible: true, reasons: [] };
+    if (session?.userId && session.role === 'Student') {
+        eligibility = await User.checkEligibility(session.userId, plain);
+    }
+
     return {
         id: String(plain._id),
         code: plain.code,
@@ -166,7 +174,8 @@ const mapOpportunity = (opportunity) => {
         credits: plain.credits,
         requiredDocuments: plain.requiredDocumentTypes || [],
         eligibility: plain.eligibility,
-        eligible: true,
+        eligible: eligibility.eligible,
+        eligibilityReasons: eligibility.reasons,
         createdAt: plain.createdAt,
         updatedAt: plain.updatedAt,
     };

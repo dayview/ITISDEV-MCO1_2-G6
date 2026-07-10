@@ -68,10 +68,11 @@ applicationSchema.methods.recalculateDocumentsStatus = async function () {
 };
 
 /* Create a new application. Can also check dupes coz of unique index */
-applicationSchema.statics.createApplication = async function ({ studentId, opportunityId }) {
+applicationSchema.statics.createApplication = async function ({ studentId, opportunityId, documents = [] }) {
     const application = new this({
         studentId,
         opportunityId,
+        documents,
         statusHistory: [{ status: 'submitted', changedAt: new Date() }]
     });
     return application.save();

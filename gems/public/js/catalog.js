@@ -505,6 +505,9 @@
     const statusChip = document.createElement('span');
     statusChip.className = `chip ${opportunity.eligible ? 'chip--green' : 'chip--ineligible'}`;
     statusChip.innerHTML = `<span class="chip__dot"></span>${opportunity.eligible ? 'Eligible' : 'Not eligible'}`;
+    if (!opportunity.eligible && opportunity.eligibilityReasons?.length) {
+      statusChip.title = opportunity.eligibilityReasons.join('\n');
+    }
 
     titleRow.append(title, statusChip);
 

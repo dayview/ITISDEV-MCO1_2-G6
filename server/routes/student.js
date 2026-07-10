@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 const User = require('../models/Users');
 const Application = require('../models/Applications');
 const Document = require('../models/Document');
+const Opportunity = require('../models/Opportunity');
 const AuditLog = require('../models/AuditLog');
 const { requireAuth } = require('../middleware/auth');
 
@@ -70,10 +71,35 @@ router.post('/applications', async (req, res) => {
         const { opportunityId } = req.body;
         if (!opportunityId) return res.status(400).json({ message: 'opportunityId is required' });
 
+        const opportunity = await Opportunity.findById(opportunityId);
+        if (!opportunity) return res.status(404).json({ message: 'Opportunity not found' });
+
+        if (opportunity.status !== 'published' || opportunity.deadline < new Date()) {
+            return res.status(400).json({ message: 'This opportunity is not currently accepting applications' });
+        }
+
+        const { eligible, reasons } = await User.checkEligibility(req.session.userId, opportunity);
+        if (!eligible) {
+            return res.status(403).json({ message: 'You are not eligible for this opportunity', reasons });
+        }
+
+        // Auto-attach whichever required document types the student has already uploaded
+        // to their vault, so they don't have to re-select files that are already on file.
+        const requiredTypes = opportunity.requiredDocumentTypes || [];
+        const matchedDocs = await Promise.all(
+            requiredTypes.map(type => Document.findByStudentAndType(req.session.userId, type))
+        );
+        const documentIds = matchedDocs
+            .map(docs => docs[0]) // most recently uploaded file for that type
+            .filter(Boolean)
+            .map(doc => doc._id);
+
         const application = await Application.createApplication({
             studentId: req.session.userId,
             opportunityId,
+            documents: documentIds,
         });
+        await application.recalculateDocumentsStatus();
 
         await AuditLog.logAction({
             action: 'application.submitted',

@@ -98,6 +98,12 @@
             <section class="detail-section">
               <h3>Eligibility criteria</h3>
               ${renderList(opportunity.eligibilityCriteria)}
+              ${!opportunity.eligible && opportunity.eligibilityReasons?.length ? `
+                <div class="quick-apply-alert quick-apply-alert--warning">
+                  <strong>Why you're not eligible</strong>
+                  ${renderList(opportunity.eligibilityReasons)}
+                </div>
+              ` : ''}
             </section>
             <section class="detail-section">
               <h3>Required documents</h3>
