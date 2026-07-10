@@ -49,14 +49,12 @@ ITISDEV-MCO1_2-G6/
 │   └── scripts/
 │       └── seed.js
 │
-├── client/                     ← student-facing frontend (served at /, /:page)
-│   └── views/student/
-│       ├── dashboard.html
-│       ├── catalog.html
-│       └── ...
-│
-├── gems/                       ← admin-facing frontend (served at /admin/:page)
-│   └── views/admin/
+├── views/
+│   ├── student/                 ← student-facing frontend (served at /, /:page)
+│   │   ├── dashboard.html
+│   │   ├── catalog.html
+│   │   └── ...
+│   └── admin/                   ← admin-facing frontend (served at /admin/:page)
 │       ├── dashboard.html
 │       ├── applicants.html
 │       ├── programs.html

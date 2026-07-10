@@ -13,7 +13,7 @@ const authRoutes = require('./routes/auth');
 const { mapOpportunity, normalizeOpportunityInput, mapAdminOpportunity } = require('./lib/opportunities');
 const { normalizeDocumentType } = require('./lib/documents');
 const { evaluateStudentEligibility, isOpportunityOpenForApplication } = require('./lib/eligibility');
-const { applicationPipeline, buildApplicationPayload, toApplicationsCsv, isValidStatus, APPLICATION_STATUSES } = require('./lib/applications');
+const { applicationPipeline, buildApplicationPayload, toApplicationsCsv, isValidStatus, APPLICATION_STATUSES, mapStudentApplication } = require('./lib/applications');
 const { computeStatisticsSummary, getUrgentCutoff } = require('./lib/statistics');
 const { determineOpportunityUpdateAction } = require('./lib/audit');
 const { buildStudentDashboard } = require('./lib/studentDashboard');
@@ -21,8 +21,8 @@ const { buildStudentDashboard } = require('./lib/studentDashboard');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const root = path.join(__dirname, '..');
-const studentViewsRoot = path.join(root, 'client', 'views', 'student');
-const adminViewsRoot = path.join(root, 'gems', 'views', 'admin');
+const studentViewsRoot = path.join(root, 'views', 'student');
+const adminViewsRoot = path.join(root, 'views', 'admin');
 
 app.use(express.json());
 app.use(session({
@@ -286,16 +286,7 @@ app.get('/api/applications/my', requireStudentSession, async (req, res) => {
         const data = await Application.find({ userId: req.session.user._id })
             .populate('opportunityId')
             .sort({ createdAt: -1 });
-        res.json({ success: true, data: data.map(application => ({
-            id: String(application._id),
-            opportunityId: String(application.opportunityId?._id || application.opportunityId),
-            programName: application.opportunityId?.name || 'Unknown opportunity',
-            hostInstitution: application.opportunityId?.institution || '',
-            deadline: application.opportunityId?.deadline,
-            status: application.status,
-            documentsStatus: application.documentsStatus,
-            submittedAt: application.submittedDate || application.createdAt
-        })) });
+        res.json({ success: true, data: data.map(mapStudentApplication) });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

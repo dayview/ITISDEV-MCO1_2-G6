@@ -1,84 +1,208 @@
-(async function() {
-  const container = document.getElementById('quick-application-list');
-  if (!container) return;
+(function () {
+  const STATUS = window.GEMSApplicationStatus;
+  const STEP_LABELS = ['Submitted', 'Under Review', 'Nominated', 'Decision'];
+  const STEP_INDEX = { submitted: 0, 'under-review': 1, nominated: 2, accepted: 3, rejected: 3 };
+
+  const loadingEl = document.getElementById('applications-loading');
+  const errorEl = document.getElementById('applications-error');
+  const errorTitleEl = document.getElementById('applications-error-title');
+  const errorMessageEl = document.getElementById('applications-error-message');
+  const retryButton = document.getElementById('applications-retry');
+  const emptyEl = document.getElementById('applications-empty');
+  const filteredEmptyEl = document.getElementById('applications-filtered-empty');
+  const listEl = document.getElementById('application-list');
+  const pillsEl = document.getElementById('applications-filter-pills');
+
+  if (!listEl || !STATUS) return;
+
+  let allApplications = [];
+  let activeFilter = 'all';
 
   function escapeHtml(value) {
-    const element = document.createElement('div');
-    element.textContent = String(value || '');
-    return element.innerHTML;
+    const el = document.createElement('div');
+    el.textContent = value === null || value === undefined ? '' : String(value);
+    return el.innerHTML;
   }
 
-  container.innerHTML = '<p class="post-list-empty">Loading your recent applications...</p>';
-
-  let response;
-  try {
-    response = await fetch('/api/applications/my');
-  } catch (error) {
-    container.innerHTML = '<div class="card"><div class="card__title">Unable to load your applications.</div><div class="card__subtitle">Please check your connection and try again.</div></div>';
-    return;
+  function showOnly(state) {
+    if (loadingEl) loadingEl.hidden = state !== 'loading';
+    if (errorEl) errorEl.hidden = state !== 'error';
+    if (emptyEl) emptyEl.hidden = state !== 'empty';
+    if (filteredEmptyEl) filteredEmptyEl.hidden = state !== 'filtered-empty';
+    listEl.hidden = state !== 'list';
+    if (state !== 'list') listEl.innerHTML = '';
   }
 
-  if (response.status === 401) {
-    container.hidden = true;
-    return;
+  function showError(title, message) {
+    if (errorTitleEl) errorTitleEl.textContent = title;
+    if (errorMessageEl) errorMessageEl.textContent = message;
+    showOnly('error');
   }
 
-  let result;
-  try {
-    result = await response.json();
-  } catch (error) {
-    container.innerHTML = '<div class="card"><div class="card__title">Unexpected response from the server.</div></div>';
-    return;
+  function formatDate(value) {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
-  if (!response.ok || !result.success) {
-    container.innerHTML = `<div class="card"><div class="card__title">Unable to load your applications.</div><div class="card__subtitle">${escapeHtml(result.error || `HTTP ${response.status}`)}</div></div>`;
-    return;
+  function initials(value) {
+    const cleaned = String(value || '')
+      .split(/\s+/)
+      .filter(Boolean)
+      .map(word => word[0])
+      .slice(0, 3)
+      .join('')
+      .toUpperCase();
+    return cleaned || 'OV';
   }
 
-  const applications = Array.isArray(result.data) ? result.data : [];
-  if (!applications.length) {
-    container.hidden = true;
-    return;
+  function chipClassForStatus(status) {
+    if (status === 'accepted') return 'chip--green';
+    if (status === 'rejected') return 'chip--red';
+    if (STATUS.getStatusGroup(status) === 'unknown') return 'chip--gray';
+    return 'chip--blue';
   }
 
-  container.innerHTML = applications.map(application => {
-    const initials = String(application.hostInstitution || '').split(' ').map(word => word[0]).slice(0, 3).join('') || 'OV';
-    const submitted = new Date(application.submittedAt || application.submittedDate).toLocaleDateString('en-US', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
+  function renderProgressSteps(status) {
+    const currentIndex = STEP_INDEX[status];
+    if (currentIndex === undefined) {
+      return `
+        <div class="draft-bar">
+          <span class="draft-bar__text">${escapeHtml(STATUS.getStatusLabel(status))}</span>
+        </div>
+      `;
+    }
+
+    const steps = STEP_LABELS.map((label, index) => {
+      if (index < currentIndex) {
+        return { label, state: 'done', marker: '&#10003;' };
+      }
+      if (index === currentIndex) {
+        if (status === 'accepted') return { label: 'Accepted', state: 'current', marker: '&#10003;' };
+        if (status === 'rejected') return { label: 'Not Selected', state: 'current', marker: '&#10007;' };
+        return { label, state: 'current', marker: '&#9679;' };
+      }
+      return { label, state: 'pending', marker: '&nbsp;' };
     });
+
+    const stepStateText = { done: 'complete', current: 'current step', pending: 'pending' };
+
+    const stepHtml = steps.map((step, index) => {
+      const col = `
+        <div class="step-col" role="listitem">
+          <div class="step-dot step-dot--${step.state}" aria-label="${escapeHtml(step.label)}: ${stepStateText[step.state]}">${step.marker}</div>
+          <div class="step-label step-label--${step.state}">${escapeHtml(step.label)}</div>
+        </div>
+      `;
+      if (index === steps.length - 1) return col;
+      const lineState = index < currentIndex ? 'done' : 'pending';
+      return `${col}<div class="step-wrap"><div class="step-line step-line--${lineState}"></div></div>`;
+    }).join('');
+
+    return `<div class="progress-steps" role="list" aria-label="Application progress">${stepHtml}</div>`;
+  }
+
+  function renderCard(application) {
+    const submittedLabel = formatDate(application.submittedAt) || 'Not provided';
+    const deadlineLabel = formatDate(application.deadline);
+    const reviewedLabel = formatDate(application.reviewedAt);
+    const statusLabel = STATUS.getStatusLabel(application.status);
+    const chipClass = chipClassForStatus(application.status);
+    const documentsLabel = application.documentsStatus === 'complete' ? 'Complete' : 'Incomplete';
+    const hasOpportunity = Boolean(application.opportunityId);
+
     return `
-      <article class="tracker-card quick-application-card">
+      <div class="tracker-card">
         <div class="tracker-card__header">
-          <div class="tracker-icon">${escapeHtml(initials)}</div>
+          <div class="tracker-icon">${escapeHtml(initials(application.hostInstitution))}</div>
           <div class="tracker-card__info">
-            <div class="tracker-name">${escapeHtml(application.programName)}</div>
-            <div class="tracker-host">${escapeHtml(application.hostInstitution)}</div>
-            <div class="tracker-submitted">submitted ${submitted} via 1-Click Apply</div>
+            <div class="tracker-name">${escapeHtml(application.programName || 'Untitled opportunity')}</div>
+            <div class="tracker-host">${escapeHtml(application.hostInstitution || 'Not provided')}${application.location ? ` · ${escapeHtml(application.location)}` : ''}</div>
+            <div class="tracker-submitted">submitted ${escapeHtml(submittedLabel)} &middot; ${deadlineLabel ? `deadline ${escapeHtml(deadlineLabel)}` : 'no deadline available'}</div>
           </div>
-          <span class="chip chip--blue"><span class="chip__dot"></span>${escapeHtml(application.status || 'submitted')}</span>
+          <span class="chip ${chipClass}"><span class="chip__dot"></span>${escapeHtml(statusLabel)}</span>
         </div>
-        <div class="progress-steps" role="list" aria-label="Application progress">
-          <div class="step-col" role="listitem"><div class="step-dot step-dot--current">&#10003;</div><div class="step-label step-label--current">Submitted</div></div>
-          <div class="step-wrap"><div class="step-line step-line--pending"></div></div>
-          <div class="step-col" role="listitem"><div class="step-dot step-dot--pending">&nbsp;</div><div class="step-label step-label--pending">Under Review</div></div>
-          <div class="step-wrap"><div class="step-line step-line--pending"></div></div>
-          <div class="step-col" role="listitem"><div class="step-dot step-dot--pending">&nbsp;</div><div class="step-label step-label--pending">Nominated</div></div>
-          <div class="step-wrap"><div class="step-line step-line--pending"></div></div>
-          <div class="step-col" role="listitem"><div class="step-dot step-dot--pending">&nbsp;</div><div class="step-label step-label--pending">Decision</div></div>
+
+        ${renderProgressSteps(application.status)}
+
+        <div class="flex-row align-center space-between gap-12 mt-16">
+          <span class="tracker-submitted">Documents: ${escapeHtml(documentsLabel)} &middot; ${reviewedLabel ? `reviewed ${escapeHtml(reviewedLabel)}` : 'not yet reviewed'}</span>
+          ${hasOpportunity ? `<a class="btn btn--secondary btn--compact" href="opportunity.html?id=${encodeURIComponent(application.opportunityId)}">View Opportunity</a>` : ''}
         </div>
-        <details class="application-bundle">
-          <summary>View submitted document bundle (${application.bundle?.length || 0})</summary>
-          <div class="application-bundle__files">
-            ${(application.bundle || []).map(document => `
-              <div><span aria-hidden="true">&#10003;</span><p><strong>${escapeHtml(document.requirement)}</strong><small>${escapeHtml(document.fileName)}</small></p></div>
-            `).join('')}
-          </div>
-          <p class="application-bundle__email">Documents status: ${escapeHtml(application.documentsStatus || 'incomplete')}</p>
-        </details>
-      </article>
+      </div>
     `;
-  }).join('');
+  }
+
+  function renderPills() {
+    if (!pillsEl) return;
+    const counts = STATUS.countByFilter(allApplications);
+    pillsEl.innerHTML = STATUS.FILTERS.map(filter => `
+      <button type="button" class="pill${filter.key === activeFilter ? ' pill--active' : ''}" data-filter="${escapeHtml(filter.key)}" aria-pressed="${filter.key === activeFilter}">
+        ${escapeHtml(filter.label)} &middot; ${counts[filter.key] || 0}
+      </button>
+    `).join('');
+
+    pillsEl.querySelectorAll('[data-filter]').forEach(button => {
+      button.addEventListener('click', () => {
+        activeFilter = button.dataset.filter;
+        renderPills();
+        renderList();
+      });
+    });
+  }
+
+  function renderList() {
+    const filtered = STATUS.filterApplications(allApplications, activeFilter);
+    if (!filtered.length) {
+      showOnly('filtered-empty');
+      return;
+    }
+    showOnly('list');
+    listEl.innerHTML = filtered.map(renderCard).join('');
+  }
+
+  async function load() {
+    showOnly('loading');
+    if (pillsEl) pillsEl.innerHTML = '';
+
+    let response;
+    try {
+      response = await fetch('/api/applications/my');
+    } catch (error) {
+      showError('We could not load your applications.', 'Please check your connection and try again.');
+      return;
+    }
+
+    if (response.status === 401 || response.status === 403) {
+      showError('Your session has expired.', 'Please sign in again to view your applications.');
+      return;
+    }
+
+    let result;
+    try {
+      result = await response.json();
+    } catch (error) {
+      showError('We could not load your applications.', 'Unexpected response from the server.');
+      return;
+    }
+
+    if (!response.ok || !result.success) {
+      showError('We could not load your applications.', result.error || `HTTP ${response.status}`);
+      return;
+    }
+
+    allApplications = Array.isArray(result.data) ? result.data : [];
+    if (!allApplications.length) {
+      showOnly('empty');
+      return;
+    }
+
+    activeFilter = 'all';
+    renderPills();
+    renderList();
+  }
+
+  if (retryButton) retryButton.addEventListener('click', load);
+  document.addEventListener('DOMContentLoaded', load);
 })();

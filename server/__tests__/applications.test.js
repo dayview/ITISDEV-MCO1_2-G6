@@ -4,7 +4,9 @@ const {
     buildApplicationPayload,
     appendStatusHistory,
     toApplicationsCsv,
-    applicationPipeline
+    applicationPipeline,
+    getReviewedAt,
+    mapStudentApplication
 } = require('../lib/applications');
 
 describe('Application Logic - status transition / bulk status validation', () => {
@@ -89,6 +91,75 @@ describe('Application Logic - CSV export formatter', () => {
         const csv = toApplicationsCsv([{}]);
         const dataLine = csv.split('\n')[1];
         expect(dataLine).toBe('"",,,,"","",,,');
+    });
+});
+
+describe('Application Logic - getReviewedAt', () => {
+    test('returns null when the only history entry is the initial submission', () => {
+        const history = [{ status: 'submitted', changedAt: new Date('2026-01-01') }];
+        expect(getReviewedAt(history)).toBeNull();
+    });
+
+    test('returns the changedAt of the most recent non-submitted entry', () => {
+        const history = [
+            { status: 'submitted', changedAt: new Date('2026-01-01') },
+            { status: 'under-review', changedAt: new Date('2026-01-05') },
+            { status: 'nominated', changedAt: new Date('2026-01-10') }
+        ];
+        expect(getReviewedAt(history)).toEqual(new Date('2026-01-10'));
+    });
+
+    test('returns null for an empty or missing history', () => {
+        expect(getReviewedAt([])).toBeNull();
+        expect(getReviewedAt(undefined)).toBeNull();
+    });
+});
+
+describe('Application Logic - mapStudentApplication', () => {
+    test('maps a populated application into the tracker-card contract', () => {
+        const application = {
+            _id: 'app1',
+            opportunityId: { _id: 'opp1', name: 'Exchange Program', institution: 'Some University', country: 'Japan', deadline: new Date('2026-09-01') },
+            status: 'under-review',
+            documentsStatus: 'complete',
+            submittedDate: '2026-06-01',
+            createdAt: new Date('2026-06-01'),
+            statusHistory: [
+                { status: 'submitted', changedAt: new Date('2026-06-01') },
+                { status: 'under-review', changedAt: new Date('2026-06-05') }
+            ]
+        };
+
+        expect(mapStudentApplication(application)).toEqual({
+            id: 'app1',
+            opportunityId: 'opp1',
+            programName: 'Exchange Program',
+            hostInstitution: 'Some University',
+            location: 'Japan',
+            status: 'under-review',
+            documentsStatus: 'complete',
+            submittedAt: '2026-06-01',
+            deadline: new Date('2026-09-01'),
+            reviewedAt: new Date('2026-06-05')
+        });
+    });
+
+    test('falls back to safe defaults when the opportunity was not populated', () => {
+        const application = { _id: 'app2', opportunityId: 'opp2', status: 'submitted', documentsStatus: 'incomplete', createdAt: new Date('2026-06-01') };
+        const mapped = mapStudentApplication(application);
+        expect(mapped.opportunityId).toBe('opp2');
+        expect(mapped.programName).toBe('Unknown opportunity');
+        expect(mapped.hostInstitution).toBe('');
+        expect(mapped.location).toBe('');
+        expect(mapped.deadline).toBeNull();
+        expect(mapped.reviewedAt).toBeNull();
+    });
+
+    test('never includes fields identifying another student', () => {
+        const application = { _id: 'app3', userId: 'someone-elses-id', opportunityId: 'opp3', status: 'submitted', createdAt: new Date() };
+        const mapped = mapStudentApplication(application);
+        expect(mapped).not.toHaveProperty('userId');
+        expect(mapped).not.toHaveProperty('studentId');
     });
 });
 

@@ -78,6 +78,30 @@ const appendStatusHistory = (history = [], status, changedBy, now = new Date()) 
     { status, changedAt: now, changedBy }
 ];
 
+const getReviewedAt = (statusHistory = []) => {
+    const reviewEntry = [...statusHistory].reverse().find(entry => entry.status && entry.status !== 'submitted');
+    return reviewEntry ? reviewEntry.changedAt : null;
+};
+
+const mapStudentApplication = (application) => {
+    const opportunity = application.opportunityId && typeof application.opportunityId === 'object'
+        ? application.opportunityId
+        : null;
+
+    return {
+        id: String(application._id),
+        opportunityId: String(opportunity?._id || application.opportunityId),
+        programName: opportunity?.name || 'Unknown opportunity',
+        hostInstitution: opportunity?.institution || '',
+        location: opportunity?.country || opportunity?.region || '',
+        status: application.status,
+        documentsStatus: application.documentsStatus,
+        submittedAt: application.submittedDate || application.createdAt,
+        deadline: opportunity?.deadline || null,
+        reviewedAt: getReviewedAt(application.statusHistory)
+    };
+};
+
 const toApplicationsCsv = (data) => {
     const header = 'Student Name,Student Id,College,CGPA,Program,Institution,Status,Documents,Submitted Date';
     const rows = data.map(row => [
@@ -100,5 +124,7 @@ module.exports = {
     applicationPipeline,
     buildApplicationPayload,
     appendStatusHistory,
-    toApplicationsCsv
+    toApplicationsCsv,
+    getReviewedAt,
+    mapStudentApplication
 };
