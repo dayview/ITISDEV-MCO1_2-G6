@@ -3,6 +3,7 @@ const connectDB = require('./config/db');
 const User = require('./models/Users');
 const Opportunity = require('./models/Opportunity');
 const Application = require('./models/Applications');
+const bcrypt = require('bcrypt');
 
 const baseEligibility = { nonGraduatingRequired: false, sdfoClearanceRequired: false };
 const opportunities = [
@@ -22,7 +23,10 @@ const opportunities = [
     eligibility: baseEligibility
 }));
 
-const DEFAULT_PASSWORD_HASH = 'seed-password-placeholder';
+// Seeded accounts share one bcrypt-hashed password so they can actually log in
+// (login uses bcrypt.compare; a plaintext placeholder would never match).
+const SEED_PASSWORD = 'Password123';
+const DEFAULT_PASSWORD_HASH = bcrypt.hashSync(SEED_PASSWORD, 12);
 
 const studentData = [
     { studentId: '12010001', name: 'Leon Pavino', college: 'CCS', cgpa: 3.7, email: 'leon_pavino@dlsu.edu.ph', role: 'student' },
@@ -45,9 +49,12 @@ const studentData = [
     { studentId: '12310018', name: 'Natalie Gomez', college: 'GCOE', cgpa: 3.1, email: 'natalie_gomez@dlsu.edu.ph', role: 'student' },
     { studentId: '12410019', name: 'Kevin Bautista', college: 'CCS', cgpa: 3.2, email: 'kevin_bautista@dlsu.edu.ph', role: 'student' },
     { studentId: '12510020', name: 'Admin User', college: 'CCS', cgpa: 4.0, email: 'admin@dlsu.edu.ph', role: 'admin' },
+    { studentId: '12510021', name: 'System Admin', college: 'CCS', cgpa: 4.0, email: 'sysadmin@dlsu.edu.ph', role: 'sysadmin' },
 ].map(user => ({
     ...user,
-    role: user.role === 'admin' ? 'OVPERI_Admin' : 'Student',
+    role: user.role === 'admin' ? 'OVPERI_Admin'
+        : user.role === 'sysadmin' ? 'System_Admin'
+        : 'Student',
     passwordHashed: DEFAULT_PASSWORD_HASH,
     // sdfoCleared now defaults to false in the schema, so mark seeded users
     // cleared explicitly to keep them eligible for clearance-gated opportunities.
