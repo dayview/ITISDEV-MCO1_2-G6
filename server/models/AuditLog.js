@@ -9,10 +9,22 @@ const auditLogSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    userRole: {
+        type: String,
+        enum: ['Student', 'OVPERI_Admin', 'System_Admin']
+    },
     targetType: String,
     targetId: {
         type: mongoose.Schema.Types.ObjectId
     },
+    targetLabel: String,
+    // Structured field-level diff for change events (from the admin-review lineage).
+    // Optional — free-form events can use `details` instead.
+    changes: [{
+        field: String,
+        from: String,
+        to: String,
+    }],
     details: mongoose.Schema.Types.Mixed,
     ip: String,
     createdAt: {
@@ -40,7 +52,10 @@ auditLogSchema.pre(
  * action     — a short verb string: 'application.status_changed', 'user.login', etc.
  * targetType — the Mongoose model name being acted on: 'Application', 'User', etc.
  * targetId   — the ObjectId of the document being acted on.
+ * targetLabel— optional human-readable label for the target (e.g. opportunity name).
+ * changes    — optional structured field diff: [{ field, from, to }].
  * details    — arbitrary extra context (old/new status, reason, field changes).
+ * userRole   — optional role of the actor at the time of the action.
  * userId     — the actor's ObjectId; null for system-initiated actions.
  * ip         — the request IP address.
  */
@@ -48,11 +63,14 @@ auditLogSchema.statics.logAction = async function ({
     action,
     targetType = null,
     targetId = null,
+    targetLabel = null,
+    changes = null,
     details = null,
+    userRole = null,
     userId = null,
     ip = null
 }) {
-    const entry = new this({ action, targetType, targetId, details, userId, ip });
+    const entry = new this({ action, targetType, targetId, targetLabel, changes, details, userRole, userId, ip });
     return entry.save();
 };
 

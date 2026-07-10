@@ -49,6 +49,9 @@ const studentData = [
     ...user,
     role: user.role === 'admin' ? 'OVPERI_Admin' : 'Student',
     passwordHashed: DEFAULT_PASSWORD_HASH,
+    // sdfoCleared now defaults to false in the schema, so mark seeded users
+    // cleared explicitly to keep them eligible for clearance-gated opportunities.
+    sdfoCleared: true,
 }));
 
 const STATUSES = ['submitted', 'submitted', 'submitted', 'submitted', 'under-review', 'under-review', 'under-review', 'nominated', 'nominated', 'accepted', 'rejected'];
@@ -70,15 +73,21 @@ async function seed() {
     const students = await User.insertMany(studentData);
     const nonAdmins = students.filter(s => s.role === 'Student');
 
-    const appDocs = Array.from({ length: 55 }, (_, index) => ({
-        userId: nonAdmins[index % nonAdmins.length]._id,
-        opportunityId: opps[Math.floor(index / nonAdmins.length) % opps.length]._id,
-        status: pick(STATUSES),
-        submittedDate: randDate(new Date('2026-05-01'), new Date('2026-06-24')),
-        documentsStatus: pick(DOC_STATUSES),
-    }));
+    const appDocs = Array.from({ length: 55 }, (_, index) => {
+        const submittedDate = randDate(new Date('2026-05-01'), new Date('2026-06-24'));
+        return {
+            studentId: nonAdmins[index % nonAdmins.length]._id,
+            opportunityId: opps[Math.floor(index / nonAdmins.length) % opps.length]._id,
+            status: pick(STATUSES),
+            documentsStatus: pick(DOC_STATUSES),
+            createdAt: submittedDate,
+            updatedAt: submittedDate,
+        };
+    });
 
-    await Application.insertMany(appDocs);
+    // timestamps:false so the seeded submitted dates above are preserved
+    // instead of being overwritten with the current time by Mongoose.
+    await Application.insertMany(appDocs, { timestamps: false });
     console.log(`Done: ${opps.length} opportunities | ${students.length} students`);
     console.log(`Applications: ${appDocs.length}`);
     process.exit(0);
