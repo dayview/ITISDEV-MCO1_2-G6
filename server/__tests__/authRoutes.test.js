@@ -165,27 +165,58 @@ describe('Authentication - login', () => {
         expect(res.json).toHaveBeenCalledWith({ success: false, error: 'Invalid credentials.' });
     });
 
-    test('returns 401 when the password does not match', async () => {
-        User.findOne.mockResolvedValue({ passwordHashed: 'correct-password' });
+    test('returns 401 when bcrypt.compare rejects the password', async () => {
+        User.findOne.mockResolvedValue({ passwordHashed: '$2b$10$somehashedvalue' });
+        bcrypt.compare.mockResolvedValue(false);
         const req = { body: { email: 'juan@dlsu.edu.ph', password: 'wrong-password' }, session: {} };
         const res = mockRes();
         const next = jest.fn();
 
         await loginHandler(req, res, next);
 
+        expect(bcrypt.compare).toHaveBeenCalledWith('wrong-password', '$2b$10$somehashedvalue');
         expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({ success: false, error: 'Invalid credentials.' });
     });
 
-    test('logs in and redirects an admin to the admin dashboard', async () => {
+    test('logs in and redirects an admin to the admin dashboard when bcrypt.compare accepts the password', async () => {
         User.findOne.mockResolvedValue({
-            _id: 'admin1', email: 'admin@dlsu.edu.ph', role: 'OVPERI_Admin', passwordHashed: 'seed-password-placeholder'
+            _id: 'admin1', email: 'admin@dlsu.edu.ph', role: 'OVPERI_Admin', passwordHashed: '$2b$10$somehashedvalue'
         });
-        const req = { body: { email: 'admin@dlsu.edu.ph', password: 'seed-password-placeholder' }, session: {} };
+        bcrypt.compare.mockResolvedValue(true);
+        const req = { body: { email: 'admin@dlsu.edu.ph', password: 'GemsDev123!' }, session: {} };
         const res = mockRes();
         const next = jest.fn();
 
         await loginHandler(req, res, next);
 
         expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ redirectTo: '/admin/dashboard.html' }));
+    });
+
+    test('does not fall back to a plaintext equality check when the submitted password literally matches passwordHashed', async () => {
+        User.findOne.mockResolvedValue({ passwordHashed: 'not-a-real-hash' });
+        bcrypt.compare.mockResolvedValue(false);
+        const req = { body: { email: 'juan@dlsu.edu.ph', password: 'not-a-real-hash' }, session: {} };
+        const res = mockRes();
+        const next = jest.fn();
+
+        await loginHandler(req, res, next);
+
+        expect(bcrypt.compare).toHaveBeenCalledWith('not-a-real-hash', 'not-a-real-hash');
+        expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({ success: false, error: 'Invalid credentials.' });
+    });
+
+    test('rejects login when the user has no passwordHashed value rather than throwing', async () => {
+        User.findOne.mockResolvedValue({ email: 'juan@dlsu.edu.ph' });
+        bcrypt.compare.mockResolvedValue(false);
+        const req = { body: { email: 'juan@dlsu.edu.ph', password: 'anything123' }, session: {} };
+        const res = mockRes();
+        const next = jest.fn();
+
+        await loginHandler(req, res, next);
+
+        expect(bcrypt.compare).toHaveBeenCalledWith('anything123', '');
+        expect(res.status).toHaveBeenCalledWith(401);
     });
 });

@@ -1,4 +1,6 @@
 require('dotenv').config();
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 const connectDB = require('../config/db');
 const User = require('../models/User');
 const Opportunity = require('../models/Opportunity');
@@ -22,7 +24,7 @@ const opportunities = [
     eligibility: baseEligibility
 }));
 
-const DEFAULT_PASSWORD_HASH = 'seed-password-placeholder';
+const SEED_PASSWORD = process.env.SEED_PASSWORD || 'GemsDev123!';
 
 const studentData = [
     { studentId: '12010001', name: 'Leon Pavino', college: 'CCS', cgpa: 3.7, email: 'leon_pavino@dlsu.edu.ph', role: 'student' },
@@ -48,7 +50,6 @@ const studentData = [
 ].map(user => ({
     ...user,
     role: user.role === 'admin' ? 'OVPERI_Admin' : 'Student',
-    passwordHashed: DEFAULT_PASSWORD_HASH,
 }));
 
 const STATUSES = ['submitted', 'submitted', 'submitted', 'submitted', 'under-review', 'under-review', 'under-review', 'nominated', 'nominated', 'accepted', 'rejected'];
@@ -57,8 +58,14 @@ const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 const randDate = (s, e) => new Date(s.getTime() + Math.random() * (e.getTime() - s.getTime())).toISOString().split('T')[0];
 
 async function seed() {
+    if (process.env.NODE_ENV === 'production') {
+        console.error('Refusing to run: this script clears collections and NODE_ENV=production.');
+        process.exit(1);
+    }
+
     await connectDB();
     console.log('Seeding...');
+    console.log('Connected database:', mongoose.connection.name);
 
     await Application.syncIndexes();
 
@@ -67,7 +74,8 @@ async function seed() {
     await User.deleteMany({});
 
     const opps = await Opportunity.insertMany(opportunities);
-    const students = await User.insertMany(studentData);
+    const passwordHashed = await bcrypt.hash(SEED_PASSWORD, 10);
+    const students = await User.insertMany(studentData.map(user => ({ ...user, passwordHashed })));
     const nonAdmins = students.filter(s => s.role === 'Student');
 
     const appDocs = Array.from({ length: 55 }, (_, index) => ({
@@ -81,6 +89,9 @@ async function seed() {
     await Application.insertMany(appDocs);
     console.log(`Done: ${opps.length} opportunities | ${students.length} students`);
     console.log(`Applications: ${appDocs.length}`);
+    if (process.env.NODE_ENV !== 'production') {
+        console.log(`Login with any seeded email and password "${SEED_PASSWORD}" (e.g. admin@dlsu.edu.ph). Development credentials only.`);
+    }
     process.exit(0);
 }
 

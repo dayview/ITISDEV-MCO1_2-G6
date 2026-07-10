@@ -1,30 +1,45 @@
 (async function() {
   const container = document.getElementById('quick-application-list');
-  if (!container || !window.GEMSApplicationStore) return;
-
-  let applications = window.GEMSApplicationStore.getApplications();
-  try {
-    const response = await fetch('/api/applications/my');
-    const result = await response.json();
-    if (response.ok && result.success) {
-      applications = result.data;
-    }
-  } catch (error) {
-    console.warn('Using local application fallback:', error);
-  }
-  if (!applications.length) {
-    container.hidden = true;
-    return;
-  }
-
-  const filterPills = document.querySelectorAll('.applications-page .filter-pills .pill');
-  if (filterPills[0]) filterPills[0].textContent = `All · ${5 + applications.length}`;
-  if (filterPills[1]) filterPills[1].textContent = `Active · ${3 + applications.length}`;
+  if (!container) return;
 
   function escapeHtml(value) {
     const element = document.createElement('div');
     element.textContent = String(value || '');
     return element.innerHTML;
+  }
+
+  container.innerHTML = '<p class="post-list-empty">Loading your recent applications...</p>';
+
+  let response;
+  try {
+    response = await fetch('/api/applications/my');
+  } catch (error) {
+    container.innerHTML = '<div class="card"><div class="card__title">Unable to load your applications.</div><div class="card__subtitle">Please check your connection and try again.</div></div>';
+    return;
+  }
+
+  if (response.status === 401) {
+    container.hidden = true;
+    return;
+  }
+
+  let result;
+  try {
+    result = await response.json();
+  } catch (error) {
+    container.innerHTML = '<div class="card"><div class="card__title">Unexpected response from the server.</div></div>';
+    return;
+  }
+
+  if (!response.ok || !result.success) {
+    container.innerHTML = `<div class="card"><div class="card__title">Unable to load your applications.</div><div class="card__subtitle">${escapeHtml(result.error || `HTTP ${response.status}`)}</div></div>`;
+    return;
+  }
+
+  const applications = Array.isArray(result.data) ? result.data : [];
+  if (!applications.length) {
+    container.hidden = true;
+    return;
   }
 
   container.innerHTML = applications.map(application => {

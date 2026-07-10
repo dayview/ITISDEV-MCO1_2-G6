@@ -27,6 +27,7 @@ const mapOpportunity = (opportunity) => {
         credits: plain.credits,
         requiredDocuments: plain.requiredDocumentTypes || [],
         eligibility: plain.eligibility,
+        eligibilityCriteria: oneLineArray(plain.eligibility?.notes),
         eligible: true,
         createdAt: plain.createdAt,
         updatedAt: plain.updatedAt

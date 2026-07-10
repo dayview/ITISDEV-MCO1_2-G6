@@ -8,6 +8,7 @@ const Opportunity = require('./models/Opportunity');
 const Application = require('./models/Applications');
 const Document = require('./models/Document');
 const AuditLog = require('./models/AuditLog');
+const User = require('./models/User');
 const authRoutes = require('./routes/auth');
 const { mapOpportunity, normalizeOpportunityInput, mapAdminOpportunity } = require('./lib/opportunities');
 const { normalizeDocumentType } = require('./lib/documents');
@@ -15,6 +16,7 @@ const { evaluateStudentEligibility, isOpportunityOpenForApplication } = require(
 const { applicationPipeline, buildApplicationPayload, toApplicationsCsv, isValidStatus, APPLICATION_STATUSES } = require('./lib/applications');
 const { computeStatisticsSummary, getUrgentCutoff } = require('./lib/statistics');
 const { determineOpportunityUpdateAction } = require('./lib/audit');
+const { buildStudentDashboard } = require('./lib/studentDashboard');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -124,6 +126,25 @@ app.get('/api/admin/opportunities', requireAdminSession, async (_req, res) => {
 
 app.get('/api/me', requireSession, (req, res) => {
     res.json({ success: true, user: req.session.user });
+});
+
+app.get('/api/student/dashboard', requireStudentSession, async (req, res) => {
+    try {
+        const now = new Date();
+        const [student, applications, openOpportunities, documents] = await Promise.all([
+            User.findById(req.session.user._id),
+            Application.find({ userId: req.session.user._id }).populate('opportunityId'),
+            Opportunity.find({ status: 'published', deadline: { $gte: now } }),
+            Document.find({ userId: req.session.user._id })
+        ]);
+        if (!student) {
+            return res.status(401).json({ success: false, error: 'Please log in.' });
+        }
+        const data = buildStudentDashboard({ student, applications, openOpportunities, documents, now });
+        res.json({ success: true, data });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 app.get('/api/opportunities', async (req, res) => {

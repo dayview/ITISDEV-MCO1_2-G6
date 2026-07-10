@@ -14,10 +14,7 @@ router.post('/login', async (req, res, next) => {
         if (!user)
             return res.status(401).json({ success: false, error: 'Invalid credentials.' });
 
-        let passwordMatches = user.passwordHashed === password;
-        if (!passwordMatches && /^\$2[aby]\$/.test(user.passwordHashed || '')) {
-            passwordMatches = await bcrypt.compare(password, user.passwordHashed);
-        }
+        const passwordMatches = await bcrypt.compare(password, user.passwordHashed || '');
         if (!passwordMatches)
             return res.status(401).json({ success: false, error: 'Invalid credentials.' });
 

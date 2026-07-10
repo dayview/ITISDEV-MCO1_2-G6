@@ -849,12 +849,29 @@
     try {
       const response = await fetch('/api/opportunities?pageSize=100');
       const result = await response.json();
-      if (response.ok && Array.isArray(result.data)) {
-        window.GEMS_BACKEND_OPPORTUNITIES = result.data;
+      if (!response.ok || !Array.isArray(result.data)) {
+        throw new Error(result.message || `HTTP ${response.status}`);
       }
+      window.GEMS_BACKEND_OPPORTUNITIES = result.data;
+      return true;
     } catch (error) {
-      console.warn('Using local opportunity fallback:', error);
+      console.error('Failed to load opportunities from the server:', error);
+      return false;
     }
+  }
+
+  function renderLoadError() {
+    if (countLabel) countLabel.textContent = 'Unable to load opportunities.';
+    resultsContainer.innerHTML = `
+      <div class="card">
+        <div class="card__title">Unable to load opportunities from the server.</div>
+        <div class="card__subtitle">Please check your connection and try again.</div>
+        <button type="button" class="btn btn--secondary" id="catalog-retry">Retry</button>
+      </div>
+    `;
+    paginationContainer.innerHTML = '';
+    const retryButton = document.getElementById('catalog-retry');
+    if (retryButton) retryButton.addEventListener('click', init);
   }
 
   async function init() {
@@ -864,7 +881,13 @@
     }
     attachEvents();
     updateCalendarModeLabel();
-    await loadBackendOpportunities();
+    if (countLabel) countLabel.textContent = 'Loading opportunities...';
+    resultsContainer.innerHTML = '<div class="card"><div class="card__title">Loading opportunities...</div></div>';
+    const loaded = await loadBackendOpportunities();
+    if (!loaded) {
+      renderLoadError();
+      return;
+    }
     renderResults();
   }
 

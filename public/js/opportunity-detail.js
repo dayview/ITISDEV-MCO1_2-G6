@@ -27,16 +27,6 @@
   }
 
   function renderBundle(evaluation) {
-    if (!evaluation.profileComplete) {
-      return `
-        <div class="quick-apply-alert quick-apply-alert--warning">
-          <strong>Complete your profile first</strong>
-          <span>Your profile details are required before quick apply is available.</span>
-          <a href="profile.html">Complete profile &rarr;</a>
-        </div>
-      `;
-    }
-
     if (evaluation.missing.length) {
       return `
         <div class="quick-apply-alert quick-apply-alert--warning">
@@ -51,7 +41,7 @@
     return `
       <div class="quick-apply-alert quick-apply-alert--ready">
         <strong>Ready for 1-Click Apply</strong>
-        <span>Your profile is complete and all ${evaluation.bundle.length} required documents are ready.</span>
+        <span>All ${evaluation.bundle.length} required documents are ready.</span>
       </div>
       <div class="quick-bundle-preview">
         <p>Document bundle</p>
@@ -65,10 +55,8 @@
     `;
   }
 
-  function renderOpportunity(opportunity) {
+  function renderOpportunity(opportunity, existing) {
     const evaluation = window.GEMSApplicationStore.evaluateOpportunity(opportunity);
-    const existing = window.GEMSApplicationStore.getApplications()
-      .find(application => String(application.opportunityId) === String(opportunity.id));
     const icon = opportunity.hostInstitution.split(' ').map(word => word[0]).slice(0, 3).join('').toUpperCase();
     const eligibleLabel = opportunity.eligible ? 'Eligible' : 'Not eligible';
     const eligibleClass = opportunity.eligible ? 'chip--green' : 'chip--ineligible';
@@ -156,7 +144,7 @@
     try {
       result = await window.GEMSApplicationStore.submitApplicationToBackend(opportunity);
     } catch (error) {
-      result = window.GEMSApplicationStore.submitApplication(opportunity);
+      result = { ok: false, error: 'Unable to reach the server. Please check your connection and try again.', evaluation: window.GEMSApplicationStore.evaluateOpportunity(opportunity) };
     }
     const feedback = document.getElementById('quick-apply-feedback');
 
@@ -182,6 +170,18 @@
     button.disabled = true;
   }
 
+  async function loadExistingApplication(opportunityId) {
+    try {
+      const response = await fetch('/api/applications/my');
+      if (!response.ok) return null;
+      const result = await response.json();
+      if (!result.success || !Array.isArray(result.data)) return null;
+      return result.data.find(application => String(application.opportunityId) === String(opportunityId)) || null;
+    } catch (error) {
+      return null;
+    }
+  }
+
   async function loadDetail() {
     const id = getQueryParam('id');
     if (!id) {
@@ -201,7 +201,8 @@
         errorState.hidden = false;
         return;
       }
-      renderOpportunity(data);
+      const existing = await loadExistingApplication(data.id);
+      renderOpportunity(data, existing);
     } catch (error) {
       loadingState.hidden = true;
       errorState.querySelector('h2').textContent = 'Unable to load opportunity';

@@ -75,7 +75,7 @@
       </button>
 
       <a class="student-topnav__link catalog-account-link" href="profile.html">
-        <span class="user-avatar" aria-hidden="true">LP</span>
+        <span class="user-avatar" id="nav-user-avatar" aria-hidden="true">··</span>
       </a>
     </div>
   </nav>
@@ -83,7 +83,7 @@
       <main class="content student-shell" id="main-content">
         <header class="student-hero">
           <div class="student-hero__copy">
-            <h1 class="student-hero__title">Welcome back, Joel!</h1>
+            <h1 class="student-hero__title" id="student-hero-title">Welcome back!</h1>
             <p class="student-hero__subtitle">Track your applications, deadlines, and recommended opportunities.</p>
           </div>
           <div class="student-hero__art" aria-hidden="true">
@@ -105,31 +105,31 @@
         <div class="stat-grid" role="region" aria-label="Summary statistics">
 
           <!-- Active Applications -->
-          <div class="stat-card">
+          <div class="stat-card" data-stat="active-applications">
             <div class="stat-card__label">Active Applications</div>
-            <div class="stat-card__value">3</div>
-            <div class="stat-card__sub stat-card__sub--green">1 nominated · 2 in review</div>
+            <div class="stat-card__value">—</div>
+            <div class="stat-card__sub">Loading...</div>
           </div>
 
           <!-- Eligible Programs -->
-          <div class="stat-card">
+          <div class="stat-card" data-stat="eligible-programs">
             <div class="stat-card__label">Eligible Programs</div>
-            <div class="stat-card__value">24</div>
-            <div class="stat-card__sub stat-card__sub--green">&#8593; 6 new this month</div>
+            <div class="stat-card__value">—</div>
+            <div class="stat-card__sub">Loading...</div>
           </div>
 
           <!-- Pending Documents -->
-          <div class="stat-card">
+          <div class="stat-card" data-stat="pending-documents">
             <div class="stat-card__label">Pending Documents</div>
-            <div class="stat-card__value">1</div>
-            <div class="stat-card__sub stat-card__sub--amber">Letter of Intent (NUS)</div>
+            <div class="stat-card__value">—</div>
+            <div class="stat-card__sub">Loading...</div>
           </div>
 
           <!-- Deadlines -->
-          <div class="stat-card">
+          <div class="stat-card" data-stat="deadlines-30">
             <div class="stat-card__label">Deadlines · 30 days</div>
-            <div class="stat-card__value">3</div>
-            <div class="stat-card__sub stat-card__sub--red">Next: 20 Jun 2026</div>
+            <div class="stat-card__value">—</div>
+            <div class="stat-card__sub">Loading...</div>
           </div>
 
         </div><!-- /stat-grid -->
@@ -145,48 +145,16 @@
             <div class="flex-row align-center space-between mb-16">
               <div>
                 <div class="card__title mb-8">Recommended for you</div>
-                <div class="card__subtitle">
-                  Matched to your profile · CGPA 3.42 · CCS
+                <div class="card__subtitle" id="recommended-subtitle">
+                  Matched to your profile
                 </div>
               </div>
               <a href="catalog.html" class="btn--ghost">View catalog &#8594;</a>
             </div>
 
-            <!-- Program row 1: NUS -->
-            <a href="catalog.html" class="opp-row">
-              <div class="opp-icon opp-icon--sm">NUS</div>
-              <div class="opp-row__info">
-                <div class="opp-name">National University of Singapore</div>
-                <div class="opp-meta">Singapore · Exchange · closes 31 Aug 2026</div>
-              </div>
-              <span class="chip chip--green">
-                <span class="chip__dot"></span>Eligible
-              </span>
-            </a>
-
-            <!-- Program row 2: NTU -->
-            <a href="catalog.html" class="opp-row">
-              <div class="opp-icon opp-icon--sm">NTU</div>
-              <div class="opp-row__info">
-                <div class="opp-name">Nanyang Technological University</div>
-                <div class="opp-meta">Singapore · Exchange · closes 15 Jul 2026</div>
-              </div>
-              <span class="chip chip--green">
-                <span class="chip__dot"></span>Eligible
-              </span>
-            </a>
-
-            <!-- Program row 3: CAU -->
-            <a href="catalog.html" class="opp-row mb-0">
-              <div class="opp-icon opp-icon--sm">CAU</div>
-              <div class="opp-row__info">
-                <div class="opp-name">Chung-Ang University</div>
-                <div class="opp-meta">South Korea · Summer Program · closes 30 Jun 2026</div>
-              </div>
-              <span class="chip chip--green">
-                <span class="chip__dot"></span>Eligible
-              </span>
-            </a>
+            <div id="recommended-opportunities-list">
+              <p class="post-list-empty">Loading recommended opportunities...</p>
+            </div>
 
           </div><!-- /recommended -->
 
@@ -197,31 +165,8 @@
 
             <div class="card__title">Upcoming deadlines</div>
 
-            <!-- Deadline 1: urgent / red -->
-            <div class="deadline-item">
-              <div class="deadline-bar deadline-bar--danger"></div>
-              <div class="deadline-content">
-                <div class="deadline-label">Upload Letter of Intent (NUS)</div>
-                <div class="deadline-when deadline-when--danger">20 Jun 2026 · in 3 days</div>
-              </div>
-            </div>
-
-            <!-- Deadline 2: moderate / amber -->
-            <div class="deadline-item">
-              <div class="deadline-bar deadline-bar--warning"></div>
-              <div class="deadline-content">
-                <div class="deadline-label">Chung-Ang program payment</div>
-                <div class="deadline-when deadline-when--warning">30 Jun 2026 · in 13 days</div>
-              </div>
-            </div>
-
-            <!-- Deadline 3: comfortable / green -->
-            <div class="deadline-item">
-              <div class="deadline-bar deadline-bar--success"></div>
-              <div class="deadline-content">
-                <div class="deadline-label">NTU nomination window</div>
-                <div class="deadline-when deadline-when--success">15 Jul 2026 · in 28 days</div>
-              </div>
+            <div id="upcoming-deadlines-list">
+              <p class="post-list-empty">Loading upcoming deadlines...</p>
             </div>
 
           </div><!-- /deadlines -->
@@ -232,5 +177,6 @@
 
 </div><!-- /app-wrapper -->
 
+<script src="../../public/js/student-dashboard.js" defer></script>
 </body>
 </html>
