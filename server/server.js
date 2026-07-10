@@ -17,6 +17,8 @@ const { applicationPipeline, buildApplicationPayload, toApplicationsCsv, isValid
 const { computeStatisticsSummary, getUrgentCutoff } = require('./lib/statistics');
 const { determineOpportunityUpdateAction } = require('./lib/audit');
 const { buildStudentDashboard } = require('./lib/studentDashboard');
+const { mapProfile, validateProfileUpdate } = require('./lib/profile');
+const { sanitizeUser } = require('./lib/authValidation');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -144,6 +146,39 @@ app.get('/api/student/dashboard', requireStudentSession, async (req, res) => {
         res.json({ success: true, data });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.get('/api/profile', requireStudentSession, async (req, res) => {
+    try {
+        const user = await User.findById(req.session.user._id);
+        if (!user) return res.status(401).json({ success: false, error: 'Please log in.' });
+        res.json({ success: true, data: mapProfile(user) });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.patch('/api/profile', requireStudentSession, async (req, res) => {
+    try {
+        const { valid, errors, updates, unsets } = validateProfileUpdate(req.body);
+        if (!valid) {
+            return res.status(400).json({ success: false, error: 'Please fix the highlighted fields.', errors });
+        }
+        const mongoUpdate = {};
+        if (Object.keys(updates).length) mongoUpdate.$set = updates;
+        if (unsets.length) mongoUpdate.$unset = Object.fromEntries(unsets.map(field => [field, '']));
+
+        const user = await User.findByIdAndUpdate(
+            req.session.user._id,
+            mongoUpdate,
+            { new: true, runValidators: true }
+        );
+        if (!user) return res.status(401).json({ success: false, error: 'Please log in.' });
+        req.session.user = sanitizeUser(user);
+        res.json({ success: true, data: mapProfile(user) });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
     }
 });
 

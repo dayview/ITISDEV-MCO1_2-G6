@@ -4016,6 +4016,10 @@ body.catalog-page {
   transform: none;
 }
 
+.toast--error {
+  background: var(--red-text);
+}
+
 .toast svg {
   width: 18px;
   height: 18px;

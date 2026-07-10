@@ -35,6 +35,16 @@ const userSchema = new mongoose.Schema({
     major: String,
     cgpa: Number,
     graduatingTerm: String,
+    phone: String,
+    gender: {
+        type: String,
+        enum: ['female', 'male', 'other', 'prefer-not']
+    },
+    birthdate: Date,
+    enrollmentStatus: {
+        type: String,
+        enum: ['Full-time', 'Part-time']
+    },
     isGraduating: {
         type: Boolean,
         default: false

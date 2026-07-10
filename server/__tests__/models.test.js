@@ -132,6 +132,30 @@ describe('Authentication - User schema validation', () => {
         expect(User.schema.path('email').options.unique).toBe(true);
         expect(User.schema.path('studentId').options.unique).toBe(true);
     });
+
+    test('accepts a fully populated profile (phone, gender, birthdate, enrollmentStatus)', () => {
+        const user = new User({
+            email: 'a@dlsu.edu.ph', passwordHashed: 'x', name: 'A',
+            phone: '+63 917 123 4567', gender: 'female', birthdate: new Date('2003-05-15'),
+            major: 'BS Computer Science', enrollmentStatus: 'Full-time', graduatingTerm: 'AY 2026-2027, Term 2'
+        });
+        expect(user.validateSync()).toBeUndefined();
+    });
+
+    test('rejects an unknown gender', () => {
+        const user = new User({ email: 'a@dlsu.edu.ph', passwordHashed: 'x', name: 'A', gender: 'not-a-real-option' });
+        expect(user.validateSync().errors.gender).toBeDefined();
+    });
+
+    test('rejects an unknown enrollment status', () => {
+        const user = new User({ email: 'a@dlsu.edu.ph', passwordHashed: 'x', name: 'A', enrollmentStatus: 'On Leave' });
+        expect(user.validateSync().errors.enrollmentStatus).toBeDefined();
+    });
+
+    test('phone, gender, birthdate, and enrollmentStatus are all optional', () => {
+        const user = new User({ email: 'a@dlsu.edu.ph', passwordHashed: 'x', name: 'A' });
+        expect(user.validateSync()).toBeUndefined();
+    });
 });
 
 describe('Audit Logging - schema validation and append-only behavior', () => {

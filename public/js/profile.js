@@ -40,7 +40,7 @@
   // Helper: Set Validation State
   function setValidationState(input, isValid, message) {
     const errorMsg = input.parentElement.querySelector('.error-message');
-    
+
     if (isValid) {
       input.classList.remove('error');
       input.classList.add('valid');
@@ -108,7 +108,7 @@
   // Event Listener: Form Submission
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    
+
     let hasErrors = false;
     const inputs = form.querySelectorAll('input, select');
 
@@ -134,7 +134,7 @@
 
     // Success: Show Toast
     toast.classList.add('show');
-    
+
     // Hide toast after 3 seconds
     setTimeout(() => {
       toast.classList.remove('show');
@@ -166,9 +166,9 @@
       e.preventDefault();
       const targetId = link.getAttribute('href');
       const targetSection = document.querySelector(targetId);
-      
+
       targetSection.scrollIntoView({ behavior: 'smooth' });
-      
+
       // Update active state immediately
       navLinks.forEach(l => l.classList.remove('active'));
       link.classList.add('active');
