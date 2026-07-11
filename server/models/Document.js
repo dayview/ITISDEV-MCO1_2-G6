@@ -11,12 +11,26 @@ const documentSchema = new mongoose.Schema({
         required: true,
         enum: ['transcript', 'recommendation', 'validId', 'passport', 'EAF', 'curriculumAudit', 'other'],
     },
-    fileName: String,
+    originalFileName: {
+        type: String,
+        required: true
+    },
+    storedFileName: {
+        type: String,
+        required: true
+    },
     filePath: {
         type: String,
         required: true
     },
-    fileFormat: String,
+    mimeType: {
+        type: String,
+        required: true
+    },
+    size: {
+        type: Number,
+        required: true
+    },
     uploadedAt: {
         type: Date,
         default: Date.now

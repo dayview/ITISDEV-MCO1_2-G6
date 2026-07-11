@@ -53,6 +53,13 @@
     return date.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
+  function formatSize(bytes) {
+    if (!bytes) return '—';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
   function showToast(message, isError) {
     if (!toast) return;
     if (toastMessage) toastMessage.textContent = message;
@@ -111,11 +118,14 @@
     vaultTable.hidden = false;
     vaultEmpty.hidden = true;
 
-    const isImage = (format) => /jpe?g|png|gif|image/i.test(format || '');
+    const isImage = (mimeType) => /^image\//i.test(mimeType || '');
+    // Only PDF and image types can ever be uploaded (see the server-side allowlist), and
+    // both render natively in a browser tab, so View is always offered alongside Download.
+    const canView = (mimeType) => mimeType === 'application/pdf' || isImage(mimeType);
 
     vaultBody.innerHTML = documents.map(document => {
       const badge = STATUS_BADGE[document.status] || STATUS_BADGE.pending;
-      const iconClass = isImage(document.fileFormat) ? 'file-icon--img' : 'file-icon--pdf';
+      const iconClass = isImage(document.mimeType) ? 'file-icon--img' : 'file-icon--pdf';
       return `
         <tr>
           <td>
@@ -123,14 +133,25 @@
               <div class="file-icon ${iconClass}">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg>
               </div>
-              ${escapeHtml(document.fileName || 'Untitled file')}
+              ${escapeHtml(document.originalFileName || 'Untitled file')}
             </div>
           </td>
           <td><span class="category-tag">${escapeHtml(document.type)}</span></td>
+          <td class="table-muted">${escapeHtml(formatSize(document.size))}</td>
           <td class="table-muted">${escapeHtml(formatDate(document.uploadedAt))}</td>
           <td><span class="badge ${badge.className}"><span class="badge__dot"></span>${escapeHtml(badge.label)}</span></td>
           <td>
             <div class="doc-actions">
+              ${canView(document.mimeType) ? `
+                <a class="doc-btn" href="${escapeHtml(document.fileUrl)}" target="_blank" rel="noopener noreferrer">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  View
+                </a>
+              ` : ''}
+              <a class="doc-btn" href="${escapeHtml(document.fileUrl)}?download=1" download="${escapeHtml(document.originalFileName || '')}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download
+              </a>
               <button type="button" class="doc-btn doc-btn--danger" data-delete-id="${escapeHtml(document.id)}">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
                 Delete
@@ -194,6 +215,8 @@
   }
 
   async function handleUpload(file) {
+    // Fast client-side pre-check for a responsive UI; the server independently
+    // re-validates MIME type, extension, and size and is the actual authority.
     const maxSize = 5 * 1024 * 1024;
     const allowed = ['application/pdf', 'image/jpeg', 'image/png'];
     if (!allowed.includes(file.type)) {
@@ -205,17 +228,15 @@
       return;
     }
 
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', pendingDocumentType);
+
     let response;
     try {
-      response = await fetch('/api/documents', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: pendingDocumentType,
-          fileName: file.name,
-          fileFormat: file.type
-        })
-      });
+      // No Content-Type header here — the browser sets multipart/form-data with the
+      // correct boundary automatically. Setting it manually would break the upload.
+      response = await fetch('/api/documents', { method: 'POST', body: formData });
     } catch (error) {
       showToast('Unable to upload. Please check your connection and try again.', true);
       return;

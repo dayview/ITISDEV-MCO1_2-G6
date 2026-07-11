@@ -19,6 +19,9 @@ const { determineOpportunityUpdateAction } = require('./lib/audit');
 const { buildStudentDashboard } = require('./lib/studentDashboard');
 const { mapProfile, validateProfileUpdate } = require('./lib/profile');
 const { sanitizeUser } = require('./lib/authValidation');
+const { uploadSingleFile } = require('./middleware/upload');
+const { resolveAbsolutePath, relativeFilePath, deleteStoredFile, removeFileIfExists, sanitizeDownloadFileName } = require('./lib/storage');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -300,20 +303,63 @@ app.get('/api/documents', requireStudentSession, async (req, res) => {
     }
 });
 
-app.post('/api/documents', requireStudentSession, async (req, res) => {
+app.post('/api/documents', requireStudentSession, uploadSingleFile, async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, error: 'A file is required.' });
+    }
     try {
-        const { type, fileName, filePath, fileFormat } = req.body;
-        if (!type || !fileName) return res.status(400).json({ success: false, error: 'Document type and file name are required.' });
+        const { type } = req.body;
+        if (!type) {
+            await removeFileIfExists(req.file.path);
+            return res.status(400).json({ success: false, error: 'Document type is required.' });
+        }
         const document = await Document.create({
             userId: req.session.user._id,
             type: normalizeDocumentType(type),
-            fileName,
-            filePath: filePath || `uploads/${req.session.user._id}/${fileName}`,
-            fileFormat
+            originalFileName: req.file.originalname,
+            storedFileName: req.file.filename,
+            filePath: relativeFilePath(req.session.user._id, req.file.filename),
+            mimeType: req.file.mimetype,
+            size: req.file.size
         });
         res.status(201).json({ success: true, data: mapDocument(document) });
     } catch (err) {
+        // The file was already written to disk before this validation/DB step ran —
+        // clean it up so a rejected or failed upload never leaves an orphaned file.
+        await removeFileIfExists(req.file.path);
         res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+// Files are served exclusively through this authenticated, ownership-scoped route —
+// the storage directory itself is never mounted with express.static.
+app.get('/api/documents/:id/file', requireStudentSession, async (req, res) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ success: false, error: 'Invalid document id.' });
+        }
+        const document = await Document.findOne({ _id: req.params.id, userId: req.session.user._id });
+        if (!document) {
+            return res.status(404).json({ success: false, error: 'Document not found.' });
+        }
+
+        let absolutePath;
+        try {
+            absolutePath = resolveAbsolutePath(document.filePath);
+        } catch (err) {
+            return res.status(500).json({ success: false, error: 'Unable to resolve the stored file location.' });
+        }
+        if (!fs.existsSync(absolutePath)) {
+            return res.status(404).json({ success: false, error: 'The stored file could not be found. It may have been removed.' });
+        }
+
+        const isDownload = req.query.download === '1';
+        const safeName = sanitizeDownloadFileName(document.originalFileName);
+        res.setHeader('Content-Type', document.mimeType || 'application/octet-stream');
+        res.setHeader('Content-Disposition', `${isDownload ? 'attachment' : 'inline'}; filename="${safeName}"`);
+        res.sendFile(absolutePath);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
@@ -325,6 +371,15 @@ app.delete('/api/documents/:id', requireStudentSession, async (req, res) => {
         const document = await Document.findOneAndDelete({ _id: req.params.id, userId: req.session.user._id });
         if (!document) {
             return res.status(404).json({ success: false, error: 'Document not found.' });
+        }
+        // The MongoDB record is authoritative: once it's deleted, the document no longer
+        // exists to the student regardless of what happens to the physical file next.
+        // An already-missing file is treated as success; any other filesystem failure is
+        // logged server-side as an orphaned-file warning rather than surfaced to the
+        // client or used to block/undo the already-completed DB deletion.
+        const fileDeletion = await deleteStoredFile(document.filePath);
+        if (!fileDeletion.ok) {
+            console.error(`Document ${document._id} record deleted but physical file removal failed: ${fileDeletion.error}`);
         }
         res.json({ success: true, data: { id: String(document._id) } });
     } catch (err) {

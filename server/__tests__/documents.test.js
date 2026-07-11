@@ -59,12 +59,13 @@ describe('Document Logic - required document lookup', () => {
 describe('Document Logic - mapDocument', () => {
     test('maps every field the documents page displays', () => {
         const document = {
-            _id: 'd1', userId: 'u1', type: 'transcript', fileName: 'grades.pdf', fileFormat: 'application/pdf',
+            _id: 'd1', userId: 'u1', type: 'transcript', originalFileName: 'grades.pdf',
+            storedFileName: 'abc123.pdf', filePath: 'documents/u1/abc123.pdf', mimeType: 'application/pdf', size: 20480,
             status: 'pending', uploadedAt: new Date('2026-06-10'), reviewedAt: null
         };
         expect(mapDocument(document)).toEqual({
-            id: 'd1', type: 'transcript', fileName: 'grades.pdf', fileFormat: 'application/pdf',
-            status: 'pending', uploadedAt: new Date('2026-06-10'), reviewedAt: null, fileUrl: null
+            id: 'd1', type: 'transcript', originalFileName: 'grades.pdf', mimeType: 'application/pdf', size: 20480,
+            status: 'pending', uploadedAt: new Date('2026-06-10'), reviewedAt: null, fileUrl: '/api/documents/d1/file'
         });
     });
 
@@ -72,13 +73,16 @@ describe('Document Logic - mapDocument', () => {
         expect(mapDocument({ _id: 'd2', type: 'passport', createdAt: new Date('2026-06-01') }).status).toBe('pending');
     });
 
-    test('fileUrl is always null — no route serves real file bytes yet', () => {
-        expect(mapDocument({ _id: 'd3', type: 'other', filePath: 'uploads/u1/x.pdf' }).fileUrl).toBeNull();
+    test('fileUrl always points at the protected retrieval route, never a raw filesystem path', () => {
+        const mapped = mapDocument({ _id: 'd3', type: 'other', filePath: 'documents/u1/x.pdf' });
+        expect(mapped.fileUrl).toBe('/api/documents/d3/file');
+        expect(mapped).not.toHaveProperty('filePath');
+        expect(mapped).not.toHaveProperty('storedFileName');
     });
 
     test('accepts a Mongoose-document-like object via toObject()', () => {
         const toObject = () => ({ _id: 'd4', type: 'validId' });
-        expect(mapDocument({ toObject })).toMatchObject({ id: 'd4', type: 'validId' });
+        expect(mapDocument({ toObject })).toMatchObject({ id: 'd4', type: 'validId', fileUrl: '/api/documents/d4/file' });
     });
 });
 
