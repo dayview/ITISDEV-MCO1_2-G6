@@ -35,7 +35,8 @@ describe('Authentication - register: duplicate email/student ID detection', () =
                 email: 'juan_delacruz@dlsu.edu.ph',
                 password: 'password123',
                 name: 'Juan Dela Cruz',
-                studentId: '12345678'
+                studentId: '12345678',
+                college: 'CCS'
             },
             session: {}
         };
@@ -59,7 +60,8 @@ describe('Authentication - register: duplicate email/student ID detection', () =
                 email: 'juan_delacruz@dlsu.edu.ph',
                 password: 'password123',
                 name: 'Juan Dela Cruz',
-                studentId: '12345678'
+                studentId: '12345678',
+                college: 'CCS'
             },
             session: {}
         };
@@ -82,7 +84,8 @@ describe('Authentication - register: duplicate email/student ID detection', () =
                 email: 'juan_delacruz@dlsu.edu.ph',
                 password: 'password123',
                 name: 'Juan Dela Cruz',
-                studentId: '12345678'
+                studentId: '12345678',
+                college: 'CCS'
             },
             session: {}
         };
@@ -94,6 +97,162 @@ describe('Authentication - register: duplicate email/student ID detection', () =
         expect(res.status).toHaveBeenCalledWith(201);
         expect(req.session.user.role).toBe('Student');
         expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true, redirectTo: '/dashboard.html' }));
+    });
+
+    test('registers a student with a non-CCS college and persists exactly what was submitted', async () => {
+        User.create.mockResolvedValue({
+            _id: 'u2', email: 'maria@dlsu.edu.ph', name: 'Maria Santos',
+            role: 'Student', studentId: '87654321', college: 'GCOE'
+        });
+        const req = {
+            body: {
+                email: 'maria@dlsu.edu.ph',
+                password: 'password123',
+                name: 'Maria Santos',
+                studentId: '87654321',
+                college: 'GCOE'
+            },
+            session: {}
+        };
+        const res = mockRes();
+        const next = jest.fn();
+
+        await registerHandler(req, res, next);
+
+        expect(User.create).toHaveBeenCalledWith(expect.objectContaining({ college: 'GCOE' }));
+        expect(res.status).toHaveBeenCalledWith(201);
+    });
+
+    test('never forces college to CCS when a different valid college is submitted', async () => {
+        User.create.mockResolvedValue({ _id: 'u3', email: 'x@dlsu.edu.ph', name: 'X', role: 'Student', college: 'RVRCOB' });
+        const req = {
+            body: { email: 'x@dlsu.edu.ph', password: 'password123', name: 'X', studentId: '1', college: 'RVRCOB' },
+            session: {}
+        };
+        await registerHandler(req, mockRes(), jest.fn());
+
+        const createArgs = User.create.mock.calls[0][0];
+        expect(createArgs.college).toBe('RVRCOB');
+        expect(createArgs.college).not.toBe('CCS');
+    });
+
+    test('the registration response never exposes passwordHashed', async () => {
+        User.create.mockResolvedValue({
+            _id: 'u4', email: 'y@dlsu.edu.ph', name: 'Y', role: 'Student', college: 'CCS',
+            passwordHashed: '$2b$10$shouldneverbeserialized'
+        });
+        const req = {
+            body: { email: 'y@dlsu.edu.ph', password: 'password123', name: 'Y', studentId: '2', college: 'CCS' },
+            session: {}
+        };
+        const res = mockRes();
+        await registerHandler(req, res, jest.fn());
+
+        const jsonPayload = res.json.mock.calls[0][0];
+        expect(jsonPayload.user).not.toHaveProperty('passwordHashed');
+        expect(JSON.stringify(jsonPayload)).not.toContain('shouldneverbeserialized');
+    });
+});
+
+describe('Authentication - register: new profile field validation', () => {
+    const registerHandler = getHandler('post', '/register');
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        bcrypt.hash.mockResolvedValue('hashed-password');
+    });
+
+    const baseBody = { email: 'juan@dlsu.edu.ph', password: 'password123', name: 'Juan', studentId: '123' };
+
+    test('rejects registration missing college with a field-level error', async () => {
+        const req = { body: { ...baseBody }, session: {} };
+        const res = mockRes();
+
+        await registerHandler(req, res, jest.fn());
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            success: false,
+            errors: expect.objectContaining({ college: expect.any(String) })
+        }));
+        expect(User.create).not.toHaveBeenCalled();
+    });
+
+    test('rejects an invalid gender with a field-level error', async () => {
+        const req = { body: { ...baseBody, college: 'CCS', gender: 'not-real' }, session: {} };
+        const res = mockRes();
+
+        await registerHandler(req, res, jest.fn());
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            errors: expect.objectContaining({ gender: expect.any(String) })
+        }));
+        expect(User.create).not.toHaveBeenCalled();
+    });
+
+    test('rejects an invalid enrollment status with a field-level error', async () => {
+        const req = { body: { ...baseBody, college: 'CCS', enrollmentStatus: 'On Leave' }, session: {} };
+        const res = mockRes();
+
+        await registerHandler(req, res, jest.fn());
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            errors: expect.objectContaining({ enrollmentStatus: expect.any(String) })
+        }));
+        expect(User.create).not.toHaveBeenCalled();
+    });
+
+    test('rejects an invalid birthdate with a field-level error', async () => {
+        const req = { body: { ...baseBody, college: 'CCS', birthdate: 'not-a-date' }, session: {} };
+        const res = mockRes();
+
+        await registerHandler(req, res, jest.fn());
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            errors: expect.objectContaining({ birthdate: expect.any(String) })
+        }));
+        expect(User.create).not.toHaveBeenCalled();
+    });
+
+    test('rejects an invalid phone number with a field-level error', async () => {
+        const req = { body: { ...baseBody, college: 'CCS', phone: '123' }, session: {} };
+        const res = mockRes();
+
+        await registerHandler(req, res, jest.fn());
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            errors: expect.objectContaining({ phone: expect.any(String) })
+        }));
+        expect(User.create).not.toHaveBeenCalled();
+    });
+
+    test('accepts registration with every new field valid', async () => {
+        User.create.mockResolvedValue({ _id: 'u5', email: 'juan@dlsu.edu.ph', name: 'Juan', role: 'Student', college: 'CLA' });
+        const req = {
+            body: {
+                ...baseBody,
+                college: 'CLA',
+                phone: '+63 917 123 4567',
+                gender: 'male',
+                birthdate: '2003-05-15',
+                enrollmentStatus: 'Full-time',
+                graduatingTerm: 'AY 2026-2027, Term 2'
+            },
+            session: {}
+        };
+        const res = mockRes();
+
+        await registerHandler(req, res, jest.fn());
+
+        expect(User.create).toHaveBeenCalledWith(expect.objectContaining({
+            college: 'CLA', phone: '+63 917 123 4567', gender: 'male',
+            birthdate: '2003-05-15', enrollmentStatus: 'Full-time', graduatingTerm: 'AY 2026-2027, Term 2'
+        }));
+        expect(res.status).toHaveBeenCalledWith(201);
     });
 });
 

@@ -21,6 +21,16 @@ const documentSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    status: {
+        type: String,
+        enum: ['pending', 'verified', 'rejected'],
+        default: 'pending'
+    },
+    reviewedAt: Date,
+    reviewedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
 }, { timestamps: true });
 
 documentSchema.index({ userId: 1, type: 1 });

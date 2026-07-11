@@ -11,7 +11,7 @@ const AuditLog = require('./models/AuditLog');
 const User = require('./models/User');
 const authRoutes = require('./routes/auth');
 const { mapOpportunity, normalizeOpportunityInput, mapAdminOpportunity } = require('./lib/opportunities');
-const { normalizeDocumentType } = require('./lib/documents');
+const { normalizeDocumentType, mapDocument, buildDocumentChecklist } = require('./lib/documents');
 const { evaluateStudentEligibility, isOpportunityOpenForApplication } = require('./lib/eligibility');
 const { applicationPipeline, buildApplicationPayload, toApplicationsCsv, isValidStatus, APPLICATION_STATUSES, mapStudentApplication } = require('./lib/applications');
 const { computeStatisticsSummary, getUrgentCutoff } = require('./lib/statistics');
@@ -292,8 +292,9 @@ app.patch('/api/opportunities/:id', requireAdminSession, async (req, res) => {
 
 app.get('/api/documents', requireStudentSession, async (req, res) => {
     try {
-        const data = await Document.find({ userId: req.session.user._id }).sort({ uploadedAt: -1 });
-        res.json({ success: true, data });
+        const documents = await Document.find({ userId: req.session.user._id }).sort({ uploadedAt: -1 });
+        const data = documents.map(mapDocument);
+        res.json({ success: true, data, checklist: buildDocumentChecklist(data) });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -310,9 +311,24 @@ app.post('/api/documents', requireStudentSession, async (req, res) => {
             filePath: filePath || `uploads/${req.session.user._id}/${fileName}`,
             fileFormat
         });
-        res.status(201).json({ success: true, data: document });
+        res.status(201).json({ success: true, data: mapDocument(document) });
     } catch (err) {
         res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+app.delete('/api/documents/:id', requireStudentSession, async (req, res) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ success: false, error: 'Invalid document id.' });
+        }
+        const document = await Document.findOneAndDelete({ _id: req.params.id, userId: req.session.user._id });
+        if (!document) {
+            return res.status(404).json({ success: false, error: 'Document not found.' });
+        }
+        res.json({ success: true, data: { id: String(document._id) } });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 

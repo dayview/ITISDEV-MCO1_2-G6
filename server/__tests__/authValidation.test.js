@@ -1,4 +1,8 @@
-const { roleHome, sanitizeUser, isDlsuEmail, isValidPassword, ADMIN_ROLES } = require('../lib/authValidation');
+const {
+    roleHome, sanitizeUser, isDlsuEmail, isValidPassword, ADMIN_ROLES,
+    isValidPhone, validateRegistrationProfile
+} = require('../lib/authValidation');
+const { GENDER_OPTIONS, ENROLLMENT_STATUSES, COLLEGE_OPTIONS } = require('../lib/profile');
 
 describe('Authentication - email validation', () => {
     test('accepts a well-formed DLSU email', () => {
@@ -88,5 +92,119 @@ describe('Authentication - sanitizeUser', () => {
             isGraduating: false,
             sdfoCleared: true
         });
+    });
+});
+
+describe('Registration - phone validation', () => {
+    test('accepts a valid Philippine mobile number', () => {
+        expect(isValidPhone('+63 917 123 4567')).toBe(true);
+    });
+
+    test('rejects a number with too few digits', () => {
+        expect(isValidPhone('12345')).toBe(false);
+    });
+
+    test('rejects an empty phone number', () => {
+        expect(isValidPhone('')).toBe(false);
+    });
+});
+
+describe('Registration - validateRegistrationProfile: college (required)', () => {
+    test('rejects registration when college is missing', () => {
+        const result = validateRegistrationProfile({});
+        expect(result.valid).toBe(false);
+        expect(result.errors.college).toBeDefined();
+        expect(result.profile.college).toBeUndefined();
+    });
+
+    test('rejects a college outside the real enum', () => {
+        const result = validateRegistrationProfile({ college: 'MIT' });
+        expect(result.valid).toBe(false);
+        expect(result.errors.college).toBeDefined();
+    });
+
+    test('accepts every real college option, including ones other than CCS', () => {
+        COLLEGE_OPTIONS.forEach(college => {
+            const result = validateRegistrationProfile({ college });
+            expect(result.valid).toBe(true);
+            expect(result.profile.college).toBe(college);
+        });
+        expect(COLLEGE_OPTIONS).toContain('GCOE');
+        expect(COLLEGE_OPTIONS).toContain('RVRCOB');
+    });
+});
+
+describe('Registration - validateRegistrationProfile: optional fields', () => {
+    test('valid registration with every optional field populated', () => {
+        const result = validateRegistrationProfile({
+            college: 'GCOE',
+            phone: '+63 917 123 4567',
+            gender: 'female',
+            birthdate: '2003-05-15',
+            enrollmentStatus: 'Full-time',
+            graduatingTerm: 'AY 2026-2027, Term 2'
+        });
+        expect(result.valid).toBe(true);
+        expect(result.profile).toEqual({
+            college: 'GCOE',
+            phone: '+63 917 123 4567',
+            gender: 'female',
+            birthdate: '2003-05-15',
+            enrollmentStatus: 'Full-time',
+            graduatingTerm: 'AY 2026-2027, Term 2'
+        });
+    });
+
+    test('optional fields may all be omitted', () => {
+        const result = validateRegistrationProfile({ college: 'CCS' });
+        expect(result.valid).toBe(true);
+        expect(result.profile).toEqual({ college: 'CCS' });
+    });
+
+    test('rejects an invalid gender', () => {
+        const result = validateRegistrationProfile({ college: 'CCS', gender: 'alien' });
+        expect(result.valid).toBe(false);
+        expect(result.errors.gender).toBeDefined();
+    });
+
+    test('accepts every real gender option', () => {
+        GENDER_OPTIONS.forEach(gender => {
+            expect(validateRegistrationProfile({ college: 'CCS', gender }).valid).toBe(true);
+        });
+    });
+
+    test('rejects an invalid enrollment status', () => {
+        const result = validateRegistrationProfile({ college: 'CCS', enrollmentStatus: 'On Leave' });
+        expect(result.valid).toBe(false);
+        expect(result.errors.enrollmentStatus).toBeDefined();
+    });
+
+    test('accepts every real enrollment status', () => {
+        ENROLLMENT_STATUSES.forEach(enrollmentStatus => {
+            expect(validateRegistrationProfile({ college: 'CCS', enrollmentStatus }).valid).toBe(true);
+        });
+    });
+
+    test('rejects an unparseable birthdate', () => {
+        const result = validateRegistrationProfile({ college: 'CCS', birthdate: 'not-a-date' });
+        expect(result.valid).toBe(false);
+        expect(result.errors.birthdate).toBeDefined();
+    });
+
+    test('rejects an invalid phone number', () => {
+        const result = validateRegistrationProfile({ college: 'CCS', phone: '123' });
+        expect(result.valid).toBe(false);
+        expect(result.errors.phone).toBeDefined();
+    });
+
+    test('never returns role, email, studentId, or passwordHashed even if present in the request body', () => {
+        const result = validateRegistrationProfile({
+            college: 'CCS', role: 'OVPERI_Admin', email: 'attacker@dlsu.edu.ph',
+            studentId: '00000000', passwordHashed: 'hacked'
+        });
+        expect(result.profile).not.toHaveProperty('role');
+        expect(result.profile).not.toHaveProperty('email');
+        expect(result.profile).not.toHaveProperty('studentId');
+        expect(result.profile).not.toHaveProperty('passwordHashed');
     });
 });

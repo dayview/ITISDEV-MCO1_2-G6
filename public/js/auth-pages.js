@@ -13,7 +13,8 @@
     });
     const result = await response.json();
     if (!response.ok || !result.success) {
-      throw new Error(result.error || `HTTP ${response.status}`);
+      const fieldMessages = result.errors ? Object.values(result.errors).join(' ') : '';
+      throw new Error(fieldMessages || result.error || `HTTP ${response.status}`);
     }
     return result;
   }
@@ -55,7 +56,12 @@
           name: document.getElementById('register-name').value,
           studentId: document.getElementById('register-student-id').value,
           major: document.getElementById('register-major').value,
-          college: 'CCS'
+          college: document.getElementById('register-college').value,
+          phone: document.getElementById('register-phone').value,
+          gender: document.getElementById('register-gender').value,
+          birthdate: document.getElementById('register-birthdate').value,
+          enrollmentStatus: document.getElementById('register-enrollment-status').value,
+          graduatingTerm: document.getElementById('register-grad-term').value
         });
         window.location.href = result.redirectTo || '/dashboard.html';
       } catch (error) {

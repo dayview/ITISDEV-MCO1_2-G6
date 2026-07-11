@@ -1,5 +1,7 @@
 const GENDER_OPTIONS = ['female', 'male', 'other', 'prefer-not'];
 const ENROLLMENT_STATUSES = ['Full-time', 'Part-time'];
+// The set of colleges already in use across seed data and the User schema.
+const COLLEGE_OPTIONS = ['CCS', 'GCOE', 'CLA', 'RVRCOB'];
 
 const mapProfile = (user) => {
     const plain = typeof user.toObject === 'function' ? user.toObject() : user;
@@ -86,4 +88,4 @@ const validateProfileUpdate = (body = {}) => {
     return { valid: Object.keys(errors).length === 0, errors, updates, unsets };
 };
 
-module.exports = { GENDER_OPTIONS, ENROLLMENT_STATUSES, mapProfile, validateProfileUpdate };
+module.exports = { GENDER_OPTIONS, ENROLLMENT_STATUSES, COLLEGE_OPTIONS, mapProfile, validateProfileUpdate };

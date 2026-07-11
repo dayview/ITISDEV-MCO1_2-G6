@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const router = express.Router();
 const User = require('../models/User');
-const { roleHome, sanitizeUser, isDlsuEmail, isValidPassword } = require('../lib/authValidation');
+const { roleHome, sanitizeUser, isDlsuEmail, isValidPassword, validateRegistrationProfile } = require('../lib/authValidation');
 
 router.post('/login', async (req, res, next) => {
     try {
@@ -25,7 +25,7 @@ router.post('/login', async (req, res, next) => {
 
 router.post('/register', async (req, res, next) => {
     try {
-        const { email, password, name, studentId, college, major, cgpa, graduatingTerm } = req.body;
+        const { email, password, name, studentId, major, cgpa } = req.body;
         if (!email || !password || !name || !studentId)
             return res.status(400).json({ success: false, error: 'Email, password, name, and student ID are required.' });
         if (!isDlsuEmail(email))
@@ -33,16 +33,20 @@ router.post('/register', async (req, res, next) => {
         if (!isValidPassword(password))
             return res.status(400).json({ success: false, error: 'Password must be at least 8 characters.' });
 
+        const { valid, errors, profile } = validateRegistrationProfile(req.body);
+        if (!valid) {
+            return res.status(400).json({ success: false, error: 'Please fix the highlighted fields.', errors });
+        }
+
         const passwordHashed = await bcrypt.hash(password, 10);
         const user = await User.create({
             email,
             passwordHashed,
             name,
             studentId,
-            college: college || 'CCS',
             major,
             cgpa: cgpa ? Number(cgpa) : undefined,
-            graduatingTerm,
+            ...profile,
             role: 'Student'
         });
 

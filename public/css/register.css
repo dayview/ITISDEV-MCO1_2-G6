@@ -162,7 +162,8 @@
   margin-bottom: 7px;
 }
 
-.field input {
+.field input,
+.field select {
   width: 100%;
   border: 1px solid #D7DEDA;
   border-radius: 9px;
@@ -175,7 +176,8 @@
   box-sizing: border-box;
 }
 
-.field input:focus { border-color: #006633; }
+.field input:focus,
+.field select:focus { border-color: #006633; }
 
 .field-row {
   display: grid;

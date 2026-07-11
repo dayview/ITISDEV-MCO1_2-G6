@@ -31,7 +31,10 @@ const userSchema = new mongoose.Schema({
         unique: true,
         sparse: true
     },
-    college: String,
+    college: {
+        type: String,
+        enum: ['CCS', 'GCOE', 'CLA', 'RVRCOB']
+    },
     major: String,
     cgpa: Number,
     graduatingTerm: String,
