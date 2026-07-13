@@ -35,7 +35,7 @@ async function fetchApplications() {
     renderApplications();
     updateStatistics();
 
-    console.log(`✓ Loaded ${currentApplications.length} applications`);
+    console.log(`Loaded ${currentApplications.length} applications`);
   } catch (err) {
     console.error('Error fetching applications:', err);
     const container = document.getElementById('applications-container');
@@ -59,7 +59,7 @@ function renderApplications() {
   currentApplications.forEach((app) => {
     const isSelected = selectedIds.has(app.id);
     const statusColor = getStatusColor(app.status);
-    const docsStatusColor = app.documents_status === 'complete' ? 'green' : 'red';
+    const docsStatusColor = app.documentsStatus === 'complete' ? 'green' : 'red';
 
     html += `
       <div class="table-row" role="row" data-app-id="${app.id}">
@@ -75,10 +75,10 @@ function renderApplications() {
           <div class="table-cell-secondary">${app.institution}</div>
         </div>
         <div class="table-cell">${app.cgpa}</div>
-        <div class="table-cell">${formatDate(app.submitted_date)}</div>
+        <div class="table-cell">${formatDate(app.submittedDate)}</div>
         <div>
           <span class="chip chip--${docsStatusColor}">
-            <span class="chip__dot"></span>${capitalize(app.documents_status)}
+            <span class="chip__dot"></span>${capitalize(app.documentsStatus)}
           </span>
         </div>
         <div>
@@ -186,7 +186,7 @@ async function updateApplicationStatus(appId, status) {
 
     // Refetch to update UI
     await fetchApplications();
-    console.log(`✓ Updated application ${appId} to ${status}`);
+    console.log(`Updated application ${appId} to ${status}`);
   } catch (err) {
     console.error('Error updating application:', err);
     alert(`Error: ${err.message}`);
@@ -240,7 +240,7 @@ async function batchApprove() {
 
     selectedIds.clear();
     await fetchApplications();
-    console.log(`✓ Batch approved ${result.data.length} applications`);
+    console.log(`Batch approved ${result.count} applications`);
   } catch (err) {
     console.error('Error batch approving:', err);
     alert(`Error: ${err.message}`);
@@ -479,7 +479,6 @@ function capitalize(str) {
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('Initializing GEMS Admin Dashboard...');
 
-  setupSortButtons();
   setupFilterPills();
   setupSearchInput();
   setupBatchActionButtons();
