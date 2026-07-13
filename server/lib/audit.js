@@ -6,6 +6,15 @@ const ALLOWED_AUDIT_ACTIONS = [
     'opportunity_closed',
     'application_status_changed',
     'application_bulk_status_changed',
+    'user_role_changed',
+    'user_deactivated',
+    'user_registered',
+    'user_login',
+    'user_logout',
+    'user_profile_updated',
+    'document_uploaded',
+    'document_deleted',
+    'application_submitted',
 ];
 
 const buildAuditEntry = ({ userId, userRole, action, targetType, targetId, targetLabel, changes = [], ip }) => {

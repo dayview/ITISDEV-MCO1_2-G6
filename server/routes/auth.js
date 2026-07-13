@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const router = express.Router();
 const User = require('../models/User');
+const AuditLog = require('../models/AuditLog');
 const { roleHome, sanitizeUser, isDlsuEmail, isValidPassword, validateRegistrationProfile } = require('../lib/authValidation');
 
 router.post('/login', async (req, res, next) => {
@@ -19,6 +20,17 @@ router.post('/login', async (req, res, next) => {
             return res.status(401).json({ success: false, error: 'Invalid credentials.' });
 
         req.session.user = sanitizeUser(user);
+
+        await AuditLog.create({
+            userId: user._id,
+            userRole: user.role,
+            action: 'user_login',
+            targetType: 'User',
+            targetId: user._id,
+            targetLabel: user.name,
+            ip: req.ip
+        });
+
         res.json({ success: true, user: req.session.user, redirectTo: roleHome(user.role) });
     } catch (err) { next(err); }
 });
@@ -51,6 +63,17 @@ router.post('/register', async (req, res, next) => {
         });
 
         req.session.user = sanitizeUser(user);
+
+        await AuditLog.create({
+            userId: user._id,
+            userRole: user.role,
+            action: 'user_registered',
+            targetType: 'User',
+            targetId: user._id,
+            targetLabel: user.name,
+            ip: req.ip
+        });
+
         res.status(201).json({ success: true, user: req.session.user, redirectTo: roleHome(user.role) });
     } catch (err) {
         if (err.code === 11000) {
@@ -60,8 +83,22 @@ router.post('/register', async (req, res, next) => {
     }
 });
 
-router.post('/logout', (req, res) => {
-    req.session.destroy(() => res.json({ success: true, message: 'Logged out.' }));
+router.post('/logout', async (req, res, next) => {
+    try {
+        const user = req.session?.user;
+        if (user) {
+            await AuditLog.create({
+                userId: user._id,
+                userRole: user.role,
+                action: 'user_logout',
+                targetType: 'User',
+                targetId: user._id,
+                targetLabel: user.name,
+                ip: req.ip
+            });
+        }
+        req.session.destroy(() => res.json({ success: true, message: 'Logged out.' }));
+    } catch (err) { next(err); }
 });
 
 router.get('/verify', (req, res) => {

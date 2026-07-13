@@ -13,4 +13,10 @@ function requireAdmin(req, res, next) {
     next();
 }
 
-module.exports = { requireAuth, requireAdmin, ADMIN_ROLES };
+function requireSystemAdmin(req, res, next) {
+    if (req.user?.role !== 'System_Admin')
+        return res.status(403).json({ success: false, error: 'Forbidden. System admin access required.' });
+    next();
+}
+
+module.exports = { requireAuth, requireAdmin, requireSystemAdmin, ADMIN_ROLES };

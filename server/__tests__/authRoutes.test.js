@@ -1,4 +1,5 @@
 jest.mock('../models/User');
+jest.mock('../models/AuditLog');
 jest.mock('bcrypt');
 
 const User = require('../models/User');

@@ -189,18 +189,39 @@ describe('Audit Logging - schema validation and append-only behavior', () => {
         expect(log.validateSync().errors.action).toBeDefined();
     });
 
-    test('user role recording: rejects a non-admin userRole', () => {
+    test('user role recording: accepts Student now that student-initiated actions are logged', () => {
         const log = new AuditLog({
-            userId: oid(), userRole: 'Student', action: 'opportunity_created',
+            userId: oid(), userRole: 'Student', action: 'application_submitted',
+            targetType: 'Application', targetId: oid()
+        });
+        expect(log.validateSync()).toBeUndefined();
+    });
+
+    test('user role recording: rejects a role outside Student/OVPERI_Admin/System_Admin', () => {
+        const log = new AuditLog({
+            userId: oid(), userRole: 'Guest', action: 'opportunity_created',
             targetType: 'Opportunity', targetId: oid()
         });
         expect(log.validateSync().errors.userRole).toBeDefined();
     });
 
-    test('target mapping: rejects a targetType outside Opportunity/Application', () => {
+    test('target mapping: accepts User and Document alongside Opportunity/Application', () => {
+        const userTargeted = new AuditLog({
+            userId: oid(), userRole: 'System_Admin', action: 'user_deactivated',
+            targetType: 'User', targetId: oid()
+        });
+        const documentTargeted = new AuditLog({
+            userId: oid(), userRole: 'Student', action: 'document_uploaded',
+            targetType: 'Document', targetId: oid()
+        });
+        expect(userTargeted.validateSync()).toBeUndefined();
+        expect(documentTargeted.validateSync()).toBeUndefined();
+    });
+
+    test('target mapping: rejects a targetType outside the known set', () => {
         const log = new AuditLog({
             userId: oid(), userRole: 'OVPERI_Admin', action: 'opportunity_created',
-            targetType: 'User', targetId: oid()
+            targetType: 'Comment', targetId: oid()
         });
         expect(log.validateSync().errors.targetType).toBeDefined();
     });

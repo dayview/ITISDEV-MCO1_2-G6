@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const auditLogSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    userRole: { type: String, enum: ['OVPERI_Admin', 'System_Admin'], required: true },
+    userRole: { type: String, enum: ['OVPERI_Admin', 'System_Admin', 'Student'], required: true },
     action: {
         type: String,
         enum: [
@@ -13,10 +13,19 @@ const auditLogSchema = new mongoose.Schema({
             'opportunity_closed',
             'application_status_changed',
             'application_bulk_status_changed',
+            'user_role_changed',
+            'user_deactivated',
+            'user_registered',
+            'user_login',
+            'user_logout',
+            'user_profile_updated',
+            'document_uploaded',
+            'document_deleted',
+            'application_submitted',
         ],
         required: true
     },
-    targetType: { type: String, enum: ['Opportunity', 'Application'], required: true },
+    targetType: { type: String, enum: ['Opportunity', 'Application', 'User', 'Document'], required: true },
     targetId: { type: mongoose.Schema.Types.ObjectId, required: true },
     targetLabel: { type: String },
     changes: [{

@@ -10,6 +10,7 @@ const Document = require('./models/Document');
 const AuditLog = require('./models/AuditLog');
 const User = require('./models/User');
 const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
 const { mapOpportunity, normalizeOpportunityInput, mapAdminOpportunity } = require('./lib/opportunities');
 const { normalizeDocumentType, mapDocument, buildDocumentChecklist } = require('./lib/documents');
 const { evaluateStudentEligibility, isOpportunityOpenForApplication } = require('./lib/eligibility');
@@ -58,6 +59,7 @@ const requireStudentSession = (req, res, next) => {
 };
 
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/', (_req, res) => {
     res.sendFile(path.join(studentViewsRoot, 'login.html'));
@@ -180,6 +182,18 @@ app.patch('/api/profile', requireStudentSession, async (req, res) => {
         );
         if (!user) return res.status(401).json({ success: false, error: 'Please log in.' });
         req.session.user = sanitizeUser(user);
+
+        await AuditLog.create({
+            userId: user._id,
+            userRole: user.role,
+            action: 'user_profile_updated',
+            targetType: 'User',
+            targetId: user._id,
+            targetLabel: user.name,
+            changes: Object.keys(updates).map(field => ({ field, from: undefined, to: String(updates[field]) })),
+            ip: req.ip
+        });
+
         res.json({ success: true, data: mapProfile(user) });
     } catch (err) {
         res.status(400).json({ success: false, error: err.message });
@@ -323,6 +337,17 @@ app.post('/api/documents', requireStudentSession, uploadSingleFile, async (req, 
             mimeType: req.file.mimetype,
             size: req.file.size
         });
+
+        await AuditLog.create({
+            userId: req.session.user._id,
+            userRole: req.session.user.role,
+            action: 'document_uploaded',
+            targetType: 'Document',
+            targetId: document._id,
+            targetLabel: document.originalFileName,
+            ip: req.ip
+        });
+
         res.status(201).json({ success: true, data: mapDocument(document) });
     } catch (err) {
         // The file was already written to disk before this validation/DB step ran —
@@ -382,6 +407,17 @@ app.delete('/api/documents/:id', requireStudentSession, async (req, res) => {
         if (!fileDeletion.ok) {
             console.error(`Document ${document._id} record deleted but physical file removal failed: ${fileDeletion.error}`);
         }
+
+        await AuditLog.create({
+            userId: req.session.user._id,
+            userRole: req.session.user.role,
+            action: 'document_deleted',
+            targetType: 'Document',
+            targetId: document._id,
+            targetLabel: document.originalFileName,
+            ip: req.ip
+        });
+
         res.json({ success: true, data: { id: String(document._id) } });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
@@ -421,6 +457,17 @@ app.post('/api/applications', requireStudentSession, async (req, res) => {
         const application = await Application.create(
             buildApplicationPayload({ userId: req.session.user._id, opportunityId, documents })
         );
+
+        await AuditLog.create({
+            userId: req.session.user._id,
+            userRole: req.session.user.role,
+            action: 'application_submitted',
+            targetType: 'Application',
+            targetId: application._id,
+            targetLabel: `Application ${application._id}`,
+            ip: req.ip
+        });
+
         res.status(201).json({ success: true, data: application });
     } catch (err) {
         if (err.code === 11000) {
