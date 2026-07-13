@@ -3,246 +3,161 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Create Account — GEMS</title>
+  <title>Create An Account — GEMS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" href="../../public/images/OVPERI-white.png" />
   <link rel="stylesheet" href="../../public/css/gems.css" />
   <link rel="stylesheet" href="../../public/css/register.css" />
 </head>
 <body>
 
-<div class="app-wrapper">
+<!-- ============================================== -->
+<!-- REGISTRATION MODAL OVERLAY BACKGROUND          -->
+<!-- ============================================== -->
+<div class="login-bg" id="auth-modal" onclick="closeAuthModal(event)">
 
-  <!-- =====================================================================
-       PROTO BAR
-       ===================================================================== -->
-  <nav class="student-topnav" aria-label="Student navigation">
-    <a href="dashboard.html" class="student-topnav__brand">
-      <div class="student-topnav__logo">
-        <img src="../../public/images/OVPERI-white.png" alt="OVPERI" class="student-topnav__logo-img">
-      </div>
-      <span class="student-topnav__title">GEMS</span>
-    </a>
+  <!-- auth-container is centered but allowed to scroll if it exceeds screen height -->
+  <div class="auth-container" id="auth-container" onclick="event.stopPropagation()">
+    <div class="card">
 
-    <div class="student-topnav__links">
-      <a class="student-topnav__link" href="catalog.html">
-        <div class="student-topnav__link-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v18"/></svg>
-        </div>
-        <div class="student-topnav__link-label">Catalog</div>
-      </a>
+      <!-- Close Button ✕ -->
+      <button class="modal-close-btn" onclick="closeAuthModal(event, true)">✕</button>
 
-      <a class="student-topnav__link" href="documents.html">
-        <div class="student-topnav__link-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-        </div>
-        <div class="student-topnav__link-label">Documents</div>
-      </a>
-
-      <a class="student-topnav__link" href="applications.html">
-        <div class="student-topnav__link-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5l4 4L8 20l-4 1 1-4L16.5 3.5z"/></svg>
-        </div>
-        <div class="student-topnav__link-label">My Applications</div>
-      </a>
-
-      <a class="student-topnav__link" href="profile.html">
-        <div class="student-topnav__link-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </div>
-        <div class="student-topnav__link-label">Account</div>
-      </a>
-    </div>
-    <div class="student-topnav__actions"></div>
-  </nav>
-
-  <!-- =====================================================================
-       REGISTRATION BODY
-       ===================================================================== -->
-  <div class="reg-body">
-
-    <!-- ---- Sidebar ---- -->
-    <aside class="reg-sidebar">
-
-      <div class="reg-sidebar__brand">
-        <div class="reg-sidebar__logo">G</div>
-        <div>
-          <div class="reg-sidebar__name">New applicant</div>
-          <div class="reg-sidebar__sub">Create your profile</div>
-        </div>
+      <!-- Shared Brand Header Symbol -->
+      <div class="brand-logo">
+        <img src="../../public/images/OVPERI-white.png" alt="OVPERI Logo" class="brand-logo-img">
       </div>
 
-      <div class="reg-steps">
+      <!-- REGISTRATION VIEW -->
+      <div id="register-view" class="view active">
+        <h2>Create An Account</h2>
+        <p class="subtext">Register your academic profile in GEMS</p>
 
-        <!-- Step 1: Personal Info — active -->
-        <div class="reg-step reg-step--active">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>
-          </svg>
-          Personal Info
-        </div>
+        <form id="register-form">
 
-        <!-- Step 2: Academic Details -->
-        <div class="reg-step reg-step--idle">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 10L12 5 2 10l10 5 10-5z"/>
-            <path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>
-          </svg>
-          Academic Details
-        </div>
-
-        <!-- Step 3: Documents -->
-        <div class="reg-step reg-step--idle">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 3v4a1 1 0 0 0 1 1h4"/>
-            <path d="M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
-          </svg>
-          Documents
-        </div>
-
-      </div>
-
-      <!-- "Log in instead" card -->
-      <div class="reg-sidebar__cta">
-        <div class="reg-sidebar__cta-title">Already registered?</div>
-        <div class="reg-sidebar__cta-sub">Log in to track your applications.</div>
-        <a href="login.html" style="display:block;text-decoration:none;">
-          <button class="btn-login-instead">Log in instead</button>
-        </a>
-      </div>
-
-    </aside><!-- /reg-sidebar -->
-
-    <!-- ---- Main content ---- -->
-    <main class="reg-main">
-      <form id="register-form" class="reg-inner">
-
-        <div class="reg-heading">Create your GEMS account</div>
-        <div class="reg-subheading">Set up your profile once — your details auto-fill every application.</div>
-
-        <!-- Account Credentials -->
-        <div class="reg-section">
-          <div class="reg-section__title">Account Credentials</div>
-
-          <div class="field">
-            <label class="field__label" for="register-email">DLSU Email Address</label>
-            <input id="register-email" name="email" type="email" autocomplete="email" placeholder="lastname_firstname@dlsu.edu.ph" required />
+          <!-- SECTION 1: Account Credentials -->
+          <div class="section-heading">Account Credentials</div>
+          <div class="form-group">
+            <label class="form-label" for="register-email">DLSU Email Address</label>
+            <input id="register-email" name="email" type="email" class="mock-field" autocomplete="email" placeholder="lastname_firstname@dlsu.edu.ph" required>
           </div>
-
-          <div class="field-row">
-            <div class="field">
-              <label class="field__label" for="register-password">Password</label>
-              <input id="register-password" name="password" type="password" autocomplete="new-password" placeholder="••••••••" required />
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label" for="register-password">Password</label>
+              <input id="register-password" name="password" type="password" class="mock-field" autocomplete="new-password" minlength="8" placeholder="••••••••" required>
             </div>
-            <div class="field">
-              <label class="field__label" for="register-confirm-password">Confirm Password</label>
-              <input id="register-confirm-password" name="confirmPassword" type="password" autocomplete="new-password" placeholder="••••••••" required />
+            <div class="form-group">
+              <label class="form-label" for="register-confirm-password">Confirm Password</label>
+              <input id="register-confirm-password" name="confirmPassword" type="password" class="mock-field" autocomplete="new-password" minlength="8" placeholder="••••••••" required>
             </div>
           </div>
-        </div>
 
-        <!-- Personal Information -->
-        <div class="reg-section">
-          <div class="reg-section__title">Personal Information</div>
-
-          <div class="field">
-            <label class="field__label" for="register-name">Full Name</label>
-            <input id="register-name" name="name" type="text" autocomplete="name" placeholder="e.g. Katrina Isabel Estrella" required />
+          <!-- SECTION 2: Personal Information -->
+          <div class="section-heading">Personal Information</div>
+          <div class="form-group">
+            <label class="form-label" for="register-name">Full Name</label>
+            <input id="register-name" name="name" type="text" class="mock-field" autocomplete="name" placeholder="e.g. Juan Dela Cruz" required>
           </div>
-
-          <div class="field">
-            <label class="field__label" for="register-phone">Phone Number</label>
-            <input id="register-phone" name="phone" type="tel" autocomplete="tel" placeholder="+63 9XX XXX XXXX" />
+          <div class="form-group">
+            <label class="form-label" for="register-phone">Phone Number</label>
+            <input id="register-phone" name="phone" type="tel" class="mock-field" autocomplete="tel" placeholder="+63 9XX XXX XXXX" required>
           </div>
-
-          <div class="field-row">
-            <div class="field">
-              <label class="field__label" for="register-gender">Gender</label>
-              <select id="register-gender" name="gender">
-                <option value="">Select gender</option>
-                <option value="female">Female</option>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label" for="register-gender">Gender</label>
+              <select id="register-gender" name="gender" class="mock-field" required>
+                <option value="" disabled selected>Select Gender</option>
                 <option value="male">Male</option>
+                <option value="female">Female</option>
                 <option value="other">Other</option>
                 <option value="prefer-not">Prefer not to say</option>
               </select>
             </div>
-            <div class="field">
-              <label class="field__label" for="register-birthdate">Date of Birth</label>
-              <input id="register-birthdate" name="birthdate" type="date" />
+            <div class="form-group">
+              <label class="form-label" for="register-birthdate">Date of Birth</label>
+              <input id="register-birthdate" name="birthdate" type="date" class="mock-field" required>
             </div>
           </div>
-        </div>
 
-        <!-- Academic Details -->
-        <div class="reg-section">
-          <div class="reg-section__title">Academic Details</div>
-
-          <div class="field">
-            <label class="field__label" for="register-student-id">Student ID Number</label>
-            <input id="register-student-id" name="studentId" type="text" placeholder="e.g. 2023-04589" required />
-          </div>
-
-          <div class="field-row" style="margin-bottom:16px;">
-            <div class="field">
-              <label class="field__label" for="register-college">College</label>
-              <select id="register-college" name="college" required>
-                <option value="">Select college</option>
+          <!-- SECTION 3: Academic Details -->
+          <div class="section-heading">Academic Details</div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label" for="register-student-id">Student ID Number</label>
+              <input id="register-student-id" name="studentId" type="text" class="mock-field mono" placeholder="12306533" maxlength="8" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="register-college">College</label>
+              <select id="register-college" name="college" class="mock-field" required>
+                <option value="" disabled selected>Select College</option>
                 <option value="CCS">CCS</option>
-                <option value="GCOE">GCOE</option>
                 <option value="CLA">CLA</option>
+                <option value="GCOE">GCOE</option>
                 <option value="RVRCOB">RVRCOB</option>
               </select>
             </div>
-            <div class="field">
-              <label class="field__label" for="register-enrollment-status">Enrollment Status</label>
-              <select id="register-enrollment-status" name="enrollmentStatus">
-                <option value="">Select status</option>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label" for="register-enrollment-status">Enrollment Status</label>
+              <select id="register-enrollment-status" name="enrollmentStatus" class="mock-field" required>
+                <option value="" disabled selected>Select Status</option>
                 <option value="Full-time">Full-time</option>
                 <option value="Part-time">Part-time</option>
               </select>
             </div>
-          </div>
-
-          <div class="field-row">
-            <div class="field">
-              <label class="field__label" for="register-major">Current Major / Program</label>
-              <input id="register-major" name="major" type="text" placeholder="e.g. BS Computer Science" />
-            </div>
-            <div class="field">
-              <label class="field__label" for="register-grad-term">Expected Graduation Term</label>
-              <select id="register-grad-term" name="graduatingTerm">
-                <option value="">Select graduation term</option>
-                <option value="AY 2026-2027, Term 1">AY 2026-2027, Term 1</option>
-                <option value="AY 2026-2027, Term 2">AY 2026-2027, Term 2</option>
-                <option value="AY 2026-2027, Term 3">AY 2026-2027, Term 3</option>
-                <option value="AY 2027-2028, Term 1">AY 2027-2028, Term 1</option>
-              </select>
+            <div class="form-group">
+              <label class="form-label" for="register-major">Current Major / Program</label>
+              <input id="register-major" name="major" type="text" class="mock-field" placeholder="e.g. BSCS-ST" required>
             </div>
           </div>
-        </div>
 
-        <!-- Footer -->
-        <div class="reg-footer">
-          <div class="reg-footer__login">
-            Already have an account? <a href="login.html">Log in</a>
+          <div class="form-group">
+            <label class="form-label" for="register-grad-term">Expected Graduation Term</label>
+            <input id="register-grad-term" name="graduatingTerm" type="text" class="mock-field" placeholder="e.g. Term 3, AY 2025-2026" required>
           </div>
-          <div class="reg-footer__btns">
-            <a href="dashboard.html" style="text-decoration:none;">
-              <button class="btn-cancel" type="button">Cancel</button>
-            </a>
-            <button class="btn-create" type="submit">Create account</button>
-          </div>
-          <div id="register-message" class="reg-footer__login" role="alert" aria-live="polite" hidden></div>
+
+          <div id="register-message" class="auth-message" role="alert" aria-live="polite" hidden></div>
+
+          <!-- Submit Action -->
+          <button type="submit" class="btn btn-primary" style="margin-top: 2rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M5 12l5 5l10 -10" />
+            </svg> Complete Registration
+          </button>
+        </form>
+
+        <!-- redirects back to the login modal file -->
+        <div class="toggle-link">
+          Already have an account? <a href="login.html">Sign in</a>
         </div>
+      </div>
 
-      </form>
-    </main><!-- /reg-main -->
+    </div>
+  </div>
+</div>
 
-  </div><!-- /reg-body -->
+<script>
+  function openAuthModal() {
+    document.getElementById('auth-modal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
 
-</div><!-- /app-wrapper -->
+  function closeAuthModal(event, force = false) {
+    if (force || event.target === document.getElementById('auth-modal')) {
+      document.getElementById('auth-modal').classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+  }
 
+  window.onload = function() {
+    openAuthModal();
+  };
+</script>
 <script src="../../public/js/auth-pages.js"></script>
 </body>
 </html>

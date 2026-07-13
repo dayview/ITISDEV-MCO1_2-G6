@@ -76,6 +76,7 @@ const studentPages = new Set([
     'catalog.html',
     'dashboard.html',
     'documents.html',
+    'forgot-password.html',
     'login.html',
     'opportunity.html',
     'profile.html',

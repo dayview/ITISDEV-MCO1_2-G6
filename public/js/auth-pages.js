@@ -69,4 +69,23 @@
       }
     });
   }
+
+  const forgotPasswordForm = document.getElementById('forgot-password-form');
+  if (forgotPasswordForm) {
+    const message = document.getElementById('forgot-password-message');
+    forgotPasswordForm.addEventListener('submit', event => {
+      event.preventDefault();
+      showMessage(message, 'Password reset email delivery is not configured yet. Please contact an administrator.');
+    });
+  }
+
+  const googleLogin = document.getElementById('google-login');
+  if (googleLogin) {
+    googleLogin.addEventListener('click', () => {
+      showMessage(
+        document.getElementById('login-message'),
+        'Google sign-in is not configured. Please use your DLSU email and password.'
+      );
+    });
+  }
 })();
