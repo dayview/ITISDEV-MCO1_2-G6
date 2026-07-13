@@ -98,22 +98,36 @@ describe('Application Logic - schema validation', () => {
 });
 
 describe('Document Logic - schema validation', () => {
+    const validDocFields = {
+        userId: oid(), type: 'transcript', originalFileName: 'grades.pdf', storedFileName: 'abc123.pdf',
+        filePath: 'documents/x/abc123.pdf', mimeType: 'application/pdf', size: 20480
+    };
+
     test('valid document passes validation', () => {
-        const doc = new Document({ userId: oid(), type: 'transcript', filePath: 'uploads/x/y.pdf' });
+        const doc = new Document(validDocFields);
         expect(doc.validateSync()).toBeUndefined();
     });
 
     test('rejects an unknown document type', () => {
-        const doc = new Document({ userId: oid(), type: 'diploma', filePath: 'uploads/x/y.pdf' });
+        const doc = new Document({ ...validDocFields, type: 'diploma' });
         expect(doc.validateSync().errors.type).toBeDefined();
     });
 
-    test('required field validation: userId, type, filePath are required', () => {
+    test('required field validation: userId, type, originalFileName, storedFileName, filePath, mimeType, size are required', () => {
         const doc = new Document({});
         const err = doc.validateSync();
         expect(err.errors.userId).toBeDefined();
         expect(err.errors.type).toBeDefined();
+        expect(err.errors.originalFileName).toBeDefined();
+        expect(err.errors.storedFileName).toBeDefined();
         expect(err.errors.filePath).toBeDefined();
+        expect(err.errors.mimeType).toBeDefined();
+        expect(err.errors.size).toBeDefined();
+    });
+
+    test('defaults status to pending', () => {
+        const doc = new Document(validDocFields);
+        expect(doc.status).toBe('pending');
     });
 });
 

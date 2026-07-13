@@ -29,20 +29,20 @@ const CHECKLIST_TYPES = [
 
 const DOCUMENT_STATUSES = ['pending', 'verified', 'rejected'];
 
-// No route serves uploaded file bytes yet (filePath is metadata only, not a real URL),
-// so fileUrl is always null for now. Kept on the shape so a future upload/storage feature
-// can populate it without changing the response contract.
+// fileUrl points at the protected GET /api/documents/:id/file route — never the raw
+// filesystem path, which is not exposed to the client at all.
 const mapDocument = (document) => {
     const plain = typeof document.toObject === 'function' ? document.toObject() : document;
     return {
         id: String(plain._id),
         type: plain.type,
-        fileName: plain.fileName || '',
-        fileFormat: plain.fileFormat || '',
+        originalFileName: plain.originalFileName || '',
+        mimeType: plain.mimeType || '',
+        size: plain.size || 0,
         status: plain.status || 'pending',
         uploadedAt: plain.uploadedAt || plain.createdAt,
         reviewedAt: plain.reviewedAt || null,
-        fileUrl: null
+        fileUrl: `/api/documents/${String(plain._id)}/file`
     };
 };
 
