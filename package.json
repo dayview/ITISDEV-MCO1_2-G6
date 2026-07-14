@@ -34,6 +34,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
+    "google-auth-library": "^10.9.0",
     "lucide": "^1.21.0",
     "mongoose": "^8.24.1",
     "multer": "^2.2.0"

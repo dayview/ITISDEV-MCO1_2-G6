@@ -82,10 +82,21 @@
   const googleLogin = document.getElementById('google-login');
   if (googleLogin) {
     googleLogin.addEventListener('click', () => {
-      showMessage(
-        document.getElementById('login-message'),
-        'Google sign-in is not configured. Please use your DLSU email and password.'
-      );
+      window.location.href = '/api/auth/google';
     });
+  }
+
+  const GOOGLE_ERROR_MESSAGES = {
+    google_not_configured: 'Google sign-in is not configured. Please use your DLSU email and password.',
+    google_auth_failed: 'Google sign-in failed. Please try again or use your DLSU email and password.',
+    google_email_unverified: 'Your Google account email is not verified.',
+    google_wrong_domain: 'Please use a DLSU Google account (@dlsu.edu.ph) to continue.'
+  };
+
+  const loginMessage = document.getElementById('login-message');
+  const error = new URLSearchParams(window.location.search).get('error');
+  if (error && loginMessage) {
+    showMessage(loginMessage, GOOGLE_ERROR_MESSAGES[error] || 'Google sign-in failed. Please try again.');
+    window.history.replaceState({}, document.title, window.location.pathname);
   }
 })();

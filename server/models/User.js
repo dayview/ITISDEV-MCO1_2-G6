@@ -10,7 +10,13 @@ const userSchema = new mongoose.Schema({
     },
     passwordHashed: {
         type: String,
-        required: true
+        // Accounts created via Google Sign-In have no password of their own.
+        required: function () { return !this.googleId; }
+    },
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true
     },
     role: {
         type: String,
