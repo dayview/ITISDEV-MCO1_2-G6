@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — GEMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/css/gems.css" />
+</head>
+<body class="student-page dashboard-page">
+
+<div class="app-wrapper">
+<!-- =====================================================================
+       HEADER
+       ===================================================================== -->
+  <nav class="student-topnav catalog-nav" aria-label="Student navigation">
+    <a href="dashboard.html" class="student-topnav__brand" aria-label="GEMS dashboard">
+      <div class="student-topnav__logo">
+        <img src="../../public/images/OVPERI-white.png" alt="" class="student-topnav__logo-img">
+      </div>
+      <span class="student-topnav__title">GEMS</span>
+    </a>
+
+    <div class="catalog-nav__search">
+      <label class="topbar-search" for="global-search">
+        <span class="topbar-search__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </span>
+        <input id="global-search" type="search" aria-label="Search programs, countries, and universities" placeholder="Search programs, countries, universities..." autocomplete="off" />
+      </label>
+      <button type="button" class="catalog-icon-btn" aria-label="Open filters">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="student-topnav__links catalog-nav__links">
+      <a class="student-topnav__link" href="dashboard.html" aria-current="page">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="8" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="15" width="7" height="6" rx="1.5"></rect></svg>
+        </div>
+        <span class="student-topnav__link-label">Dashboard</span>
+      </a>
+
+      <a class="student-topnav__link" href="catalog.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">Catalog</span>
+      </a>
+
+      <a class="student-topnav__link" href="documents.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">Documents</span>
+      </a>
+
+      <a class="student-topnav__link" href="applications.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">My Applications</span>
+      </a>
+
+      <button type="button" class="catalog-notification" aria-label="Notifications, 3 unread">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="catalog-notification__badge">3</span>
+      </button>
+
+      <a class="student-topnav__link catalog-account-link" href="profile.html">
+        <span class="user-avatar" id="nav-user-avatar" aria-hidden="true">··</span>
+      </a>
+    </div>
+  </nav>
+
+      <main class="content student-shell" id="main-content">
+        <header class="student-hero">
+          <div class="student-hero__copy">
+            <h1 class="student-hero__title" id="student-hero-title">Welcome back!</h1>
+            <p class="student-hero__subtitle">Track your applications, deadlines, and recommended opportunities.</p>
+          </div>
+          <div class="student-hero__art" aria-hidden="true">
+            <svg viewBox="0 0 420 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M74 232C127 142 204 88 337 72" stroke="#B5E4C9" stroke-width="2.5" stroke-dasharray="8 7" stroke-linecap="round" opacity=".7"/>
+              <rect x="146" y="74" width="174" height="132" rx="22" fill="#C8E8D6"/>
+              <rect x="168" y="100" width="52" height="72" rx="12" fill="#9DD4B4"/>
+              <rect x="232" y="128" width="52" height="44" rx="12" fill="#9DD4B4" opacity=".78"/>
+              <circle cx="317" cy="78" r="44" fill="#EAF7EF"/>
+              <path d="M296 78l15 15 28-32" stroke="#0F7A3D" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".74"/>
+              <circle cx="134" cy="211" r="38" fill="#EAF7EF"/>
+              <path d="M117 213h34M117 198h34M117 228h21" stroke="#0F7A3D" stroke-width="8" stroke-linecap="round" opacity=".55"/>
+              <path d="M337 72C378 83 383 134 347 162" stroke="#5CC48A" stroke-width="2.5" stroke-dasharray="8 7" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </header>
+
+        <!-- Stat cards -->
+        <div class="stat-grid" role="region" aria-label="Summary statistics">
+
+          <!-- Active Applications -->
+          <div class="stat-card" data-stat="active-applications">
+            <div class="stat-card__label">Active Applications</div>
+            <div class="stat-card__value">—</div>
+            <div class="stat-card__sub">Loading...</div>
+          </div>
+
+          <!-- Eligible Programs -->
+          <div class="stat-card" data-stat="eligible-programs">
+            <div class="stat-card__label">Eligible Programs</div>
+            <div class="stat-card__value">—</div>
+            <div class="stat-card__sub">Loading...</div>
+          </div>
+
+          <!-- Pending Documents -->
+          <div class="stat-card" data-stat="pending-documents">
+            <div class="stat-card__label">Pending Documents</div>
+            <div class="stat-card__value">—</div>
+            <div class="stat-card__sub">Loading...</div>
+          </div>
+
+          <!-- Deadlines -->
+          <div class="stat-card" data-stat="deadlines-30">
+            <div class="stat-card__label">Deadlines · 30 days</div>
+            <div class="stat-card__value">—</div>
+            <div class="stat-card__sub">Loading...</div>
+          </div>
+
+        </div><!-- /stat-grid -->
+
+        <!-- Two-column grid -->
+        <div class="dashboard-grid">
+
+          <!-- ============================================================
+               LEFT — Recommended for you
+               ============================================================ -->
+          <div class="card-lg">
+
+            <div class="flex-row align-center space-between mb-16">
+              <div>
+                <div class="card__title mb-8">Recommended for you</div>
+                <div class="card__subtitle" id="recommended-subtitle">
+                  Matched to your profile
+                </div>
+              </div>
+              <a href="catalog.html" class="btn--ghost">View catalog &#8594;</a>
+            </div>
+
+            <div id="recommended-opportunities-list">
+              <p class="post-list-empty">Loading recommended opportunities...</p>
+            </div>
+
+          </div><!-- /recommended -->
+
+          <!-- ============================================================
+               RIGHT — Upcoming deadlines
+               ============================================================ -->
+          <div class="card-lg">
+
+            <div class="card__title">Upcoming deadlines</div>
+
+            <div id="upcoming-deadlines-list">
+              <p class="post-list-empty">Loading upcoming deadlines...</p>
+            </div>
+
+          </div><!-- /deadlines -->
+
+        </div><!-- /dashboard-grid -->
+
+      </main><!-- /content -->
+
+</div><!-- /app-wrapper -->
+
+<script src="../../public/js/student-dashboard.js" defer></script>
+</body>
+</html>

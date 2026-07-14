@@ -1,3 +1,9 @@
 node_modules
 .vscode
 .env
+.DS_Store
+
+# Local dev-only document storage — see server/lib/storage.js.
+# Production should use managed object storage instead.
+storage/documents/*
+!storage/documents/.gitkeep

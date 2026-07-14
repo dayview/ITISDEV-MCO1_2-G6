@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile Management - GEMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/css/gems.css" />
+</head>
+<body class="student-page profile-page">
+<div class="app-wrapper">
+  <nav class="student-topnav catalog-nav" aria-label="Student navigation">
+    <a href="dashboard.html" class="student-topnav__brand" aria-label="GEMS dashboard">
+      <div class="student-topnav__logo">
+        <img src="../../public/images/OVPERI-white.png" alt="" class="student-topnav__logo-img">
+      </div>
+      <span class="student-topnav__title">GEMS</span>
+    </a>
+
+    <div class="catalog-nav__search">
+      <label class="topbar-search" for="global-search">
+        <span class="topbar-search__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </span>
+        <input id="global-search" type="search" aria-label="Search programs, countries, and universities" placeholder="Search programs, countries, universities..." autocomplete="off" />
+      </label>
+      <button type="button" class="catalog-icon-btn" aria-label="Open filters">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="student-topnav__links catalog-nav__links">
+      <a class="student-topnav__link" href="dashboard.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="8" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="15" width="7" height="6" rx="1.5"></rect></svg>
+        </div>
+        <span class="student-topnav__link-label">Dashboard</span>
+      </a>
+
+      <a class="student-topnav__link" href="catalog.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">Catalog</span>
+      </a>
+
+      <a class="student-topnav__link" href="documents.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">Documents</span>
+      </a>
+
+      <a class="student-topnav__link" href="applications.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">My Applications</span>
+      </a>
+
+      <button type="button" class="catalog-notification" aria-label="Notifications, 3 unread">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="catalog-notification__badge">3</span>
+      </button>
+
+      <a class="student-topnav__link catalog-account-link" href="profile.html" aria-current="page" aria-label="Profile">
+        <span class="user-avatar" id="nav-user-avatar" aria-hidden="true">··</span>
+      </a>
+    </div>
+  </nav>
+
+  <main class="content student-shell" id="main-content">
+    <header class="student-hero">
+      <div class="student-hero__copy">
+        <h1 class="student-hero__title">Profile Management</h1>
+        <p class="student-hero__subtitle">View and update your personal information, academic details, and documents.</p>
+      </div>
+      <div class="student-hero__art" aria-hidden="true">
+        <svg viewBox="0 0 420 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M84 231C137 146 211 93 342 77" stroke="#B5E4C9" stroke-width="2.5" stroke-dasharray="8 7" stroke-linecap="round" opacity=".7"/>
+          <circle cx="236" cy="118" r="58" fill="#C8E8D6"/>
+          <circle cx="236" cy="101" r="24" fill="#9DD4B4"/>
+          <path d="M183 199c9-39 31-59 53-59s44 20 53 59" fill="#9DD4B4" opacity=".72"/>
+          <rect x="96" y="142" width="96" height="78" rx="18" fill="#EAF7EF"/>
+          <path d="M119 170h49M119 194h35" stroke="#0F7A3D" stroke-width="8" stroke-linecap="round" opacity=".38"/>
+          <circle cx="318" cy="194" r="42" fill="#EAF7EF"/>
+          <path d="M300 194l13 13 28-32" stroke="#0F7A3D" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".72"/>
+        </svg>
+      </div>
+    </header>
+
+    <!-- Loading state -->
+    <div id="profile-loading" class="student-card profile-card">
+      <div class="card__title">Loading your profile...</div>
+    </div>
+
+    <!-- Error state -->
+    <div id="profile-error" class="student-card profile-card" hidden>
+      <div class="card__title">Unable to load your profile.</div>
+      <div class="card__subtitle" id="profile-error-message"></div>
+      <button type="button" class="btn btn--secondary" id="profile-retry">Retry</button>
+    </div>
+
+    <form id="profile-form" class="profile-form" novalidate hidden>
+      <section id="section-personal" class="student-card profile-card">
+        <div class="profile-card__header">
+          <div>
+            <h2>Personal Information</h2>
+            <p class="section-subtitle">Keep your contact details current for program coordination.</p>
+          </div>
+          <span class="status-badge status-verified">Verified</span>
+        </div>
+
+        <div class="profile-grid">
+          <div class="profile-field profile-field--full">
+            <label for="fullname">Full Name</label>
+            <input type="text" id="fullname" name="fullname" value="" autocomplete="name" />
+            <span class="error-message" id="error-fullname"></span>
+          </div>
+
+          <div class="profile-field">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" value="" autocomplete="email" disabled />
+            <span class="error-message" id="error-email"></span>
+          </div>
+
+          <div class="profile-field">
+            <label for="phone">Mobile Number</label>
+            <input type="tel" id="phone" name="phone" value="" autocomplete="tel" placeholder="e.g. +63 917 123 4567" />
+            <span class="error-message" id="error-phone"></span>
+          </div>
+
+          <div class="profile-field">
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender">
+              <option value="">Select gender</option>
+              <option value="female">Female</option>
+              <option value="male">Male</option>
+              <option value="other">Other</option>
+              <option value="prefer-not">Prefer not to say</option>
+            </select>
+            <span class="error-message" id="error-gender"></span>
+          </div>
+
+          <div class="profile-field">
+            <label for="birthdate">Date of Birth</label>
+            <input type="date" id="birthdate" name="birthdate" value="" />
+            <span class="error-message" id="error-birthdate"></span>
+          </div>
+        </div>
+      </section>
+
+      <section id="section-academic" class="student-card profile-card">
+        <div class="profile-card__header">
+          <div>
+            <h2>Academic Details</h2>
+            <p class="section-subtitle">These details help determine eligibility and document requirements.</p>
+          </div>
+          <span class="status-badge status-pending">Pending Review</span>
+        </div>
+
+        <div class="profile-grid">
+          <div class="profile-field profile-field--full">
+            <label for="student-id">Student ID Number</label>
+            <input type="text" id="student-id" name="student-id" value="" disabled />
+            <span class="error-message" id="error-student-id"></span>
+          </div>
+
+          <div class="profile-field">
+            <label for="major">Current Major / Program</label>
+            <select id="major" name="major">
+              <option value="">Select major</option>
+              <option value="BS Computer Science">BS Computer Science</option>
+              <option value="BS Information Technology">BS Information Technology</option>
+              <option value="BS Data Science">BS Data Science</option>
+              <option value="BS Artificial Intelligence">BS Artificial Intelligence</option>
+            </select>
+            <span class="error-message" id="error-major"></span>
+          </div>
+
+          <div class="profile-field">
+            <label for="enrollment-status">Enrollment Status</label>
+            <select id="enrollment-status" name="enrollment-status">
+              <option value="">Select status</option>
+              <option value="Full-time">Full-time</option>
+              <option value="Part-time">Part-time</option>
+            </select>
+            <span class="error-message" id="error-enrollment-status"></span>
+          </div>
+
+          <div class="profile-field profile-field--full">
+            <label for="grad-term">Expected Graduation Term</label>
+            <select id="grad-term" name="grad-term">
+              <option value="">Select graduation term</option>
+              <option value="AY 2026-2027, Term 1">AY 2026-2027, Term 1</option>
+              <option value="AY 2026-2027, Term 2">AY 2026-2027, Term 2</option>
+              <option value="AY 2026-2027, Term 3">AY 2026-2027, Term 3</option>
+              <option value="AY 2027-2028, Term 1">AY 2027-2028, Term 1</option>
+            </select>
+            <span class="error-message" id="error-grad-term"></span>
+          </div>
+        </div>
+      </section>
+
+      <section id="section-documents" class="student-card profile-card">
+        <div class="profile-card__header">
+          <div>
+            <h2>Document Checklist</h2>
+            <p class="section-subtitle">Ensure all required documents are uploaded and up to date.</p>
+          </div>
+          <span class="status-badge status-pending">2 Pending</span>
+        </div>
+
+        <div class="profile-doc-grid">
+          <div class="profile-doc-item">
+            <div>
+              <div class="profile-doc-name">Valid ID Card</div>
+              <div class="profile-doc-meta">DLSU identification document</div>
+            </div>
+            <span class="status-badge status-verified">Verified</span>
+            <button type="button" class="doc-btn">View</button>
+          </div>
+
+          <div class="profile-doc-item">
+            <div>
+              <div class="profile-doc-name">Proof of Enrollment</div>
+              <div class="profile-doc-meta">PDF, JPG, or PNG up to 5 MB</div>
+            </div>
+            <span class="status-badge status-pending">Pending Review</span>
+            <label class="profile-upload" for="file-enrollment">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span>
+                <span class="upload-text">Upload Document</span>
+                <span class="upload-subtext">Click to select file</span>
+              </span>
+              <input type="file" id="file-enrollment" name="file-enrollment" accept=".pdf,.jpg,.png" />
+            </label>
+          </div>
+
+          <div class="profile-doc-item">
+            <div>
+              <div class="profile-doc-name">GPA Transcript</div>
+              <div class="profile-doc-meta">Latest transcript from the Registrar</div>
+            </div>
+            <span class="status-badge status-pending">Pending Review</span>
+            <label class="profile-upload" for="file-transcript">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span>
+                <span class="upload-text">Upload Document</span>
+                <span class="upload-subtext">Click to select file</span>
+              </span>
+              <input type="file" id="file-transcript" name="file-transcript" accept=".pdf,.jpg,.png" />
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <div class="profile-actions">
+        <button type="button" class="btn btn--secondary" id="btn-cancel">Cancel</button>
+        <button type="submit" class="btn btn--primary">Save Changes</button>
+      </div>
+    </form>
+  </main>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.5L3.5 11 5 9.5 9 13.5 19 3.5 20.5 5 9 16.5z"/></svg>
+  <span id="toast-message">Profile successfully updated!</span>
+</div>
+
+<script src="../../public/js/student-profile.js"></script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+const express = require('express');
+const bcrypt = require('bcrypt');
+const router = express.Router();
+const User = require('../models/User');
+const AuditLog = require('../models/AuditLog');
+const { roleHome, sanitizeUser, isDlsuEmail, isValidPassword, validateRegistrationProfile } = require('../lib/authValidation');
+
+router.post('/login', async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password)
+            return res.status(400).json({ success: false, error: 'Email and password required.' });
+
+        const user = await User.findOne({ email });
+        if (!user)
+            return res.status(401).json({ success: false, error: 'Invalid credentials.' });
+
+        const passwordMatches = await bcrypt.compare(password, user.passwordHashed || '');
+        if (!passwordMatches)
+            return res.status(401).json({ success: false, error: 'Invalid credentials.' });
+
+        req.session.user = sanitizeUser(user);
+
+        await AuditLog.create({
+            userId: user._id,
+            userRole: user.role,
+            action: 'user_login',
+            targetType: 'User',
+            targetId: user._id,
+            targetLabel: user.name,
+            ip: req.ip
+        });
+
+        res.json({ success: true, user: req.session.user, redirectTo: roleHome(user.role) });
+    } catch (err) { next(err); }
+});
+
+router.post('/register', async (req, res, next) => {
+    try {
+        const { email, password, name, studentId, major, cgpa } = req.body;
+        if (!email || !password || !name || !studentId)
+            return res.status(400).json({ success: false, error: 'Email, password, name, and student ID are required.' });
+        if (!isDlsuEmail(email))
+            return res.status(400).json({ success: false, error: 'Use a valid DLSU email address.' });
+        if (!isValidPassword(password))
+            return res.status(400).json({ success: false, error: 'Password must be at least 8 characters.' });
+
+        const { valid, errors, profile } = validateRegistrationProfile(req.body);
+        if (!valid) {
+            return res.status(400).json({ success: false, error: 'Please fix the highlighted fields.', errors });
+        }
+
+        const passwordHashed = await bcrypt.hash(password, 10);
+        const user = await User.create({
+            email,
+            passwordHashed,
+            name,
+            studentId,
+            major,
+            cgpa: cgpa ? Number(cgpa) : undefined,
+            ...profile,
+            role: 'Student'
+        });
+
+        req.session.user = sanitizeUser(user);
+
+        await AuditLog.create({
+            userId: user._id,
+            userRole: user.role,
+            action: 'user_registered',
+            targetType: 'User',
+            targetId: user._id,
+            targetLabel: user.name,
+            ip: req.ip
+        });
+
+        res.status(201).json({ success: true, user: req.session.user, redirectTo: roleHome(user.role) });
+    } catch (err) {
+        if (err.code === 11000) {
+            return res.status(409).json({ success: false, error: 'An account with this email or student ID already exists.' });
+        }
+        next(err);
+    }
+});
+
+router.post('/logout', async (req, res, next) => {
+    try {
+        const user = req.session?.user;
+        if (user) {
+            await AuditLog.create({
+                userId: user._id,
+                userRole: user.role,
+                action: 'user_logout',
+                targetType: 'User',
+                targetId: user._id,
+                targetLabel: user.name,
+                ip: req.ip
+            });
+        }
+        req.session.destroy(() => res.json({ success: true, message: 'Logged out.' }));
+    } catch (err) { next(err); }
+});
+
+router.get('/verify', (req, res) => {
+    if (!req.session?.user)
+        return res.status(401).json({ success: false, error: 'Not authenticated.' });
+    res.json({ success: true, user: req.session.user });
+});
+
+module.exports = router;

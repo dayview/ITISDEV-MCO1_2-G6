@@ -5,8 +5,15 @@
   "main": "index.js",
   "scripts": {
     "start": "node server/server.js",
-    "seed": "node server/seed.js",
-    "dev": "node server/server.js"
+    "seed": "node server/scripts/seed.js",
+    "dev": "node server/server.js",
+    "test": "jest"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/server/__tests__/**/*.test.js"
+    ]
   },
   "repository": {
     "type": "git",
@@ -21,9 +28,17 @@
   },
   "homepage": "https://github.com/dayview/ITISDEV-MCO1_2-G6#readme",
   "dependencies": {
+    "bcrypt": "^6.0.0",
+    "connect-mongo": "^5.1.0",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-session": "^1.19.0",
     "lucide": "^1.21.0",
-    "mongodb": "^7.3.0"
+    "mongoose": "^8.24.1",
+    "multer": "^2.2.0"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2"
   }
 }

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Opportunity Catalog - GEMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/css/gems.css" />
+</head>
+<body class="catalog-page student-page">
+
+<div class="app-wrapper">
+  <nav class="student-topnav catalog-nav" aria-label="Student navigation">
+    <a href="dashboard.html" class="student-topnav__brand" aria-label="GEMS dashboard">
+      <div class="student-topnav__logo">
+        <img src="../../public/images/OVPERI-white.png" alt="" class="student-topnav__logo-img">
+      </div>
+      <span class="student-topnav__title">GEMS</span>
+    </a>
+
+    <div class="catalog-nav__search">
+      <label class="topbar-search" for="global-search">
+        <span class="topbar-search__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </span>
+        <input id="global-search" type="search" aria-label="Search programs, countries, and universities" placeholder="Search programs, countries, universities..." autocomplete="off" />
+      </label>
+      <button type="button" class="catalog-icon-btn" aria-label="Open filters">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="student-topnav__links catalog-nav__links">
+      <a class="student-topnav__link" href="dashboard.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="8" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="15" width="7" height="6" rx="1.5"></rect></svg>
+        </div>
+        <span class="student-topnav__link-label">Dashboard</span>
+      </a>
+
+      <a class="student-topnav__link" href="catalog.html" aria-current="page">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">Catalog</span>
+      </a>
+
+      <a class="student-topnav__link" href="documents.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">Documents</span>
+      </a>
+
+      <a class="student-topnav__link" href="applications.html">
+        <div class="student-topnav__link-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        </div>
+        <span class="student-topnav__link-label">My Applications</span>
+      </a>
+
+      <button type="button" class="catalog-notification" aria-label="Notifications, 3 unread">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="catalog-notification__badge">3</span>
+      </button>
+
+      <a class="student-topnav__link catalog-account-link" href="profile.html">
+        <span class="user-avatar" aria-hidden="true">LP</span>
+      </a>
+    </div>
+  </nav>
+
+  <main class="content catalog-shell" id="main-content">
+    <header class="catalog-hero">
+      <div>
+        <h1 class="catalog-title">Opportunity Catalog</h1>
+        <p class="catalog-subtitle">Discover global programs and opportunities by DLSU OVPERI.</p>
+      </div>
+      <div class="catalog-globe-wrap" aria-hidden="true">
+        <svg class="catalog-globe-svg" viewBox="0 0 420 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Back arc of orbital path (renders behind globe) -->
+          <path d="M 85 155 C 58 284, 363 304, 393 70" stroke="#B5E4C9" stroke-width="2.5" stroke-dasharray="8 7" stroke-linecap="round" opacity="0.55"/>
+          <!-- Cloud 1 -->
+          <g fill="#DFF0E9">
+            <ellipse cx="57" cy="57" rx="33" ry="14"/>
+            <circle cx="44" cy="49" r="14"/>
+            <circle cx="65" cy="45" r="17"/>
+          </g>
+          <!-- Cloud 2 -->
+          <g fill="#DFF0E9" opacity="0.75">
+            <ellipse cx="102" cy="212" rx="27" ry="11"/>
+            <circle cx="91" cy="204" r="11"/>
+            <circle cx="110" cy="202" r="13"/>
+          </g>
+          <!-- Globe body -->
+          <circle cx="265" cy="158" r="117" fill="#C8E8D6"/>
+          <!-- Globe latitude/longitude lines -->
+          <ellipse cx="265" cy="158" rx="117" ry="46" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/>
+          <ellipse cx="265" cy="158" rx="62" ry="117" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
+          <line x1="265" y1="41" x2="265" y2="275" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
+          <!-- Continent shapes -->
+          <ellipse cx="237" cy="126" rx="43" ry="27" fill="#9DD4B4" transform="rotate(-16 237 126)" opacity="0.9"/>
+          <ellipse cx="294" cy="176" rx="37" ry="22" fill="#9DD4B4" transform="rotate(14 294 176)" opacity="0.9"/>
+          <ellipse cx="248" cy="183" rx="22" ry="14" fill="#9DD4B4" transform="rotate(-6 248 183)" opacity="0.85"/>
+          <circle cx="226" cy="175" r="13" fill="#9DD4B4" opacity="0.75"/>
+          <!-- Front arc of orbital path (renders in front of globe) -->
+          <path d="M 393 70 C 370 10, 118 10, 85 155" stroke="#5CC48A" stroke-width="2.5" stroke-dasharray="8 7" stroke-linecap="round"/>
+          <!-- Plane at tip of orbital path -->
+          <g transform="translate(391, 67) rotate(-22)">
+            <path d="M 0,-13 L 4,8 L -4,8 Z" fill="#0F7A3D"/>
+            <path d="M -10,2 L 10,2 L 4,-2 L -4,-2 Z" fill="#0A6B35"/>
+            <path d="M -4,7 L 4,7 L 2,10 L -2,10 Z" fill="#0F7A3D"/>
+          </g>
+        </svg>
+      </div>
+    </header>
+
+    <form id="catalog-filter-form" class="catalog-filter-panel" aria-label="Catalog filters">
+      <div class="filter-grid catalog-filter-grid">
+        <label class="field">
+          <span class="field-label">Category</span>
+          <select name="category">
+            <option value="all">All categories</option>
+            <option value="Exchange">Exchange</option>
+            <option value="Research">Research</option>
+            <option value="Summer">Summer</option>
+            <option value="Internship">Internship</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Region</span>
+          <select name="region">
+            <option value="all">All regions</option>
+            <option value="Asia">Asia</option>
+            <option value="Europe">Europe</option>
+            <option value="North America">North America</option>
+            <option value="Australia">Australia</option>
+            <option value="Latin America">Latin America</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Deadline</span>
+          <select id="deadline-range" name="deadlineRange">
+            <option value="any">Any time</option>
+            <option value="30">Next 30 days</option>
+            <option value="60">Next 60 days</option>
+            <option value="90">Next 90 days</option>
+          </select>
+        </label>
+
+        <label class="field" for="sort-by">
+          <span class="field-label">Sort by</span>
+          <select id="sort-by">
+            <option value="deadlineAsc">Deadline (soonest first)</option>
+            <option value="deadlineDesc">Deadline (latest first)</option>
+            <option value="programName">Program Name (A-Z)</option>
+            <option value="recentlyAdded">Recently Added</option>
+          </select>
+        </label>
+
+        <div class="catalog-filter-actions">
+          <button type="button" class="catalog-filter-button" aria-label="Advanced filters">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 6h18"></path>
+              <path d="M7 12h10"></path>
+              <path d="M10 18h4"></path>
+            </svg>
+            Filters
+          </button>
+
+          <button type="button" id="reset-filters" class="catalog-clear-button" hidden>Clear all</button>
+        </div>
+      </div>
+
+      <input id="search-query" type="hidden" name="search" value="" />
+      <input type="hidden" name="deadlineFrom" />
+      <input type="hidden" name="deadlineTo" />
+      <input type="hidden" name="page" value="1" />
+    </form>
+
+    <section class="catalog-view-section" aria-label="Catalog results">
+      <div class="catalog-results-header">
+        <div class="view-switcher" role="tablist" aria-label="Catalog view switcher">
+          <button type="button" class="view-tab view-tab--active" data-view="card" role="tab" aria-selected="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M8 9h8M8 13h5"></path></svg>
+            Card
+          </button>
+          <button type="button" class="view-tab" data-view="gallery" role="tab" aria-selected="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+            Gallery
+          </button>
+          <button type="button" class="view-tab" data-view="calendar" role="tab" aria-selected="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M8 2v4M16 2v4M3 10h18"></path></svg>
+            Calendar
+          </button>
+          <button type="button" class="view-tab" data-view="timeline" role="tab" aria-selected="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h16"></path><circle cx="8" cy="7" r="1"></circle><circle cx="14" cy="12" r="1"></circle><circle cx="18" cy="17" r="1"></circle></svg>
+            Timeline
+          </button>
+        </div>
+        <div id="calendar-view-mode" class="calendar-view-mode" aria-live="polite"></div>
+      </div>
+
+      <div id="catalog-results" class="catalog-results"></div>
+
+      <footer class="catalog-footer">
+        <p id="catalog-result-count" class="catalog-result-count" aria-live="polite"></p>
+        <label class="field field--inline catalog-page-size" for="page-size">
+          <span class="field-label">Page size</span>
+          <select id="page-size" name="pageSize">
+            <option value="10">10</option>
+            <option value="20">20</option>
+          </select>
+        </label>
+        <div id="catalog-pagination" class="pagination-container"></div>
+      </footer>
+    </section>
+  </main>
+</div>
+
+<script src="../../public/js/opportunity-data.js"></script>
+<script src="../../public/js/opportunity-api.js"></script>
+<script src="../../public/js/catalog.js"></script>
+</body>
+</html>
