@@ -106,13 +106,7 @@
   }
 
   function getInitials(value) {
-    return String(value || '')
-      .split(/\s+/)
-      .filter(Boolean)
-      .map(word => word[0])
-      .slice(0, 3)
-      .join('')
-      .toUpperCase();
+    return window.GEMSOpportunityInitials(value);
   }
 
   function attachSettingsPopover(root) {

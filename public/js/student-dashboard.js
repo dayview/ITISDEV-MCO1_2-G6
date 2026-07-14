@@ -77,13 +77,7 @@
       return;
     }
     recommendedList.innerHTML = items.map(item => {
-      const icon = String(item.hostInstitution || '')
-        .split(/\s+/)
-        .filter(Boolean)
-        .map(word => word[0])
-        .slice(0, 3)
-        .join('')
-        .toUpperCase() || 'OV';
+      const icon = window.GEMSOpportunityInitials(item.hostInstitution);
       const meta = [item.country || item.region, item.category, `closes ${formatDate(item.deadline)}`]
         .filter(Boolean)
         .join(' · ');

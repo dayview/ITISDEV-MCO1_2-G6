@@ -57,7 +57,7 @@
 
   function renderOpportunity(opportunity, existing) {
     const evaluation = window.GEMSApplicationStore.evaluateOpportunity(opportunity);
-    const icon = opportunity.hostInstitution.split(' ').map(word => word[0]).slice(0, 3).join('').toUpperCase();
+    const icon = window.GEMSOpportunityInitials(opportunity.hostInstitution);
     const eligibleLabel = opportunity.eligible ? 'Eligible' : 'Not eligible';
     const eligibleClass = opportunity.eligible ? 'chip--green' : 'chip--ineligible';
 

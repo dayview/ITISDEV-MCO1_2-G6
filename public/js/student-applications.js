@@ -47,14 +47,7 @@
   }
 
   function initials(value) {
-    const cleaned = String(value || '')
-      .split(/\s+/)
-      .filter(Boolean)
-      .map(word => word[0])
-      .slice(0, 3)
-      .join('')
-      .toUpperCase();
-    return cleaned || 'OV';
+    return window.GEMSOpportunityInitials(value);
   }
 
   function chipClassForStatus(status) {
