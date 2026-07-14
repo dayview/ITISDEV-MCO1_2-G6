@@ -21,7 +21,12 @@
 
 body {
   font-family: 'Inter', system-ui, sans-serif;
-  background: var(--bg-panel);
+  background-color: var(--bg-panel);
+  background-image: url('../images/background-overlay.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
   color: var(--text-main);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;

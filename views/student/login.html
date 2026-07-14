@@ -22,7 +22,7 @@
     <div class="card">
 
       <!-- Close Button ✕ -->
-      <button class="modal-close-btn" onclick="closeAuthModal(event, true)">✕</button>
+      <button type="button" class="modal-close-btn" aria-label="Close login" onclick="closeAuthModal(event, true)">✕</button>
 
       <!-- Shared Brand Header Symbol -->
       <div class="brand-logo">
@@ -92,6 +92,11 @@
 
   function closeAuthModal(event, force = false) {
     if (force || event.target === document.getElementById('auth-modal')) {
+      const form = document.getElementById('login-form');
+      if (form && !form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
       document.getElementById('auth-modal').classList.remove('active');
       document.body.style.overflow = 'auto';
       const frame = document.getElementById('auth-frame');
