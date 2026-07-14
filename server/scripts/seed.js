@@ -5,19 +5,21 @@ const connectDB = require('../config/db');
 const User = require('../models/User');
 const Opportunity = require('../models/Opportunity');
 const Application = require('../models/Applications');
+const Document = require('../models/Document');
+const { defaultFilePath } = require('../lib/documents');
 
 const baseEligibility = { nonGraduatingRequired: false, sdfoClearanceRequired: false };
 const opportunities = [
-    { code: 'NUS-EX-01',    name: 'NUS Student Exchange', institution: 'National University of Singapore', country: 'Singapore', region: 'Asia', category: 'Exchange', deadline: '2026-07-15', capacity: 5 },
-    { code: 'KAIST-SU-01',  name: 'KAIST Summer Program', institution: 'KAIST', country: 'South Korea', region: 'Asia', category: 'Summer', deadline: '2026-06-30', capacity: 8 },
-    { code: 'UTOKYO-EX-01', name: 'UTokyo Exchange', institution: 'University of Tokyo', country: 'Japan', region: 'Asia', category: 'Exchange', deadline: '2026-08-01', capacity: 4 },
-    { code: 'TUM-EX-01',    name: 'TUM Exchange Program', institution: 'Technical University of Munich', country: 'Germany', region: 'Europe', category: 'Exchange', deadline: '2026-09-15', capacity: 6 },
-    { code: 'UNSW-EX-01',   name: 'UNSW Exchange', institution: 'University of New South Wales', country: 'Australia', region: 'Australia', category: 'Exchange', deadline: '2026-10-01', capacity: 4 },
-    { code: 'NTU-RS-01',    name: 'NTU Research Internship', institution: 'Nanyang Technological University', country: 'Singapore', region: 'Asia', category: 'Internship', deadline: '2026-07-28', capacity: 3 },
-    { code: 'YONSEI-SU-01', name: 'Yonsei Summer School', institution: 'Yonsei University', country: 'South Korea', region: 'Asia', category: 'Summer', deadline: '2026-06-28', capacity: 10 },
-    { code: 'HKU-EX-01',    name: 'HKU Exchange', institution: 'University of Hong Kong', country: 'Hong Kong', region: 'Asia', category: 'Exchange', deadline: '2026-08-20', capacity: 5 },
-    { code: 'NUS-RS-01',    name: 'NUS UROP Research', institution: 'National University of Singapore', country: 'Singapore', region: 'Asia', category: 'Research', deadline: '2026-10-31', capacity: 6 },
-    { code: 'POSTECH-EX-01', name: 'POSTECH Exchange', institution: 'POSTECH', country: 'South Korea', region: 'Asia', category: 'Exchange', deadline: '2026-09-30', capacity: 4 },
+    { code: 'NUS-EX-01',    name: 'NUS Student Exchange', institution: 'National University of Singapore', country: 'Singapore', region: 'Asia', category: 'Exchange', deadline: '2026-07-15', capacity: 5, requiredDocumentTypes: ['transcript', 'passport', 'EAF', 'recommendation'] },
+    { code: 'KAIST-SU-01',  name: 'KAIST Summer Program', institution: 'KAIST', country: 'South Korea', region: 'Asia', category: 'Summer', deadline: '2026-06-30', capacity: 8, requiredDocumentTypes: ['transcript', 'recommendation'] },
+    { code: 'UTOKYO-EX-01', name: 'UTokyo Exchange', institution: 'University of Tokyo', country: 'Japan', region: 'Asia', category: 'Exchange', deadline: '2026-08-01', capacity: 4, requiredDocumentTypes: ['transcript', 'passport', 'EAF'] },
+    { code: 'TUM-EX-01',    name: 'TUM Exchange Program', institution: 'Technical University of Munich', country: 'Germany', region: 'Europe', category: 'Exchange', deadline: '2026-09-15', capacity: 6, requiredDocumentTypes: ['transcript', 'passport', 'EAF', 'recommendation'] },
+    { code: 'UNSW-EX-01',   name: 'UNSW Exchange', institution: 'University of New South Wales', country: 'Australia', region: 'Australia', category: 'Exchange', deadline: '2026-10-01', capacity: 4, requiredDocumentTypes: ['transcript', 'passport', 'EAF'] },
+    { code: 'NTU-RS-01',    name: 'NTU Research Internship', institution: 'Nanyang Technological University', country: 'Singapore', region: 'Asia', category: 'Internship', deadline: '2026-07-28', capacity: 3, requiredDocumentTypes: ['transcript', 'validId', 'recommendation'] },
+    { code: 'YONSEI-SU-01', name: 'Yonsei Summer School', institution: 'Yonsei University', country: 'South Korea', region: 'Asia', category: 'Summer', deadline: '2026-06-28', capacity: 10, requiredDocumentTypes: ['transcript', 'recommendation'] },
+    { code: 'HKU-EX-01',    name: 'HKU Exchange', institution: 'University of Hong Kong', country: 'Hong Kong', region: 'Asia', category: 'Exchange', deadline: '2026-08-20', capacity: 5, requiredDocumentTypes: ['transcript', 'passport', 'EAF', 'recommendation'] },
+    { code: 'NUS-RS-01',    name: 'NUS UROP Research', institution: 'National University of Singapore', country: 'Singapore', region: 'Asia', category: 'Research', deadline: '2026-10-31', capacity: 6, requiredDocumentTypes: ['transcript', 'curriculumAudit'] },
+    { code: 'POSTECH-EX-01', name: 'POSTECH Exchange', institution: 'POSTECH', country: 'South Korea', region: 'Asia', category: 'Exchange', deadline: '2026-09-30', capacity: 4, requiredDocumentTypes: ['transcript', 'passport', 'EAF'] },
 ].map(opportunity => ({
     ...opportunity,
     status: 'published',
@@ -53,9 +55,32 @@ const studentData = [
 }));
 
 const STATUSES = ['submitted', 'submitted', 'submitted', 'submitted', 'under-review', 'under-review', 'under-review', 'nominated', 'nominated', 'accepted', 'rejected'];
-const DOC_STATUSES = ['incomplete', 'incomplete', 'complete'];
+const DOCUMENT_TYPES = ['transcript', 'recommendation', 'validId', 'passport', 'EAF', 'curriculumAudit'];
+const DOCUMENT_UPLOAD_STATUSES = ['pending', 'pending', 'verified', 'verified', 'rejected'];
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
 const randDate = (s, e) => new Date(s.getTime() + Math.random() * (e.getTime() - s.getTime())).toISOString().split('T')[0];
+const randDateTime = (s, e) => new Date(s.getTime() + Math.random() * (e.getTime() - s.getTime()));
+
+// Gives each student a random subset of document types on file (2 to all 6), so some
+// students are missing a type entirely -- exercising the "incomplete" path.
+const buildDocumentsForStudents = (students) => students.flatMap((student, index) => {
+    const typeCount = 2 + (index % (DOCUMENT_TYPES.length - 1));
+    return shuffle(DOCUMENT_TYPES).slice(0, typeCount).map((type, typeIndex) => {
+        const fileName = `${type}-${student.studentId}.pdf`;
+        return {
+            userId: student._id,
+            type,
+            originalFileName: fileName,
+            storedFileName: `${student._id}-${typeIndex}-${fileName}`,
+            filePath: defaultFilePath(student._id, fileName),
+            mimeType: 'application/pdf',
+            size: 100000 + Math.floor(Math.random() * 400000),
+            uploadedAt: randDateTime(new Date('2026-04-01'), new Date('2026-06-20')),
+            status: pick(DOCUMENT_UPLOAD_STATUSES)
+        };
+    });
+});
 
 async function seed() {
     if (process.env.NODE_ENV === 'production') {
@@ -67,27 +92,47 @@ async function seed() {
     console.log('Seeding...');
     console.log('Connected database:', mongoose.connection.name);
 
-    await Application.syncIndexes();
-
     await Application.deleteMany({});
     await Opportunity.deleteMany({});
     await User.deleteMany({});
+    await Document.deleteMany({});
+
+    await Application.syncIndexes();
 
     const opps = await Opportunity.insertMany(opportunities);
     const passwordHashed = await bcrypt.hash(SEED_PASSWORD, 10);
     const students = await User.insertMany(studentData.map(user => ({ ...user, passwordHashed })));
     const nonAdmins = students.filter(s => s.role === 'Student');
 
-    const appDocs = Array.from({ length: 55 }, (_, index) => ({
-        userId: nonAdmins[index % nonAdmins.length]._id,
-        opportunityId: opps[Math.floor(index / nonAdmins.length) % opps.length]._id,
-        status: pick(STATUSES),
-        submittedDate: randDate(new Date('2026-05-01'), new Date('2026-06-24')),
-        documentsStatus: pick(DOC_STATUSES),
-    }));
+    const documents = buildDocumentsForStudents(nonAdmins);
+    await Document.insertMany(documents);
+
+    const documentTypesByStudent = new Map();
+    documents.forEach(document => {
+        const types = documentTypesByStudent.get(String(document.userId)) || new Set();
+        types.add(document.type);
+        documentTypesByStudent.set(String(document.userId), types);
+    });
+    const hasAllRequiredDocuments = (userId, opportunity) => {
+        const onFile = documentTypesByStudent.get(String(userId)) || new Set();
+        return (opportunity.requiredDocumentTypes || []).every(type => onFile.has(type));
+    };
+
+    const appDocs = Array.from({ length: 55 }, (_, index) => {
+        const student = nonAdmins[index % nonAdmins.length];
+        const opportunity = opps[Math.floor(index / nonAdmins.length) % opps.length];
+        return {
+            userId: student._id,
+            opportunityId: opportunity._id,
+            status: pick(STATUSES),
+            submittedDate: randDate(new Date('2026-05-01'), new Date('2026-06-24')),
+            documentsStatus: hasAllRequiredDocuments(student._id, opportunity) ? 'complete' : 'incomplete',
+        };
+    });
 
     await Application.insertMany(appDocs);
     console.log(`Done: ${opps.length} opportunities | ${students.length} students`);
+    console.log(`Documents: ${documents.length}`);
     console.log(`Applications: ${appDocs.length}`);
     if (process.env.NODE_ENV !== 'production') {
         console.log(`Login with any seeded email and password "${SEED_PASSWORD}" (e.g. admin@dlsu.edu.ph). Development credentials only.`);
