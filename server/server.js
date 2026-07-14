@@ -445,7 +445,12 @@ app.post('/api/applications', requireStudentSession, async (req, res) => {
         if (!isOpportunityOpenForApplication(opportunity)) {
             return res.status(400).json({ success: false, error: 'Opportunity is not open for applications.' });
         }
-        const documents = await Document.find({ userId: req.session.user._id });
+        const requiredTypes = [...new Set((opportunity.requiredDocumentTypes || []).map(normalizeDocumentType))];
+        const documents = [];
+        for (const type of requiredTypes) {
+            const [latest] = await Document.findByStudentAndType(req.session.user._id, type);
+            if (latest) documents.push(latest);
+        }
         const evaluation = evaluateStudentEligibility(req.session.user, opportunity, documents);
         if (!evaluation.eligible) {
             return res.status(400).json({

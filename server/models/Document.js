@@ -49,4 +49,10 @@ const documentSchema = new mongoose.Schema({
 
 documentSchema.index({ userId: 1, type: 1 });
 
+// Most-recently-uploaded documents of a given type first, so callers can grab [0]
+// for the current one on file.
+documentSchema.statics.findByStudentAndType = function (userId, type) {
+    return this.find({ userId, type }).sort({ uploadedAt: -1 });
+};
+
 module.exports = mongoose.model('Document', documentSchema);
