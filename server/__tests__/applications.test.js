@@ -20,8 +20,8 @@ describe('Application Logic - status transition / bulk status validation', () =>
         expect(isValidStatus(undefined)).toBe(false);
     });
 
-    test('APPLICATION_STATUSES exposes exactly the five known statuses', () => {
-        expect(APPLICATION_STATUSES).toEqual(['submitted', 'under-review', 'nominated', 'accepted', 'rejected']);
+    test('APPLICATION_STATUSES exposes exactly the six known statuses', () => {
+        expect(APPLICATION_STATUSES).toEqual(['draft', 'submitted', 'under-review', 'nominated', 'accepted', 'rejected']);
     });
 });
 
@@ -40,6 +40,7 @@ describe('Application Logic - application creation helper', () => {
             opportunityId: 'o1',
             documents: ['d1', 'd2'],
             documentsStatus: 'complete',
+            status: 'submitted',
             submittedDate: '2026-07-02',
             statusHistory: [{ status: 'submitted', changedAt: now, changedBy: 'u1' }]
         });

@@ -13,8 +13,8 @@ const applicationSchema = new mongoose.Schema({
     },
     status: { 
         type: String, 
-        enum: ['submitted', 'under-review', 'nominated', 'accepted', 'rejected'], 
-        default: 'submitted' 
+        enum: ['draft', 'submitted', 'under-review', 'nominated', 'accepted', 'rejected'], 
+        default: 'draft' 
     },
     documents: [{
         type: mongoose.Schema.Types.ObjectId,

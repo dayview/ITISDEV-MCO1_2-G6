@@ -81,9 +81,9 @@ describe('Application Logic - schema validation', () => {
         expect(err.errors.submittedDate).toBeDefined();
     });
 
-    test('status defaults to submitted and rejects unknown values', () => {
+    test('status defaults to draft and rejects unknown values', () => {
         const app = new Application({ userId: oid(), opportunityId: oid(), submittedDate: '2026-01-01' });
-        expect(app.status).toBe('submitted');
+        expect(app.status).toBe('draft');
 
         const bad = new Application({ userId: oid(), opportunityId: oid(), submittedDate: '2026-01-01', status: 'approved' });
         expect(bad.validateSync().errors.status).toBeDefined();

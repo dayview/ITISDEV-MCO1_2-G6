@@ -1,8 +1,57 @@
 const mongoose = require('mongoose');
+const { normalizeDocumentType } = require('./documents');
 
-const APPLICATION_STATUSES = ['submitted', 'under-review', 'nominated', 'accepted', 'rejected'];
+const APPLICATION_STATUSES = ['draft', 'submitted', 'under-review', 'nominated', 'accepted', 'rejected'];
 
 const isValidStatus = (status) => APPLICATION_STATUSES.includes(status);
+
+const getRequiredDocumentTypes = (opportunity) => {
+    const requirements = Array.isArray(opportunity?.requiredDocumentTypes)
+        ? opportunity.requiredDocumentTypes
+        : [];
+
+    return [...new Set(requirements.map(normalizeDocumentType))];
+};
+
+const getLatestDocumentsByType = (documents = []) => {
+    const latestByType = new Map();
+
+    documents.forEach(document => {
+        if (!document?.type) return;
+        
+        const existing = latestByType.get(document.type);
+        const uploadedAt = new Date(document.uploadedAt || document.createdAt || 0);
+        const existingUploadedAt = new Date(existing?.uploadedAt || existing?.createdAt || 0);
+
+        if (!existing || uploadedAt > existingUploadedAt) {
+            latestByType.set(document.type, document);
+        }
+    });
+
+    return latestByType;
+}
+
+/**
+ * Derives the document references and completeness of an application from the opportunity's current requirements and the student's current uploaded files.
+ * 
+ * Document verification is intentionally not required here because the existing application eligibility flow accepts uploaded documents in any review state.
+ */
+const buildApplicationDocumentState = ({ opportunity, documents = [] }) => {
+    const requiredTypes = getRequiredDocumentTypes(opportunity);
+    const latestByType = getLatestDocumentsByType(documents);
+    const selectedDocuments = requiredTypes
+        .map(type => latestByType.get(type))
+        .filter(Boolean);
+
+    const missingDocumentTypes = requiredTypes.filter(type => !latestByType.has(type));
+
+    return {
+        documents: selectedDocuments,
+        documentIds: selectedDocuments.map(document => document._id),
+        documentsStatus: missingDocumentTypes.length ? 'incomplete' : 'complete',
+        missingDocumentTypes
+    };
+};
 
 const applicationPipeline = ({ status = '', college = '', search = '', sort = 'recency', documentsStatus = '', ids = [] } = {}) => {
     const pipeline = [
@@ -64,13 +113,14 @@ const applicationPipeline = ({ status = '', college = '', search = '', sort = 'r
     return pipeline;
 };
 
-const buildApplicationPayload = ({ userId, opportunityId, documents = [], now = new Date() }) => ({
+const buildApplicationPayload = ({ userId, opportunityId, documents = [], documentsStatus = 'complete', status = documentsStatus === 'complete' ? 'submitted' : 'draft', now = new Date() }) => ({
     userId,
     opportunityId,
     documents: documents.map(document => document._id),
-    documentsStatus: 'complete',
+    documentsStatus,
+    status,
     submittedDate: now.toISOString().slice(0, 10),
-    statusHistory: [{ status: 'submitted', changedAt: now, changedBy: userId }]
+    statusHistory: [{ status, changedAt: now, changedBy: userId }]
 });
 
 const appendStatusHistory = (history = [], status, changedBy, now = new Date()) => [
@@ -79,7 +129,8 @@ const appendStatusHistory = (history = [], status, changedBy, now = new Date()) 
 ];
 
 const getReviewedAt = (statusHistory = []) => {
-    const reviewEntry = [...statusHistory].reverse().find(entry => entry.status && entry.status !== 'submitted');
+    const reviewEntry = [...statusHistory].reverse().find(entry => entry.status && !['draft', 'submitted'].includes(entry.status));
+
     return reviewEntry ? reviewEntry.changedAt : null;
 };
 
@@ -121,6 +172,9 @@ const toApplicationsCsv = (data) => {
 module.exports = {
     APPLICATION_STATUSES,
     isValidStatus,
+    getRequiredDocumentTypes,
+    getLatestDocumentsByType,
+    buildApplicationDocumentState,
     applicationPipeline,
     buildApplicationPayload,
     appendStatusHistory,
