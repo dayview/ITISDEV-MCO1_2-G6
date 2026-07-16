@@ -29,6 +29,8 @@ const CHECKLIST_TYPES = [
 
 const DOCUMENT_STATUSES = ['pending', 'verified', 'rejected'];
 
+const DOCUMENT_LABELS = Object.fromEntries(CHECKLIST_TYPES.map(item => [item.type, item.label]));
+
 // fileUrl points at the protected GET /api/documents/:id/file route — never the raw
 // filesystem path, which is not exposed to the client at all.
 const mapDocument = (document) => {
@@ -78,6 +80,27 @@ const buildDocumentChecklist = (documents = []) => {
     };
 };
 
+const buildRequirementChecklist = (requiredTypes = [], documents = []) => {
+    const latestByType = new Map();
+    documents.forEach(document => {
+        const type = normalizeDocumentType(document.type);
+        const existing = latestByType.get(type);
+        if (!existing || new Date(document.uploadedAt || document.createdAt) > new Date(existing.uploadedAt || existing.createdAt)) {
+            latestByType.set(type, document);
+        }
+    });
+
+    return [...new Set(requiredTypes.map(normalizeDocumentType))].map(type => {
+        const document = latestByType.get(type) || null;
+        return {
+            type,
+            label: DOCUMENT_LABELS[type] || 'Other Required Document',
+            status: document ? document.status || 'pending' : 'missing',
+            document
+        };
+    });
+};
+
 const canDeleteDocument = (document, requestingUserId) => {
     if (!document || !requestingUserId) return false;
     return String(document.userId) === String(requestingUserId);
@@ -89,7 +112,9 @@ module.exports = {
     hasDocumentType,
     CHECKLIST_TYPES,
     DOCUMENT_STATUSES,
+    DOCUMENT_LABELS,
     mapDocument,
     buildDocumentChecklist,
+    buildRequirementChecklist,
     canDeleteDocument
 };

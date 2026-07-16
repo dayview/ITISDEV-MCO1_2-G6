@@ -37,7 +37,8 @@
     "google-auth-library": "^10.9.0",
     "lucide": "^1.21.0",
     "mongoose": "^8.24.1",
-    "multer": "^2.2.0"
+    "multer": "^2.2.0",
+    "node-cron": "^4.6.0"
   },
   "devDependencies": {
     "jest": "^30.4.2"

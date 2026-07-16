@@ -11,6 +11,9 @@ const AuditLog = require('./models/AuditLog');
 const User = require('./models/User');
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
+const notificationRoutes = require('./routes/notifications');
+const reminderRoutes = require('./routes/reminders');
+const { startDeadlineReminderScheduler } = require('./lib/reminderScheduler');
 const { mapOpportunity, normalizeOpportunityInput, mapAdminOpportunity } = require('./lib/opportunities');
 const { normalizeDocumentType, mapDocument, buildDocumentChecklist } = require('./lib/documents');
 const { evaluateStudentEligibility, isOpportunityOpenForApplication } = require('./lib/eligibility');
@@ -90,6 +93,8 @@ const refreshDraftApplicationDocumentStates = async (userId) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/admin/reminders', reminderRoutes);
 
 app.get('/', (_req, res) => {
     res.sendFile(path.join(studentViewsRoot, 'login.html'));
@@ -720,6 +725,7 @@ app.get('/api/statistics', requireAdminSession, async (_req, res) => {
 
 const startServer = async () => {
     await connectDB();
+    startDeadlineReminderScheduler();
     app.listen(PORT, () => {
         console.log(`Server running at http://localhost:${PORT}`);
     });
