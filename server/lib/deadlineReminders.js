@@ -5,7 +5,7 @@ const { buildRequirementChecklist } = require('./documents');
 
 const DEADLINE_REMINDER_WINDOWS = [7, 3, 1, 0];
 const APP_TIMEZONE = process.env.APP_TIMEZONE || 'Asia/Manila';
-const ACTIVE_APPLICATION_STATUSES = ['submitted', 'under-review', 'nominated'];
+const ACTIVE_APPLICATION_STATUSES = ['draft', 'submitted', 'under-review', 'nominated'];
 const INCOMPLETE_REQUIREMENT_STATUSES = ['missing', 'pending', 'rejected'];
 const DAY_MS = 24 * 60 * 60 * 1000;
 
