@@ -14,7 +14,7 @@ const adminRoutes = require('./routes/admin');
 const { mapOpportunity, normalizeOpportunityInput, mapAdminOpportunity } = require('./lib/opportunities');
 const { normalizeDocumentType, mapDocument, buildDocumentChecklist } = require('./lib/documents');
 const { evaluateStudentEligibility, isOpportunityOpenForApplication } = require('./lib/eligibility');
-const { applicationPipeline, buildApplicationPayload, toApplicationsCsv, isValidStatus, APPLICATION_STATUSES, mapStudentApplication } = require('./lib/applications');
+const { applicationPipeline, buildApplicationDocumentState, buildApplicationPayload, toApplicationsCsv, isValidStatus, APPLICATION_STATUSES, mapStudentApplication } = require('./lib/applications');
 const { computeStatisticsSummary, getUrgentCutoff } = require('./lib/statistics');
 const { determineOpportunityUpdateAction } = require('./lib/audit');
 const { buildStudentDashboard } = require('./lib/studentDashboard');
@@ -56,6 +56,36 @@ const requireStudentSession = (req, res, next) => {
     if (!req.session?.user) return res.status(401).json({ success: false, error: 'Please log in.' });
     if (req.session.user.role !== 'Student') return res.status(403).json({ success: false, error: 'Student access required.' });
     next();
+};
+
+const refreshDraftApplicationDocumentStates = async (userId) => {
+    const [draftApplications, documents] = await Promise.all([
+        Application.find({ userId, status: 'draft' }).populate('opportunityId'),
+        Document.find({ userId })
+    ]);
+
+    const updates = draftApplications.filter(application => application.opportunityId).map(application => { 
+        const documentState = buildApplicationDocumentState({
+            opportunity: application.opportunityId, documents
+        });
+
+        return {
+            updateOne: {
+                filter: { _id: application._id, status: 'draft' },
+                update: {
+                    $set: {
+                        documents: documentState.documentIds,
+                        documentsStatus: documentState.documentsStatus
+                    }
+                }
+            }
+        };
+    });
+
+    if (!updates.length) return 0;
+
+    await Application.bulkWrite(updates);
+    return updates.length;
 };
 
 app.use('/api/auth', authRoutes);
@@ -328,6 +358,7 @@ app.post('/api/documents', requireStudentSession, uploadSingleFile, async (req, 
             await removeFileIfExists(req.file.path);
             return res.status(400).json({ success: false, error: 'Document type is required.' });
         }
+
         const document = await Document.create({
             userId: req.session.user._id,
             type: normalizeDocumentType(type),
@@ -337,6 +368,8 @@ app.post('/api/documents', requireStudentSession, uploadSingleFile, async (req, 
             mimeType: req.file.mimetype,
             size: req.file.size
         });
+
+        const updatedDrafts = await refreshDraftApplicationDocumentStates(req.session.user._id);
 
         await AuditLog.create({
             userId: req.session.user._id,
@@ -348,7 +381,7 @@ app.post('/api/documents', requireStudentSession, uploadSingleFile, async (req, 
             ip: req.ip
         });
 
-        res.status(201).json({ success: true, data: mapDocument(document) });
+        res.status(201).json({ success: true, data: mapDocument(document), meta: { updatedDrafts } });
     } catch (err) {
         // The file was already written to disk before this validation/DB step ran —
         // clean it up so a rejected or failed upload never leaves an orphaned file.
@@ -394,15 +427,19 @@ app.delete('/api/documents/:id', requireStudentSession, async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ success: false, error: 'Invalid document id.' });
         }
+
         const document = await Document.findOneAndDelete({ _id: req.params.id, userId: req.session.user._id });
+
         if (!document) {
             return res.status(404).json({ success: false, error: 'Document not found.' });
         }
-        // The MongoDB record is authoritative: once it's deleted, the document no longer
-        // exists to the student regardless of what happens to the physical file next.
-        // An already-missing file is treated as success; any other filesystem failure is
-        // logged server-side as an orphaned-file warning rather than surfaced to the
-        // client or used to block/undo the already-completed DB deletion.
+
+        const updatedDrafts = await refreshDraftApplicationDocumentStates(req.session.user._id);
+
+        /**
+         * The MongoDB record is authoritative, once it's deleted, the document no longer exists to the student regardless of what happens to the physical file next.
+         * An already-missing file is treated as success; any other filesystem failure is logged server-side as an orphaned-file warning rather than surfaced to the client or used to block/undo the already-completed DB deletion.
+         */
         const fileDeletion = await deleteStoredFile(document.filePath);
         if (!fileDeletion.ok) {
             console.error(`Document ${document._id} record deleted but physical file removal failed: ${fileDeletion.error}`);
@@ -418,7 +455,7 @@ app.delete('/api/documents/:id', requireStudentSession, async (req, res) => {
             ip: req.ip
         });
 
-        res.json({ success: true, data: { id: String(document._id) } });
+        res.json({ success: true, data: { id: String(document._id) }, meta: { updatedDrafts } });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -441,42 +478,119 @@ app.post('/api/applications', requireStudentSession, async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(opportunityId)) {
             return res.status(400).json({ success: false, error: 'Valid opportunity ID is required.' });
         }
-        const opportunity = await Opportunity.findById(opportunityId);
+
+        const [student, opportunity, documents] = await Promise.all([
+            User.findById(req.session.user._id),
+            Opportunity.findById(opportunityId),
+            Document.find({ userId: req.session.user._id })
+        ]);
+
+        if (!student) {
+            return res.status(401).json({ success: false, error: 'Please log in.' });
+        }
         if (!isOpportunityOpenForApplication(opportunity)) {
             return res.status(400).json({ success: false, error: 'Opportunity is not open for applications.' });
         }
-        const requiredTypes = [...new Set((opportunity.requiredDocumentTypes || []).map(normalizeDocumentType))];
-        const documents = [];
-        for (const type of requiredTypes) {
-            const [latest] = await Document.findByStudentAndType(req.session.user._id, type);
-            if (latest) documents.push(latest);
-        }
-        const evaluation = evaluateStudentEligibility(req.session.user, opportunity, documents);
-        if (!evaluation.eligible) {
+
+        const documentState = buildApplicationDocumentState({ opportunity, documents });
+        const evaluation = evaluateStudentEligibility(student, opportunity, documentState.documents);
+        const documentRequirements = new Set(opportunity.requiredDocumentTypes || []);
+        const missingEligibility = evaluation.missing.filter(item => !documentRequirements.has(item));
+
+        if (missingEligibility.length) {
             return res.status(400).json({
                 success: false,
-                error: 'Application requirements are incomplete.',
-                missing: evaluation.missing
+                error: 'You are not eligible for this opportunity.',
+                missing: missingEligibility
             });
         }
-        const application = await Application.create(
-            buildApplicationPayload({ userId: req.session.user._id, opportunityId, documents })
-        );
 
-        await AuditLog.create({
-            userId: req.session.user._id,
-            userRole: req.session.user.role,
-            action: 'application_submitted',
-            targetType: 'Application',
-            targetId: application._id,
-            targetLabel: `Application ${application._id}`,
-            ip: req.ip
+        const existing = await Application.findOne({
+            userId: student._id,
+            opportunityId: opportunity._id
         });
 
-        res.status(201).json({ success: true, data: application });
+        if (existing && existing.status !== 'draft') {
+            return res.status(409).json({
+                success: false,
+                error: 'You already submitted an application to this opportunity.'
+            });
+        }
+
+        if (existing) {
+            const update = {
+                documents: documentState.documentIds,
+                documentsStatus: documentState.documentsStatus
+            };
+
+            if (documentState.documentsStatus === 'complete') {
+                update.status = 'submitted';
+                existing.statusHistory.push({
+                    status: 'submitted',
+                    changedAt: new Date(),
+                    changedBy: student._id
+                });
+            }
+
+            existing.set(update);
+            await existing.save();
+
+            if (existing.status === 'submitted') {
+                await AuditLog.create({
+                    userId: student._id,
+                    userRole: student.role,
+                    action: 'application_submitted',
+                    targetType: 'Application',
+                    targetId: existing._id,
+                    targetLabel: `Application ${existing._id}`,
+                    ip: req.ip
+                });
+            }
+
+            return res.json({
+                success: true,
+                data: existing,
+                message: existing.status === 'submitted'
+                    ? 'Application submitted successfully.'
+                    : 'Application draft saved. Upload the remaining documents before the deadline.'
+            });
+        }
+
+        const application = await Application.create(
+            buildApplicationPayload({
+                userId: student._id,
+                opportunityId: opportunity._id,
+                documents: documentState.documents,
+                documentsStatus: documentState.documentsStatus
+            })
+        );
+
+
+        if (application.status === 'submitted') {
+            await AuditLog.create({
+                userId: student._id,
+                userRole: student.role,
+                action: 'application_submitted',
+                targetType: 'Application',
+                targetId: application._id,
+                targetLabel: `Application ${application._id}`,
+                ip: req.ip
+            });
+        }
+
+        res.status(201).json({ 
+            success: true, 
+            data: application, 
+            message: application.status === 'submitted' 
+                ? 'Application submitted successfully.' 
+                : 'Application draft saved. Upload the remaining documents before the deadline.' 
+        });
     } catch (err) {
         if (err.code === 11000) {
-            return res.status(409).json({ success: false, error: 'You already applied to this opportunity.' });
+            return res.status(409).json({ 
+                success: false, 
+                error: 'You already applied to this opportunity.' 
+            });
         }
         res.status(400).json({ success: false, error: err.message });
     }
