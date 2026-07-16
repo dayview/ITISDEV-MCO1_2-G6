@@ -1,40 +1,54 @@
 (function() {
-  const documentVault = [
-    { type: 'Academic transcript', fileName: 'grades_T32526.pdf', aliases: ['transcript', 'academic transcript', 'copy of grades'] },
-    { type: 'Recommendation letter', fileName: 'recommendation_letter.pdf', aliases: ['recommendation letter', 'faculty recommendation', 'academic reference', 'faculty reference'] },
-    { type: 'Passport', fileName: 'passport_biopage.jpg', aliases: ['passport', 'copy of passport', 'passport bio-page'] },
-    { type: 'Valid ID', fileName: 'dlsu_id_scan.png', aliases: ['valid id', 'id card', 'identification'] },
-    { type: 'Curriculum audit', fileName: 'curriculum_audit.pdf', aliases: ['curriculum audit', 'prerequisite course records'] },
-    { type: 'CV', fileName: 'resume_2026.pdf', aliases: ['cv', 'resume'] },
-    { type: 'Personal statement', fileName: 'personal_statement.pdf', aliases: ['personal statement', 'personal essay', 'statement of purpose'] }
-  ];
+  function normalizeDocumentType(value) {
+    const text = String(value || '').toLowerCase();
 
-  function normalize(value) {
-    return String(value || '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, ' ')
-      .replace(/\b(copy of|proof of|academic|faculty|valid|latest|two|one)\b/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    if (text.includes('transcript') || text.includes('grade')) return 'transcript';
+    if (text.includes('recommendation') || text.includes('reference')) return 'recommendation';
+    if (text.includes('passport')) return 'passport';
+    if (text.includes('eaf') || text.includes('application form')) return 'EAF';
+    if (text.includes('curriculum')) return 'curriculumAudit';
+    if (text.includes('id')) return 'validId';
+
+    return 'other';
   }
 
-  function findDocument(requirement) {
-    const normalizedRequirement = normalize(requirement);
-    return documentVault.find(document => document.aliases.some(alias => {
-      const normalizedAlias = normalize(alias);
-      return normalizedRequirement.includes(normalizedAlias) || normalizedAlias.includes(normalizedRequirement);
-    }));
+  function getLatestDocumentsByType(documents) {
+    const latestByType = new Map();
+
+    documents.forEach(document => {
+      const current = latestByType.get(document.type);
+      const uploadedAt = new Date(document.uploadedAt || 0);
+      const currentUploadedAt = current ? new Date(current.uploadedAt || 0) : null;
+
+      if (!current || uploadedAt > currentUploadedAt) {
+        latestByType.set(document.type, document);
+      }
+    });
+
+    return latestByType;
   }
 
-  function evaluateOpportunity(opportunity) {
-    const requirements = opportunity.requiredDocuments || [];
+  function evaluateOpportunity(opportunity, documents = []) {
+    const requirements = Array.isArray(opportunity.requiredDocuments) ? opportunity.requiredDocuments : [];
+    const latestDocumentsByType = getLatestDocumentsByType(documents);
     const bundle = [];
     const missing = [];
 
     requirements.forEach(requirement => {
-      const document = findDocument(requirement);
-      if (document) bundle.push({ requirement, type: document.type, fileName: document.fileName });
-      else missing.push(requirement);
+      const type = normalizeDocumentType(requirement);
+      const document = latestDocumentsByType.get(type);
+
+      if (!document) {
+        missing.push(requirement);
+        return;
+      }
+
+      bundle.push({
+        requirement,
+        type,
+        fileName: document.originalFileName || 'Uploaded document',
+        status: document.status || 'pending'
+      });
     });
 
     return {
@@ -44,14 +58,42 @@
     };
   }
 
-  async function submitApplicationToBackend(opportunity) {
-    const evaluation = evaluateOpportunity(opportunity);
+  async function loadStudentDocuments() {
+    const response = await fetch('/api/documents');
+    let result;
+
+    try {
+      result = await response.json();
+    } catch (error) {
+      throw new Error('Unexpected response while loading documents.');
+    }
+
+    if (!response.ok || !result.success || !Array.isArray(result.data)) {
+      throw new Error(result.error || `Unable to load documents (HTTP ${response.status}).`);
+    }
+
+    return result.data;
+  }
+
+  async function submitApplicationToBackend(opportunity, documents = []) {
+    const evaluation = evaluateOpportunity(opportunity, documents);
     const response = await fetch('/api/applications', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ opportunityId: opportunity.id })
     });
-    const result = await response.json();
+
+    let result;
+    try {
+      result = await response.json();
+    } catch (error) {
+      return {
+        ok: false,
+        error: 'Unexpected response while submitting the application.',
+        evaluation
+      };
+    }
+
     if (!response.ok || !result.success) {
       return {
         ok: false,
@@ -62,12 +104,18 @@
         }
       };
     }
-    return { ok: true, duplicate: false, application: result.data, evaluation };
+
+    return {
+      ok: true,
+      application: result.data,
+      evaluation
+    };
   }
 
   window.GEMSApplicationStore = {
-    documentVault,
+    normalizeDocumentType,
     evaluateOpportunity,
+    loadStudentDocuments,
     submitApplicationToBackend
   };
 })();

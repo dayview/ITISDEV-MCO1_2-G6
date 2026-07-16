@@ -8,6 +8,7 @@
   // Mirrors the Application schema's `status` enum in server/models/Applications.js.
   // There is no "draft" status in the backend — applications only exist once submitted.
   const STATUS_CONFIG = {
+    draft: { label: 'Draft', group: 'active', progress: 0 },
     submitted: { label: 'Submitted', group: 'active', progress: 40 },
     'under-review': { label: 'Under Review', group: 'active', progress: 60 },
     nominated: { label: 'Nominated', group: 'active', progress: 80 },

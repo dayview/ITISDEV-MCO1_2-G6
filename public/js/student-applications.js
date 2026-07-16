@@ -53,7 +53,7 @@
   function chipClassForStatus(status) {
     if (status === 'accepted') return 'chip--green';
     if (status === 'rejected') return 'chip--red';
-    if (STATUS.getStatusGroup(status) === 'unknown') return 'chip--gray';
+    if (status === 'draft' || STATUS.getStatusGroup(status) === 'unknown') return 'chip--gray';
     return 'chip--blue';
   }
 
@@ -104,6 +104,12 @@
     const chipClass = chipClassForStatus(application.status);
     const documentsLabel = application.documentsStatus === 'complete' ? 'Complete' : 'Incomplete';
     const hasOpportunity = Boolean(application.opportunityId);
+    const isDraft = application.status === 'draft';
+    const activityLabel = isDraft ? 'saved' : 'submitted';
+    const actionLabel = isDraft ? 'Continue Draft' : 'View Opportunity';
+    const documentMessage = isDraft && application.documentsStatus !== 'complete'
+      ? 'Documents: Incomplete · upload remaining documents'
+      : `Documents: ${documentsLabel} · ${reviewedLabel ? `reviewed ${escapeHtml(reviewedLabel)}` : 'not yet reviewed'}`;
 
     return `
       <div class="tracker-card">
@@ -112,7 +118,7 @@
           <div class="tracker-card__info">
             <div class="tracker-name">${escapeHtml(application.programName || 'Untitled opportunity')}</div>
             <div class="tracker-host">${escapeHtml(application.hostInstitution || 'Not provided')}${application.location ? ` · ${escapeHtml(application.location)}` : ''}</div>
-            <div class="tracker-submitted">submitted ${escapeHtml(submittedLabel)} &middot; ${deadlineLabel ? `deadline ${escapeHtml(deadlineLabel)}` : 'no deadline available'}</div>
+            <div class="tracker-submitted">${activityLabel} ${escapeHtml(submittedLabel)} &middot; ${deadlineLabel ? `deadline ${escapeHtml(deadlineLabel)}` : 'no deadline available'}</div>
           </div>
           <span class="chip ${chipClass}"><span class="chip__dot"></span>${escapeHtml(statusLabel)}</span>
         </div>
@@ -120,8 +126,8 @@
         ${renderProgressSteps(application.status)}
 
         <div class="flex-row align-center space-between gap-12 mt-16">
-          <span class="tracker-submitted">Documents: ${escapeHtml(documentsLabel)} &middot; ${reviewedLabel ? `reviewed ${escapeHtml(reviewedLabel)}` : 'not yet reviewed'}</span>
-          ${hasOpportunity ? `<a class="btn btn--secondary btn--compact" href="opportunity.html?id=${encodeURIComponent(application.opportunityId)}">View Opportunity</a>` : ''}
+          <span class="tracker-submitted">${documentMessage}</span>
+          ${hasOpportunity ? `<a class="btn btn--secondary btn--compact" href="opportunity.html?id=${encodeURIComponent(application.opportunityId)}">${actionLabel}</a>` : ''}
         </div>
       </div>
     `;

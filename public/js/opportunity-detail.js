@@ -19,11 +19,20 @@
   }
 
   function formatDeadline(value) {
-    return new Date(`${value}T00:00:00`).toLocaleDateString('en-US', {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'Not available';
+
+    return date.toLocaleDateString('en-US', {
       day: '2-digit',
       month: 'short',
       year: 'numeric'
     });
+  }
+
+  function getDocumentStatusLabel(status) {
+    if (status === 'verified') return 'Verified';
+    if (status === 'rejected') return 'Rejected';
+    return 'Pending review';
   }
 
   function renderBundle(evaluation) {
@@ -41,25 +50,80 @@
     return `
       <div class="quick-apply-alert quick-apply-alert--ready">
         <strong>Ready for 1-Click Apply</strong>
-        <span>All ${evaluation.bundle.length} required documents are ready.</span>
+        <span>All ${evaluation.bundle.length} required documents are uploaded.</span>
       </div>
       <div class="quick-bundle-preview">
         <p>Document bundle</p>
         ${evaluation.bundle.map(document => `
           <div class="quick-bundle-file">
             <span aria-hidden="true">&#10003;</span>
-            <div><strong>${escapeHtml(document.requirement)}</strong><small>${escapeHtml(document.fileName)}</small></div>
+            <div>
+              <strong>${escapeHtml(document.requirement)}</strong>
+              <small>${escapeHtml(document.fileName)} · ${escapeHtml(getDocumentStatusLabel(document.status))}</small>
+            </div>
           </div>
         `).join('')}
       </div>
     `;
   }
 
-  function renderOpportunity(opportunity, existing) {
-    const evaluation = window.GEMSApplicationStore.evaluateOpportunity(opportunity);
+  function renderExistingFeedback(existing, evaluation) {
+    if (existing.status === 'draft') {
+      if (evaluation.missing.length) {
+        return `
+          <div class="quick-apply-alert quick-apply-alert--warning">
+            <strong>Draft saved</strong>
+            <span>Upload the remaining required documents, then return here to submit your application.</span>
+            ${renderList(evaluation.missing, 'quick-apply-missing-list')}
+            <a href="documents.html">Upload missing documents &rarr;</a>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="quick-apply-alert quick-apply-alert--ready">
+          <strong>Draft ready to submit</strong>
+          <span>All required documents are uploaded. Select Submit Application to send it to OVPERI.</span>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="quick-apply-alert quick-apply-alert--success">
+        <strong>Application submitted</strong>
+        <span>Your document bundle is now with OVPERI for review.</span>
+        <a href="applications.html">View application tracker &rarr;</a>
+      </div>
+    `;
+  }
+
+  function renderApplyButtonLabel(existing, evaluation) {
+    if (!existing) {
+      return `
+        <svg class="quick-apply-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M13 2 4.5 13h6L9 22l8.5-11h-6L13 2Z" fill="currentColor"></path>
+        </svg>
+        <span>Quick Apply</span>
+      `;
+    }
+
+    if (existing.status === 'draft' && evaluation.missing.length === 0) {
+      return '<span>Submit Application</span>';
+    }
+
+    if (existing.status === 'draft') {
+      return '<span>Update Draft</span>'
+    }
+
+    return '<span>Application submitted</span>';
+  }
+
+  function renderOpportunity(opportunity, existing, documents) {
+    const evaluation = window.GEMSApplicationStore.evaluateOpportunity(opportunity, documents);
     const icon = window.GEMSOpportunityInitials(opportunity.hostInstitution);
     const eligibleLabel = opportunity.eligible ? 'Eligible' : 'Not eligible';
     const eligibleClass = opportunity.eligible ? 'chip--green' : 'chip--ineligible';
+    const isSubmitted = existing && existing.status !== 'draft';
 
     detailContainer.innerHTML = `
       <div class="opportunity-layout">
@@ -108,25 +172,14 @@
             <div class="opportunity-deadline">${formatDeadline(opportunity.deadline)}</div>
           </div>
           <div id="quick-apply-feedback" aria-live="polite">
-            ${existing ? `
-              <div class="quick-apply-alert quick-apply-alert--success">
-                <strong>Application submitted</strong>
-                <span>Your document bundle is now with OVPERI for review.</span>
-                <a href="applications.html">View application tracker &rarr;</a>
-              </div>
-            ` : renderBundle(evaluation)}
+            ${existing ? renderExistingFeedback(existing, evaluation) : renderBundle(evaluation)}
           </div>
           <button
             type="button"
             class="btn btn--primary opportunity-apply-button"
             id="quick-apply-button"
-            ${!opportunity.eligible || existing ? 'disabled' : ''}
-          >${existing ? 'Application submitted' : `
-            <svg class="quick-apply-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M13 2 4.5 13h6L9 22l8.5-11h-6L13 2Z" fill="currentColor"></path>
-            </svg>
-            <span>Quick Apply</span>
-          `}</button>
+            ${!opportunity.eligible || isSubmitted ? 'disabled' : ''}
+          >${renderApplyButtonLabel(existing, evaluation)}</button>
           <p class="quick-apply-privacy">By applying, your profile and listed documents will be securely bundled and submitted to OVPERI.</p>
           <a class="btn btn--secondary opportunity-catalog-button" href="catalog.html">Back to catalog</a>
         </aside>
@@ -135,17 +188,24 @@
 
     const button = document.getElementById('quick-apply-button');
     if (!button || button.disabled) return;
-    button.addEventListener('click', () => handleQuickApply(opportunity, button));
+
+    button.addEventListener('click', () => handleQuickApply(opportunity, documents, button));
   }
 
-  async function handleQuickApply(opportunity, button) {
+  async function handleQuickApply(opportunity, documents, button) {
     button.disabled = true;
+
     let result;
     try {
-      result = await window.GEMSApplicationStore.submitApplicationToBackend(opportunity);
+      result = await window.GEMSApplicationStore.submitApplicationToBackend(opportunity, documents);
     } catch (error) {
-      result = { ok: false, error: 'Unable to reach the server. Please check your connection and try again.', evaluation: window.GEMSApplicationStore.evaluateOpportunity(opportunity) };
+      result = { 
+        ok: false, 
+        error: 'Unable to reach the server. Please check your connection and try again.', 
+        evaluation: window.GEMSApplicationStore.evaluateOpportunity(opportunity, documents) 
+      };
     }
+
     const feedback = document.getElementById('quick-apply-feedback');
 
     if (!result.ok) {
@@ -153,15 +213,24 @@
       if (result.error) {
         feedback.insertAdjacentHTML('afterbegin', `<div class="quick-apply-alert quick-apply-alert--warning"><strong>${escapeHtml(result.error)}</strong></div>`);
       }
+
       const uploadLink = feedback.querySelector('a');
       if (uploadLink) uploadLink.focus();
+
+      button.disabled = false;
+      return;
+    }
+
+    if (result.application.status === 'draft') {
+      feedback.innerHTML = renderExistingFeedback(result.application, result.evaluation);
+      button.innerHTML = renderApplyButtonLabel(result.application, result.evaluation);
       button.disabled = false;
       return;
     }
 
     feedback.innerHTML = `
       <div class="quick-apply-alert quick-apply-alert--success" role="status">
-        <strong>${result.duplicate ? 'Already submitted' : 'Application submitted successfully!'}</strong>
+        <strong>Application submitted successfully!</strong>
         <span>Your application was sent to OVPERI for review.</span>
         <a href="applications.html">View application and bundle &rarr;</a>
       </div>
@@ -174,8 +243,10 @@
     try {
       const response = await fetch('/api/applications/my');
       if (!response.ok) return null;
+
       const result = await response.json();
       if (!result.success || !Array.isArray(result.data)) return null;
+
       return result.data.find(application => String(application.opportunityId) === String(opportunityId)) || null;
     } catch (error) {
       return null;
@@ -184,6 +255,7 @@
 
   async function loadDetail() {
     const id = getQueryParam('id');
+
     if (!id) {
       loadingState.hidden = true;
       errorState.querySelector('h2').textContent = 'Opportunity ID is missing';
@@ -193,22 +265,29 @@
     }
 
     try {
-      const response = await window.fakeApiFetch(`/api/opportunities/${encodeURIComponent(id)}`);
+      const response = await fetch(`/api/opportunities/${encodeURIComponent(id)}`);
       const data = await response.json();
+
       loadingState.hidden = true;
+
       if (!response.ok) {
         errorState.querySelector('h2').textContent = data.message || 'Opportunity not found';
         errorState.hidden = false;
         return;
       }
-      const existing = await loadExistingApplication(data.id);
-      renderOpportunity(data, existing);
+
+      const [existing, documents] = await Promise.all([
+        loadExistingApplication(data.id),
+        window.GEMSApplicationStore.loadStudentDocuments()
+      ]);
+
+      renderOpportunity(data, existing, documents);
     } catch (error) {
       loadingState.hidden = true;
       errorState.querySelector('h2').textContent = 'Unable to load opportunity';
       errorState.querySelector('p').textContent = 'Please check your connection and try again.';
       errorState.hidden = false;
-      console.error('Failed to load opportunity details:', error);
+      console.error('Faailed to load opportunity details:', error);
     }
   }
 
