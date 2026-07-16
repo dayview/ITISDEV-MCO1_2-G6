@@ -9,6 +9,10 @@
   const documentsFilter = document.getElementById('applicant-documents-filter');
   const programFilter = document.getElementById('applicant-program-filter');
   const sort = document.getElementById('applicant-sort');
+  const reviewModal = document.getElementById('document-review-modal');
+  const reviewList = document.getElementById('document-review-list');
+  const reviewMessage = document.getElementById('document-review-message');
+  let reviewingApplicationId = '';
 
   const statusLabels = {
     submitted: 'Pending Review',
@@ -135,12 +139,87 @@
     body.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', async () => {
       const applicant = applicants.find(item => item.id === button.closest('.applicant-row').dataset.applicantId);
       if (button.dataset.action === 'more') {
-        alert(`Application for ${applicant.name}: ${applicant.statusLabel}.`);
+        await openDocumentReview(applicant);
         return;
       }
       const status = button.dataset.action === 'approve' ? 'nominated' : 'rejected';
       await updateStatus(applicant.id, status);
     }));
+  }
+
+  function showReviewMessage(message, isError) {
+    reviewMessage.hidden = !message;
+    reviewMessage.textContent = message || '';
+    reviewMessage.classList.toggle('review-modal__message--error', Boolean(isError));
+  }
+
+  function closeDocumentReview() {
+    reviewModal.hidden = true;
+    reviewingApplicationId = '';
+    document.body.classList.remove('review-modal-open');
+  }
+
+  async function openDocumentReview(applicant) {
+    reviewingApplicationId = applicant.id;
+    document.getElementById('document-review-title').textContent = `${applicant.name}'s documents`;
+    document.getElementById('document-review-subtitle').textContent = `${applicant.program} · ${applicant.studentId}`;
+    reviewList.innerHTML = '<p class="post-list-empty">Loading documents...</p>';
+    showReviewMessage('');
+    reviewModal.hidden = false;
+    document.body.classList.add('review-modal-open');
+    const response = await fetch(`/api/applications/${encodeURIComponent(applicant.id)}/documents`);
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      reviewList.innerHTML = '';
+      showReviewMessage(result.error || `HTTP ${response.status}`, true);
+      return;
+    }
+    renderReviewDocuments(result.data || []);
+  }
+
+  function renderReviewDocuments(documents) {
+    if (!documents.length) {
+      reviewList.innerHTML = '<p class="post-list-empty">No documents are attached to this application.</p>';
+      return;
+    }
+    reviewList.innerHTML = documents.map(document => `
+      <article class="review-document" data-document-id="${escapeHtml(document.id)}">
+        <div class="review-document__summary">
+          <div><strong>${escapeHtml(document.originalFileName)}</strong><span>${escapeHtml(document.type)} · ${escapeHtml(DocumentReviewUI.statusLabel(document.status))}</span></div>
+          <div class="review-document__links">
+            <a class="btn btn--secondary" href="${escapeHtml(document.fileUrl)}" target="_blank" rel="noopener">View</a>
+            <a class="btn btn--secondary" href="${escapeHtml(document.fileUrl)}?download=1" download>Download</a>
+          </div>
+        </div>
+        ${document.rejectionReason ? `<p class="review-document__reason"><strong>Rejection reason:</strong> ${escapeHtml(document.rejectionReason)}</p>` : ''}
+        <label class="review-document__reason-field"><span>Reason (required when rejecting)</span><textarea maxlength="500" rows="2" placeholder="Explain what the student needs to correct..."></textarea></label>
+        <div class="review-document__actions">
+          <button type="button" class="btn btn--secondary" data-review-status="rejected">Reject</button>
+          <button type="button" class="btn btn--primary" data-review-status="verified">Verify</button>
+        </div>
+      </article>
+    `).join('');
+    reviewList.querySelectorAll('[data-review-status]').forEach(button => button.addEventListener('click', () => reviewDocument(button)));
+  }
+
+  async function reviewDocument(button) {
+    const card = button.closest('[data-document-id]');
+    const status = button.dataset.reviewStatus;
+    const rejectionReason = card.querySelector('textarea').value;
+    const validationError = DocumentReviewUI.validateReview(status, rejectionReason);
+    if (validationError) return showReviewMessage(validationError, true);
+    showReviewMessage('Saving review...');
+    const response = await fetch(`/api/applications/${encodeURIComponent(reviewingApplicationId)}/documents/${encodeURIComponent(card.dataset.documentId)}/review`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, rejectionReason })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) return showReviewMessage(result.error || `HTTP ${response.status}`, true);
+    const applicant = applicants.find(item => item.id === reviewingApplicationId);
+    showReviewMessage(status === 'verified' ? 'Document verified.' : 'Document rejected. The reason is now visible to the student.');
+    await loadApplicants();
+    if (applicant) await openDocumentReview(applicant);
   }
 
   function updateBulkBar() {
@@ -223,6 +302,8 @@
     else if (button.dataset.applicantBulk === 'reject') bulkStatus('rejected');
     else alert(`Export selected for ${selected.size} applicant${selected.size === 1 ? '' : 's'}.`);
   }));
+  document.querySelectorAll('[data-close-review-modal]').forEach(button => button.addEventListener('click', closeDocumentReview));
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && !reviewModal.hidden) closeDocumentReview(); });
 
   loadApplicants().catch(error => {
     document.querySelector('.applicant-table').hidden = true;

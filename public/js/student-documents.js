@@ -93,7 +93,7 @@
               </div>
             </div>
           </td>
-          <td><span class="badge ${badge.className}"><span class="badge__dot"></span>${escapeHtml(badge.label)}</span></td>
+          <td><span class="badge ${badge.className}"><span class="badge__dot"></span>${escapeHtml(badge.label)}</span>${item.document?.rejectionReason ? `<p class="document-rejection-reason">${escapeHtml(item.document.rejectionReason)}</p>` : ''}</td>
           <td class="table-muted">${escapeHtml(lastUpdated)}</td>
           <td><button type="button" class="${actionClass}" data-upload-type="${escapeHtml(item.type)}">${actionLabel}</button></td>
         </tr>
@@ -139,7 +139,7 @@
           <td><span class="category-tag">${escapeHtml(document.type)}</span></td>
           <td class="table-muted">${escapeHtml(formatSize(document.size))}</td>
           <td class="table-muted">${escapeHtml(formatDate(document.uploadedAt))}</td>
-          <td><span class="badge ${badge.className}"><span class="badge__dot"></span>${escapeHtml(badge.label)}</span></td>
+          <td><span class="badge ${badge.className}"><span class="badge__dot"></span>${escapeHtml(badge.label)}</span>${document.rejectionReason ? `<p class="document-rejection-reason">${escapeHtml(document.rejectionReason)}</p>` : ''}</td>
           <td>
             <div class="doc-actions">
               ${canView(document.mimeType) ? `

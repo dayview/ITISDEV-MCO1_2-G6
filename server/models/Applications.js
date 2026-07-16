@@ -18,7 +18,7 @@ const applicationSchema = new mongoose.Schema({
     },
     documents: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'document'
+        ref: 'Document'
     }],
     submittedDate: { 
         type: String, 

@@ -21,6 +21,8 @@ const auditLogSchema = new mongoose.Schema({
             'user_profile_updated',
             'document_uploaded',
             'document_deleted',
+            'document_verified',
+            'document_rejected',
             'application_submitted',
         ],
         required: true

@@ -281,7 +281,7 @@ async function updateStatistics() {
     // Update stat cards
     updateStatCard('pending', stats.pending, `${stats.urgent} urgent · deadline < 7d`);
     updateStatCard('nominated', stats.nominated, 'Awaiting partner reply');
-    updateStatCard('accepted', stats.accepted, 'AY 2026–27 cohort');
+    updateStatCard('accepted', stats.accepted, 'Current accepted applications');
     updateStatCard('live-programs', stats.livePrograms, `across ${stats.countries} countries`);
   } catch (err) {
     console.error('Error updating statistics:', err);
@@ -421,7 +421,7 @@ function setupTopbarActions() {
         notice.style.cssText = 'position:fixed;top:76px;right:24px;z-index:30;padding:12px 14px;border-radius:8px;background:#ffffff;border:1px solid rgba(15,122,61,.18);box-shadow:0 16px 40px rgba(15,23,42,.14);color:#123524;font-size:14px;';
         document.body.appendChild(notice);
       }
-      notice.textContent = 'No new admin notifications in this test environment.';
+      notice.textContent = 'Notifications are not available yet.';
       window.clearTimeout(notice._hideTimer);
       notice._hideTimer = window.setTimeout(() => notice.remove(), 2500);
     });

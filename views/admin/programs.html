@@ -56,7 +56,7 @@
       </a>
       <button type="button" class="catalog-notification" aria-label="Notifications, 6 unread">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-        <span class="catalog-notification__badge">6</span>
+        <span class="catalog-notification__badge" hidden></span>
       </button>
       <a class="student-topnav__link catalog-account-link" href="admin-profile.html" aria-label="Admin profile">
         <span class="user-avatar" aria-hidden="true">OV</span>
@@ -106,17 +106,17 @@
     </section>
 
     <section class="program-summary-grid" aria-label="Program summary">
-      <article class="stat-card"><div class="stat-card__label">Programs</div><div class="stat-card__value">24</div><div class="stat-card__sub stat-card__sub--muted">All managed opportunities</div></article>
-      <article class="stat-card"><div class="stat-card__label">Published</div><div class="stat-card__value">18</div><div class="stat-card__sub stat-card__sub--green">Visible to students</div></article>
-      <article class="stat-card"><div class="stat-card__label">Drafts</div><div class="stat-card__value">4</div><div class="stat-card__sub stat-card__sub--amber">Awaiting publication</div></article>
-      <article class="stat-card"><div class="stat-card__label">Archived</div><div class="stat-card__value">2</div><div class="stat-card__sub stat-card__sub--muted">Stored for reference</div></article>
+      <article class="stat-card"><div class="stat-card__label">Programs</div><div class="stat-card__value">—</div><div class="stat-card__sub stat-card__sub--muted">All managed opportunities</div></article>
+      <article class="stat-card"><div class="stat-card__label">Published</div><div class="stat-card__value">—</div><div class="stat-card__sub stat-card__sub--green">Visible to students</div></article>
+      <article class="stat-card"><div class="stat-card__label">Drafts</div><div class="stat-card__value">—</div><div class="stat-card__sub stat-card__sub--amber">Awaiting publication</div></article>
+      <article class="stat-card"><div class="stat-card__label">Closed</div><div class="stat-card__value">—</div><div class="stat-card__sub stat-card__sub--muted">No longer accepting applications</div></article>
     </section>
 
     <section class="program-filter-panel" id="program-filter-panel" aria-label="Program filters">
       <label><span>Status</span><select id="filter-status"><option value="">All statuses</option><option>Published</option><option>Draft</option><option>Archived</option><option>Closed</option></select></label>
-      <label><span>Country</span><select id="filter-country"><option value="">All countries</option><option>Singapore</option><option>South Korea</option><option>Japan</option><option>Australia</option><option>Germany</option><option>Canada</option></select></label>
-      <label><span>Partner University</span><select id="filter-university"><option value="">All partners</option><option>National University of Singapore</option><option>Chung-Ang University</option><option>Kyoto University</option><option>University of Melbourne</option><option>Technical University of Munich</option></select></label>
-      <label><span>Program Type</span><select id="filter-type"><option value="">All types</option><option>Exchange</option><option>Summer</option><option>Research</option><option>Internship</option></select></label>
+      <label><span>Country</span><select id="filter-country"><option value="">All countries</option></select></label>
+      <label><span>Partner University</span><select id="filter-university"><option value="">All partners</option></select></label>
+      <label><span>Program Type</span><select id="filter-type"><option value="">All types</option></select></label>
       <label><span>Application Period</span><select id="filter-period"><option value="">Any period</option><option>Open</option><option>Upcoming</option><option>Closed</option></select></label>
       <label><span>Sort By</span><select id="sort-programs"><option value="updated">Last updated</option><option value="name">Program name</option><option value="applications">Applications</option><option value="deadline">Application deadline</option></select></label>
     </section>
@@ -135,7 +135,7 @@
       <div class="program-table-heading">
         <div>
           <h2 id="program-table-title">All programs</h2>
-          <p id="program-result-count">Showing 8 of 24 programs</p>
+          <p id="program-result-count">Loading programs...</p>
         </div>
       </div>
 
@@ -158,7 +158,7 @@
       </div>
 
       <div class="program-pagination">
-        <p id="program-page-summary">Page 1 of 3</p>
+        <p id="program-page-summary">Loading...</p>
         <nav class="pagination" aria-label="Programs pagination">
           <button type="button" class="btn btn--secondary" id="program-prev" aria-label="Previous page">&larr;</button>
           <div class="pagination-pages" id="program-pages"></div>

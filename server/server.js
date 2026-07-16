@@ -12,7 +12,7 @@ const User = require('./models/User');
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const { mapOpportunity, normalizeOpportunityInput, mapAdminOpportunity } = require('./lib/opportunities');
-const { normalizeDocumentType, mapDocument, buildDocumentChecklist } = require('./lib/documents');
+const { normalizeDocumentType, mapDocument, buildDocumentChecklist, validateDocumentReview, getApplicationDocumentStatus } = require('./lib/documents');
 const { evaluateStudentEligibility, isOpportunityOpenForApplication } = require('./lib/eligibility');
 const { applicationPipeline, buildApplicationPayload, toApplicationsCsv, isValidStatus, APPLICATION_STATUSES, mapStudentApplication } = require('./lib/applications');
 const { computeStatisticsSummary, getUrgentCutoff } = require('./lib/statistics');
@@ -310,7 +310,7 @@ app.patch('/api/opportunities/:id', requireAdminSession, async (req, res) => {
 
 app.get('/api/documents', requireStudentSession, async (req, res) => {
     try {
-        const documents = await Document.find({ userId: req.session.user._id }).sort({ uploadedAt: -1 });
+        const documents = await Document.find({ userId: req.session.user._id }).populate('reviewedBy', 'name').sort({ uploadedAt: -1 });
         const data = documents.map(mapDocument);
         res.json({ success: true, data, checklist: buildDocumentChecklist(data) });
     } catch (err) {
@@ -338,6 +338,29 @@ app.post('/api/documents', requireStudentSession, uploadSingleFile, async (req, 
             size: req.file.size
         });
 
+        // A replacement becomes the current document for applications that referenced
+        // an older rejected file of the same type.
+        const rejected = await Document.find({
+            userId: req.session.user._id,
+            type: document.type,
+            status: 'rejected',
+            _id: { $ne: document._id }
+        }).select('_id');
+        const rejectedIds = rejected.map(item => item._id);
+        if (rejectedIds.length) {
+            const affected = await Application.find({
+                userId: req.session.user._id,
+                documents: { $in: rejectedIds }
+            });
+            for (const application of affected) {
+                application.documents = application.documents
+                    .filter(id => !rejectedIds.some(rejectedId => String(rejectedId) === String(id)))
+                    .concat(document._id);
+                application.documentsStatus = 'incomplete';
+                await application.save();
+            }
+        }
+
         await AuditLog.create({
             userId: req.session.user._id,
             userRole: req.session.user.role,
@@ -359,12 +382,14 @@ app.post('/api/documents', requireStudentSession, uploadSingleFile, async (req, 
 
 // Files are served exclusively through this authenticated, ownership-scoped route —
 // the storage directory itself is never mounted with express.static.
-app.get('/api/documents/:id/file', requireStudentSession, async (req, res) => {
+app.get('/api/documents/:id/file', requireSession, async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ success: false, error: 'Invalid document id.' });
         }
-        const document = await Document.findOne({ _id: req.params.id, userId: req.session.user._id });
+        const query = { _id: req.params.id };
+        if (!isAdminRole(req.session.user.role)) query.userId = req.session.user._id;
+        const document = await Document.findOne(query);
         if (!document) {
             return res.status(404).json({ success: false, error: 'Document not found.' });
         }
@@ -389,6 +414,75 @@ app.get('/api/documents/:id/file', requireStudentSession, async (req, res) => {
     }
 });
 
+app.get('/api/applications/:id/documents', requireAdminSession, async (req, res) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ success: false, error: 'Invalid application id.' });
+        }
+        const application = await Application.findById(req.params.id).populate({
+            path: 'documents',
+            populate: { path: 'reviewedBy', select: 'name' }
+        });
+        if (!application) return res.status(404).json({ success: false, error: 'Application not found.' });
+        res.json({
+            success: true,
+            data: (application.documents || []).map(mapDocument),
+            documentsStatus: application.documentsStatus
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.patch('/api/applications/:applicationId/documents/:documentId/review', requireAdminSession, async (req, res) => {
+    try {
+        const { applicationId, documentId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(applicationId) || !mongoose.Types.ObjectId.isValid(documentId)) {
+            return res.status(400).json({ success: false, error: 'Invalid application or document id.' });
+        }
+        const review = validateDocumentReview(req.body.status, req.body.rejectionReason);
+        if (!review.valid) return res.status(400).json({ success: false, error: review.error });
+
+        const application = await Application.findOne({ _id: applicationId, documents: documentId });
+        if (!application) return res.status(404).json({ success: false, error: 'Document is not part of this application.' });
+        const document = await Document.findById(documentId);
+        if (!document) return res.status(404).json({ success: false, error: 'Document not found.' });
+
+        const previousStatus = document.status;
+        document.status = req.body.status;
+        document.rejectionReason = review.reason || undefined;
+        document.reviewedAt = new Date();
+        document.reviewedBy = req.session.user._id;
+        await document.save();
+
+        const linkedApplications = await Application.find({ documents: document._id }).populate('documents');
+        for (const linked of linkedApplications) {
+            linked.documentsStatus = getApplicationDocumentStatus(linked.documents);
+            await linked.save();
+        }
+
+        await AuditLog.create({
+            userId: req.session.user._id,
+            userRole: req.session.user.role,
+            action: document.status === 'verified' ? 'document_verified' : 'document_rejected',
+            targetType: 'Document',
+            targetId: document._id,
+            targetLabel: document.originalFileName,
+            changes: [
+                { field: 'status', from: previousStatus, to: document.status },
+                ...(review.reason ? [{ field: 'rejectionReason', from: '', to: review.reason }] : [])
+            ],
+            ip: req.ip
+        });
+
+        await document.populate('reviewedBy', 'name');
+        const reviewedApplication = linkedApplications.find(item => String(item._id) === String(application._id));
+        res.json({ success: true, data: mapDocument(document), documentsStatus: reviewedApplication?.documentsStatus || 'incomplete' });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
 app.delete('/api/documents/:id', requireStudentSession, async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -398,6 +492,10 @@ app.delete('/api/documents/:id', requireStudentSession, async (req, res) => {
         if (!document) {
             return res.status(404).json({ success: false, error: 'Document not found.' });
         }
+        await Application.updateMany(
+            { documents: document._id },
+            { $pull: { documents: document._id }, $set: { documentsStatus: 'incomplete' } }
+        );
         // The MongoDB record is authoritative: once it's deleted, the document no longer
         // exists to the student regardless of what happens to the physical file next.
         // An already-missing file is treated as success; any other filesystem failure is

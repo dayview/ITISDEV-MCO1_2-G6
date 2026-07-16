@@ -5,7 +5,9 @@ const {
     CHECKLIST_TYPES,
     mapDocument,
     buildDocumentChecklist,
-    canDeleteDocument
+    canDeleteDocument,
+    validateDocumentReview,
+    getApplicationDocumentStatus
 } = require('../lib/documents');
 
 describe('Document Logic - document type normalization', () => {
@@ -65,7 +67,8 @@ describe('Document Logic - mapDocument', () => {
         };
         expect(mapDocument(document)).toEqual({
             id: 'd1', type: 'transcript', originalFileName: 'grades.pdf', mimeType: 'application/pdf', size: 20480,
-            status: 'pending', uploadedAt: new Date('2026-06-10'), reviewedAt: null, fileUrl: '/api/documents/d1/file'
+            status: 'pending', uploadedAt: new Date('2026-06-10'), reviewedAt: null, reviewedBy: null,
+            reviewerName: '', rejectionReason: '', fileUrl: '/api/documents/d1/file'
         });
     });
 
@@ -83,6 +86,31 @@ describe('Document Logic - mapDocument', () => {
     test('accepts a Mongoose-document-like object via toObject()', () => {
         const toObject = () => ({ _id: 'd4', type: 'validId' });
         expect(mapDocument({ toObject })).toMatchObject({ id: 'd4', type: 'validId', fileUrl: '/api/documents/d4/file' });
+    });
+});
+
+describe('Document Logic - admin review validation', () => {
+    test('accepts verification without a reason', () => {
+        expect(validateDocumentReview('verified', '')).toEqual({ valid: true, reason: '' });
+    });
+
+    test('requires and trims a reason when rejecting', () => {
+        expect(validateDocumentReview('rejected', '  Blurry scan  ')).toEqual({ valid: true, reason: 'Blurry scan' });
+        expect(validateDocumentReview('rejected', ' ')).toEqual({ valid: false, error: 'A rejection reason is required.' });
+    });
+
+    test('rejects unsupported states and oversized reasons', () => {
+        expect(validateDocumentReview('pending', '')).toEqual({ valid: false, error: 'Status must be verified or rejected.' });
+        expect(validateDocumentReview('rejected', 'x'.repeat(501)).valid).toBe(false);
+    });
+});
+
+describe('Document Logic - application completeness', () => {
+    test('is complete only when every attached document is verified', () => {
+        expect(getApplicationDocumentStatus([{ status: 'verified' }, { status: 'verified' }])).toBe('complete');
+        expect(getApplicationDocumentStatus([{ status: 'verified' }, { status: 'pending' }])).toBe('incomplete');
+        expect(getApplicationDocumentStatus([{ status: 'rejected' }])).toBe('incomplete');
+        expect(getApplicationDocumentStatus([])).toBe('incomplete');
     });
 });
 

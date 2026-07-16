@@ -56,9 +56,9 @@
         </div>
         <span class="student-topnav__link-label">Post</span>
       </a>
-      <button type="button" class="catalog-notification" aria-label="Notifications, 6 unread">
+      <button type="button" class="catalog-notification" aria-label="Notifications">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-        <span class="catalog-notification__badge">6</span>
+        <span class="catalog-notification__badge" hidden></span>
       </button>
       <a class="student-topnav__link catalog-account-link" href="admin-profile.html" aria-current="page" aria-label="Admin profile">
         <span class="user-avatar" aria-hidden="true">OV</span>
@@ -100,27 +100,27 @@
         <div class="profile-grid">
           <div class="profile-field profile-field--full">
             <label for="fullname">Full Name</label>
-            <input type="text" id="fullname" name="fullname" value="OVPERI Administrator" autocomplete="name" />
+            <input type="text" id="fullname" name="fullname" value="" autocomplete="name" disabled />
             <span class="error-message" id="error-fullname"></span>
           </div>
           <div class="profile-field">
             <label for="email">Email Address</label>
-            <input type="email" id="email" name="email" value="admin.ovperi@dlsu.edu.ph" autocomplete="email" />
+            <input type="email" id="email" name="email" value="" autocomplete="email" disabled />
             <span class="error-message" id="error-email"></span>
           </div>
           <div class="profile-field">
             <label for="phone">Phone Number</label>
-            <input type="tel" id="phone" name="phone" value="+63 917 000 0000" autocomplete="tel" />
+            <input type="tel" id="phone" name="phone" value="" placeholder="Not available" disabled />
             <span class="error-message" id="error-phone"></span>
           </div>
           <div class="profile-field profile-field--full">
             <label for="department">Department / Office</label>
-            <input type="text" id="department" name="department" value="Office of the Vice President for External Relations and Internationalization" />
+            <input type="text" id="department" name="department" value="" placeholder="Not available" disabled />
             <span class="error-message" id="error-department"></span>
           </div>
           <div class="profile-field profile-field--full">
             <label for="position">Position / Role</label>
-            <input type="text" id="position" name="position" value="Mobility Program Officer" />
+            <input type="text" id="position" name="position" value="" placeholder="Not available" disabled />
             <span class="error-message" id="error-position"></span>
           </div>
         </div>
@@ -132,34 +132,28 @@
             <h2>Account &amp; Access</h2>
             <p class="section-subtitle">Review the administrative scope assigned to this OVPERI account.</p>
           </div>
-          <span class="status-badge status-verified">Active</span>
+          <span class="status-badge status-verified" id="admin-session-status">Loading...</span>
         </div>
 
         <div class="profile-grid">
           <div class="profile-field">
             <label for="admin-role">Admin Role</label>
-            <input type="text" id="admin-role" name="admin-role" value="Program Administrator" />
+            <input type="text" id="admin-role" name="admin-role" value="" disabled />
             <span class="error-message" id="error-admin-role"></span>
           </div>
           <div class="profile-field">
             <label for="permission-level">Permission Level</label>
-            <select id="permission-level" name="permission-level">
-              <option selected>Full Access</option>
-              <option>Limited Access</option>
-            </select>
+            <select id="permission-level" name="permission-level" disabled><option selected>Not available</option></select>
             <span class="error-message" id="error-permission-level"></span>
           </div>
           <div class="profile-field profile-field--full">
             <label for="assigned-module">Assigned Module</label>
-            <input type="text" id="assigned-module" name="assigned-module" value="Programs, Applicants, Post Opportunities" />
+            <input type="text" id="assigned-module" name="assigned-module" value="" placeholder="Not available" disabled />
             <span class="error-message" id="error-assigned-module"></span>
           </div>
           <div class="profile-field">
             <label for="account-status">Account Status</label>
-            <select id="account-status" name="account-status">
-              <option selected>Active</option>
-              <option>Inactive</option>
-            </select>
+            <select id="account-status" name="account-status" disabled><option selected>Not available</option></select>
             <span class="error-message" id="error-account-status"></span>
           </div>
         </div>
@@ -178,28 +172,28 @@
           <div class="admin-security-row">
             <div>
               <div class="admin-security-row__label">Password</div>
-              <div class="admin-security-row__value">Last changed 45 days ago</div>
+              <div class="admin-security-row__value">Not available</div>
             </div>
             <button type="button" class="btn btn--secondary">Change Password</button>
           </div>
           <div class="admin-security-row">
             <div>
               <div class="admin-security-row__label">Two-Factor Authentication</div>
-              <div class="admin-security-row__value">Disabled for this administrator account</div>
+              <div class="admin-security-row__value">Not available</div>
             </div>
             <button type="button" class="btn btn--secondary">Enable 2FA</button>
           </div>
           <div class="admin-security-row">
             <div>
               <div class="admin-security-row__label">Last Login</div>
-              <div class="admin-security-row__value">June 27, 2026 at 9:15 AM</div>
+              <div class="admin-security-row__value">Not available</div>
             </div>
             <button type="button" class="btn btn--secondary">View Login Activity</button>
           </div>
           <div class="admin-security-row">
             <div>
               <div class="admin-security-row__label">Login Email</div>
-              <div class="admin-security-row__value">admin.ovperi@dlsu.edu.ph</div>
+              <div class="admin-security-row__value" id="admin-login-email">Loading...</div>
             </div>
             <button type="button" class="btn btn--secondary">View Login Activity</button>
           </div>
@@ -217,23 +211,23 @@
         <div class="admin-profile-summary-grid" aria-label="Admin activity summary">
           <article class="admin-profile-summary-card">
             <div class="admin-profile-summary-card__label">Programs Posted</div>
-            <div class="admin-profile-summary-card__value">24</div>
-            <div class="admin-profile-summary-card__meta">6 this term</div>
+            <div class="admin-profile-summary-card__value">Not available</div>
+            <div class="admin-profile-summary-card__meta">Per-admin activity tracking requires backend support</div>
           </article>
           <article class="admin-profile-summary-card">
             <div class="admin-profile-summary-card__label">Applicants Reviewed</div>
-            <div class="admin-profile-summary-card__value">128</div>
-            <div class="admin-profile-summary-card__meta">Across active programs</div>
+            <div class="admin-profile-summary-card__value">Not available</div>
+            <div class="admin-profile-summary-card__meta">Per-admin review tracking requires backend support</div>
           </article>
           <article class="admin-profile-summary-card">
             <div class="admin-profile-summary-card__label">Approvals Completed</div>
-            <div class="admin-profile-summary-card__value">84</div>
-            <div class="admin-profile-summary-card__meta">Ready for nomination</div>
+            <div class="admin-profile-summary-card__value">Not available</div>
+            <div class="admin-profile-summary-card__meta">Per-admin approval tracking requires backend support</div>
           </article>
           <article class="admin-profile-summary-card">
             <div class="admin-profile-summary-card__label">Last Activity</div>
-            <div class="admin-profile-summary-card__value">Today</div>
-            <div class="admin-profile-summary-card__meta">Applicant review updated</div>
+            <div class="admin-profile-summary-card__value">Not available</div>
+            <div class="admin-profile-summary-card__meta">Activity history requires backend support</div>
           </article>
         </div>
       </section>
@@ -249,7 +243,7 @@
         <div class="profile-grid">
           <div class="profile-field">
             <label for="notification-preferences">Notification Preferences</label>
-            <select id="notification-preferences" name="notification-preferences">
+            <select id="notification-preferences" name="notification-preferences" disabled>
               <option selected>Email and dashboard alerts</option>
               <option>Email only</option>
               <option>Dashboard alerts only</option>
@@ -258,7 +252,7 @@
           </div>
           <div class="profile-field">
             <label for="email-digest-frequency">Email Digest Frequency</label>
-            <select id="email-digest-frequency" name="email-digest-frequency">
+            <select id="email-digest-frequency" name="email-digest-frequency" disabled>
               <option>Daily</option>
               <option selected>Weekly</option>
               <option>Monthly</option>
@@ -267,7 +261,7 @@
           </div>
           <div class="profile-field profile-field--full">
             <label for="default-dashboard-view">Default Dashboard View</label>
-            <select id="default-dashboard-view" name="default-dashboard-view">
+            <select id="default-dashboard-view" name="default-dashboard-view" disabled>
               <option selected>Applicant review queue</option>
               <option>Program management</option>
               <option>Posting workspace</option>
@@ -278,8 +272,8 @@
       </section>
 
       <div class="profile-actions">
-        <button type="button" class="btn btn--secondary" id="btn-cancel">Cancel</button>
-        <button type="submit" class="btn btn--primary">Save Changes</button>
+        <button type="button" class="btn btn--secondary" id="btn-cancel" disabled>Cancel</button>
+        <button type="submit" class="btn btn--primary" disabled>Save Changes</button>
       </div>
     </form>
   </main>

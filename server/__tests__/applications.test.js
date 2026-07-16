@@ -31,7 +31,7 @@ describe('Application Logic - application creation helper', () => {
         const payload = buildApplicationPayload({
             userId: 'u1',
             opportunityId: 'o1',
-            documents: [{ _id: 'd1' }, { _id: 'd2' }],
+            documents: [{ _id: 'd1', status: 'verified' }, { _id: 'd2', status: 'verified' }],
             now
         });
 
@@ -48,6 +48,12 @@ describe('Application Logic - application creation helper', () => {
     test('defaults to an empty document list when none are provided', () => {
         const payload = buildApplicationPayload({ userId: 'u1', opportunityId: 'o1', now: new Date('2026-01-01') });
         expect(payload.documents).toEqual([]);
+        expect(payload.documentsStatus).toBe('incomplete');
+    });
+
+    test('keeps an application incomplete while any submitted document awaits review', () => {
+        const payload = buildApplicationPayload({ userId: 'u1', opportunityId: 'o1', documents: [{ _id: 'd1', status: 'pending' }] });
+        expect(payload.documentsStatus).toBe('incomplete');
     });
 });
 

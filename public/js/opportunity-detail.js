@@ -193,7 +193,7 @@
     }
 
     try {
-      const response = await window.fakeApiFetch(`/api/opportunities/${encodeURIComponent(id)}`);
+      const response = await window.opportunityApiFetch(`/api/opportunities/${encodeURIComponent(id)}`);
       const data = await response.json();
       loadingState.hidden = true;
       if (!response.ok) {

@@ -42,9 +42,32 @@ const mapDocument = (document) => {
         status: plain.status || 'pending',
         uploadedAt: plain.uploadedAt || plain.createdAt,
         reviewedAt: plain.reviewedAt || null,
+        reviewedBy: plain.reviewedBy ? String(plain.reviewedBy._id || plain.reviewedBy) : null,
+        reviewerName: plain.reviewedBy && typeof plain.reviewedBy === 'object' ? plain.reviewedBy.name || '' : '',
+        rejectionReason: plain.rejectionReason || '',
         fileUrl: `/api/documents/${String(plain._id)}/file`
     };
 };
+
+const validateDocumentReview = (status, rejectionReason) => {
+    if (!['verified', 'rejected'].includes(status)) {
+        return { valid: false, error: 'Status must be verified or rejected.' };
+    }
+    const reason = String(rejectionReason || '').trim();
+    if (status === 'rejected' && !reason) {
+        return { valid: false, error: 'A rejection reason is required.' };
+    }
+    if (reason.length > 500) {
+        return { valid: false, error: 'The rejection reason must be 500 characters or fewer.' };
+    }
+    return { valid: true, reason: status === 'rejected' ? reason : '' };
+};
+
+const getApplicationDocumentStatus = (documents = []) => (
+    documents.length > 0 && documents.every(document => document.status === 'verified')
+        ? 'complete'
+        : 'incomplete'
+);
 
 // Expects already-mapped documents (see mapDocument). For each checklist type, uses the
 // most recently uploaded document of that type, if any.
@@ -91,5 +114,7 @@ module.exports = {
     DOCUMENT_STATUSES,
     mapDocument,
     buildDocumentChecklist,
-    canDeleteDocument
+    canDeleteDocument,
+    validateDocumentReview,
+    getApplicationDocumentStatus
 };

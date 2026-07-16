@@ -429,8 +429,8 @@
   }
 
   function getFilteredOpportunities() {
-    const opportunities = typeof window.getOpportunities === 'function'
-      ? window.getOpportunities()
+    const opportunities = Array.isArray(window.GEMS_BACKEND_OPPORTUNITIES)
+      ? window.GEMS_BACKEND_OPPORTUNITIES
       : [];
     const filters = getFormData();
     const today = getToday();

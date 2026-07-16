@@ -68,10 +68,16 @@ const buildApplicationPayload = ({ userId, opportunityId, documents = [], now = 
     userId,
     opportunityId,
     documents: documents.map(document => document._id),
-    documentsStatus: 'complete',
+    documentsStatus: getInitialDocumentsStatus(documents),
     submittedDate: now.toISOString().slice(0, 10),
     statusHistory: [{ status: 'submitted', changedAt: now, changedBy: userId }]
 });
+
+function getInitialDocumentsStatus(documents = []) {
+    return documents.length > 0 && documents.every(document => document.status === 'verified')
+        ? 'complete'
+        : 'incomplete';
+}
 
 const appendStatusHistory = (history = [], status, changedBy, now = new Date()) => [
     ...history,
@@ -123,6 +129,7 @@ module.exports = {
     isValidStatus,
     applicationPipeline,
     buildApplicationPayload,
+    getInitialDocumentsStatus,
     appendStatusHistory,
     toApplicationsCsv,
     getReviewedAt,

@@ -56,7 +56,7 @@
       </a>
       <button type="button" class="catalog-notification" aria-label="Notifications, 6 unread">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-        <span class="catalog-notification__badge">6</span>
+        <span class="catalog-notification__badge" hidden></span>
       </button>
       <a class="student-topnav__link catalog-account-link" href="admin-profile.html" aria-label="Admin profile">
         <span class="user-avatar" aria-hidden="true">OV</span>
@@ -86,10 +86,10 @@
     </header>
 
     <section class="program-summary-grid applicant-summary-grid" aria-label="Applicant summary">
-      <article class="stat-card"><div class="stat-card__label">Total Applicants</div><div class="stat-card__value">28</div><div class="stat-card__sub stat-card__sub--muted">Across active programs</div></article>
-      <article class="stat-card"><div class="stat-card__label">Pending Review</div><div class="stat-card__value">12</div><div class="stat-card__sub stat-card__sub--amber">Requires OVPERI action</div></article>
-      <article class="stat-card"><div class="stat-card__label">Approved</div><div class="stat-card__value">11</div><div class="stat-card__sub stat-card__sub--green">Ready for nomination</div></article>
-      <article class="stat-card"><div class="stat-card__label">Rejected</div><div class="stat-card__value">5</div><div class="stat-card__sub stat-card__sub--red">Closed decisions</div></article>
+      <article class="stat-card"><div class="stat-card__label">Total Applicants</div><div class="stat-card__value">—</div><div class="stat-card__sub stat-card__sub--muted">Across active programs</div></article>
+      <article class="stat-card"><div class="stat-card__label">Pending Review</div><div class="stat-card__value">—</div><div class="stat-card__sub stat-card__sub--amber">Requires OVPERI action</div></article>
+      <article class="stat-card"><div class="stat-card__label">Approved</div><div class="stat-card__value">—</div><div class="stat-card__sub stat-card__sub--green">Ready for nomination</div></article>
+      <article class="stat-card"><div class="stat-card__label">Rejected</div><div class="stat-card__value">—</div><div class="stat-card__sub stat-card__sub--red">Closed decisions</div></article>
     </section>
 
     <section class="applicant-toolbar" aria-label="Applicant actions">
@@ -113,7 +113,7 @@
     <section class="applicant-filter-panel" id="applicant-filter-panel" aria-label="Applicant filters">
       <label><span>Status</span><select id="applicant-status-filter"><option value="">All statuses</option><option>Pending Review</option><option>Approved</option><option>Rejected</option><option>Needs Revision</option></select></label>
       <label><span>Documents</span><select id="applicant-documents-filter"><option value="">All document states</option><option>Complete</option><option>Incomplete</option></select></label>
-      <label><span>Program</span><select id="applicant-program-filter"><option value="">All programs</option><option>NUS Exchange Semester</option><option>Chung-Ang Summer Program</option><option>Kyoto Research Exchange</option><option>Melbourne Global Semester</option></select></label>
+      <label><span>Program</span><select id="applicant-program-filter"><option value="">All programs</option></select></label>
     </section>
 
     <section class="applicant-bulk-bar" id="applicant-bulk-bar" hidden aria-live="polite">
@@ -162,6 +162,19 @@
   </main>
 </div>
 
+<div class="review-modal" id="document-review-modal" hidden>
+  <div class="review-modal__backdrop" data-close-review-modal></div>
+  <section class="review-modal__panel" role="dialog" aria-modal="true" aria-labelledby="document-review-title">
+    <div class="review-modal__header">
+      <div><p class="programs-eyebrow">Application documents</p><h2 id="document-review-title">Review documents</h2><p id="document-review-subtitle"></p></div>
+      <button type="button" class="review-modal__close" data-close-review-modal aria-label="Close document review">&times;</button>
+    </div>
+    <div id="document-review-message" class="review-modal__message" role="status" hidden></div>
+    <div id="document-review-list" class="review-document-list"></div>
+  </section>
+</div>
+
+<script src="../../public/js/document-review-ui.js"></script>
 <script src="../../public/js/admin-applicants.js"></script>
 </body>
 </html>

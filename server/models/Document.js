@@ -45,6 +45,11 @@ const documentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
+    rejectionReason: {
+        type: String,
+        trim: true,
+        maxlength: 500
+    },
 }, { timestamps: true });
 
 documentSchema.index({ userId: 1, type: 1 });
