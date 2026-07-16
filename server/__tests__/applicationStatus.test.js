@@ -2,6 +2,7 @@ const STATUS = require('../../public/js/application-status');
 
 describe('Application Status - canonical status mapping', () => {
     test.each([
+        ['draft', 'Draft', 'active', 0],
         ['submitted', 'Submitted', 'active', 40],
         ['under-review', 'Under Review', 'active', 60],
         ['nominated', 'Nominated', 'active', 80],
@@ -19,9 +20,9 @@ describe('Application Status - canonical status mapping', () => {
         expect(STATUS.getStatusProgress(undefined)).toBe(0);
     });
 
-    test('covers exactly the five statuses defined on the Application schema, no invented ones like "draft"', () => {
+    test('covers exactly the six statuses defined on the Application schema, no invented ones like "draft"', () => {
         expect(Object.keys(STATUS.STATUS_CONFIG).sort()).toEqual(
-            ['accepted', 'nominated', 'rejected', 'submitted', 'under-review'].sort()
+            ['draft', 'accepted', 'nominated', 'rejected', 'submitted', 'under-review'].sort()
         );
     });
 });
@@ -29,12 +30,13 @@ describe('Application Status - canonical status mapping', () => {
 describe('Application Status - countByFilter', () => {
     test('counts every application into "all" plus its status group', () => {
         const applications = [
+            { status: 'draft' },
             { status: 'submitted' },
             { status: 'under-review' },
             { status: 'accepted' },
             { status: 'rejected' }
         ];
-        expect(STATUS.countByFilter(applications)).toEqual({ all: 4, active: 2, completed: 2, unknown: 0 });
+        expect(STATUS.countByFilter(applications)).toEqual({ all: 5, active: 3, completed: 2, unknown: 0 });
     });
 
     test('counts are derived only from the applications actually passed in, not a fabricated baseline', () => {
@@ -53,16 +55,17 @@ describe('Application Status - filterApplications', () => {
     const applications = [
         { id: 'a', status: 'submitted' },
         { id: 'b', status: 'accepted' },
-        { id: 'c', status: 'rejected' }
+        { id: 'c', status: 'rejected' },
+        { id: 'd', status: 'draft' }
     ];
 
     test('"all" (or no filter) returns every application', () => {
-        expect(STATUS.filterApplications(applications, 'all').map(a => a.id)).toEqual(['a', 'b', 'c']);
-        expect(STATUS.filterApplications(applications, undefined).map(a => a.id)).toEqual(['a', 'b', 'c']);
+        expect(STATUS.filterApplications(applications, 'all').map(a => a.id)).toEqual(['a', 'b', 'c', 'd']);
+        expect(STATUS.filterApplications(applications, undefined).map(a => a.id)).toEqual(['a', 'b', 'c', 'd']);
     });
 
     test('"active" returns only in-progress applications', () => {
-        expect(STATUS.filterApplications(applications, 'active').map(a => a.id)).toEqual(['a']);
+        expect(STATUS.filterApplications(applications, 'active').map(a => a.id)).toEqual(['a', 'd']);
     });
 
     test('"completed" returns only terminal applications', () => {
