@@ -22,9 +22,6 @@
   <div class="auth-container" id="auth-container" onclick="event.stopPropagation()">
     <div class="card">
 
-      <!-- Close Button ✕ -->
-      <button type="button" class="modal-close-btn" aria-label="Close registration" onclick="closeAuthModal(event, true)">✕</button>
-
       <!-- Shared Brand Header Symbol -->
       <div class="brand-logo">
         <img src="../../public/images/OVPERI-white.png" alt="OVPERI Logo" class="brand-logo-img">
@@ -92,27 +89,22 @@
               <label class="form-label" for="register-college">College</label>
               <select id="register-college" name="college" class="mock-field" required>
                 <option value="" disabled selected>Select College</option>
-                <option value="CCS">CCS</option>
-                <option value="CLA">CLA</option>
-                <option value="GCOE">GCOE</option>
-                <option value="RVRCOB">RVRCOB</option>
+                <option value="BAGCED">BAGCED: Br. Andrew Gonzalez FSC College of Education</option>
+                <option value="CCS">CCS: College of Computer Studies</option>
+                <option value="CLA">CLA: College of Liberal Arts</option>
+                <option value="COS">COS: College of Science</option>
+                <option value="GCOE">GCOE: Gokongwei College of Engineering</option>
+                <option value="RVRCOB">RVRCOB: Ramon V. del Rosario College of Business</option>
+                <option value="SOE">SOE: School of Economics</option>
               </select>
             </div>
           </div>
 
-          <div class="grid-2">
-            <div class="form-group">
-              <label class="form-label" for="register-enrollment-status">Enrollment Status</label>
-              <select id="register-enrollment-status" name="enrollmentStatus" class="mock-field" required>
-                <option value="" disabled selected>Select Status</option>
-                <option value="Full-time">Full-time</option>
-                <option value="Part-time">Part-time</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="register-major">Current Major / Program</label>
-              <input id="register-major" name="major" type="text" class="mock-field" placeholder="e.g. BSCS-ST" required>
-            </div>
+          <div class="form-group">
+            <label class="form-label" for="register-major">Degree Program</label>
+            <select id="register-major" name="major" class="mock-field" required disabled>
+              <option value="" disabled selected>Select a college first</option>
+            </select>
           </div>
 
           <div class="form-group">

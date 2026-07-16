@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema({
     },
     college: {
         type: String,
-        enum: ['CCS', 'GCOE', 'CLA', 'RVRCOB']
+        enum: ['BAGCED', 'CCS', 'CLA', 'COS', 'GCOE', 'RVRCOB', 'SOE']
     },
     major: String,
     cgpa: Number,

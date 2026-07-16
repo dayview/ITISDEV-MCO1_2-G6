@@ -1,7 +1,7 @@
 const GENDER_OPTIONS = ['female', 'male', 'other', 'prefer-not'];
 const ENROLLMENT_STATUSES = ['Full-time', 'Part-time'];
 // The set of colleges already in use across seed data and the User schema.
-const COLLEGE_OPTIONS = ['CCS', 'GCOE', 'CLA', 'RVRCOB'];
+const COLLEGE_OPTIONS = ['BAGCED', 'CCS', 'CLA', 'COS', 'GCOE', 'RVRCOB', 'SOE'];
 
 const mapProfile = (user) => {
     const plain = typeof user.toObject === 'function' ? user.toObject() : user;

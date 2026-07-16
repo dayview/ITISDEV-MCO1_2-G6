@@ -39,6 +39,94 @@
 
   const registerForm = document.getElementById('register-form');
   if (registerForm) {
+    const degreePrograms = {
+      BAGCED: [
+        'Bachelor of Early Childhood Education',
+        'Bachelor of Secondary Education major in English',
+        'Bachelor of Secondary Education major in Filipino',
+        'Bachelor of Secondary Education major in Mathematics',
+        'Bachelor of Secondary Education major in Science'
+      ],
+      CCS: [
+        'BS Computer Science major in Computer Systems Engineering',
+        'BS Computer Science major in Network and Information Security',
+        'BS Computer Science major in Software Technology',
+        'BS Information Systems',
+        'BS Information Technology'
+      ],
+      CLA: [
+        'AB Behavioral Sciences',
+        'AB Communication Arts',
+        'AB Development Studies',
+        'AB History',
+        'AB International Studies',
+        'AB Literature',
+        'AB Organizational Communication',
+        'AB Philosophy',
+        'AB Political Science',
+        'AB Psychology',
+        'AB Sports Studies'
+      ],
+      COS: [
+        'BS Biochemistry',
+        'BS Biology',
+        'BS Chemistry',
+        'BS Human Biology',
+        'BS Mathematics with specialization in Business Applications',
+        'BS Physics'
+      ],
+      GCOE: [
+        'BS Chemical Engineering',
+        'BS Civil Engineering',
+        'BS Computer Engineering',
+        'BS Electrical Engineering',
+        'BS Electronics Engineering',
+        'BS Industrial Engineering',
+        'BS Manufacturing Engineering and Management',
+        'BS Mechanical Engineering'
+      ],
+      RVRCOB: [
+        'BS Accountancy',
+        'BS Advertising Management',
+        'BS Applied Corporate Management',
+        'BS Business Management',
+        'BS Entrepreneurship',
+        'BS Financial Institutions',
+        'BS Interdisciplinary Business Studies',
+        'BS Legal Management',
+        'BS Marketing Management'
+      ],
+      SOE: [
+        'AB Economics',
+        'BS Applied Economics',
+        'BS Applied Economics major in Financial Economics',
+        'BS Applied Economics major in Industrial Economics'
+      ]
+    };
+    const collegeSelect = document.getElementById('register-college');
+    const majorSelect = document.getElementById('register-major');
+
+    function updateDegreePrograms() {
+      const programs = degreePrograms[collegeSelect.value] || [];
+      majorSelect.replaceChildren();
+      const prompt = document.createElement('option');
+      prompt.value = '';
+      prompt.disabled = true;
+      prompt.selected = true;
+      prompt.textContent = programs.length ? 'Select Degree Program' : 'Select a college first';
+      majorSelect.appendChild(prompt);
+      programs.forEach(program => {
+        const option = document.createElement('option');
+        option.value = program;
+        option.textContent = program;
+        majorSelect.appendChild(option);
+      });
+      majorSelect.disabled = programs.length === 0;
+    }
+
+    collegeSelect.addEventListener('change', updateDegreePrograms);
+    updateDegreePrograms();
+
     const message = document.getElementById('register-message');
     registerForm.addEventListener('submit', async event => {
       event.preventDefault();
@@ -60,7 +148,6 @@
           phone: document.getElementById('register-phone').value,
           gender: document.getElementById('register-gender').value,
           birthdate: document.getElementById('register-birthdate').value,
-          enrollmentStatus: document.getElementById('register-enrollment-status').value,
           graduatingTerm: document.getElementById('register-grad-term').value
         });
         window.location.href = result.redirectTo || '/dashboard.html';

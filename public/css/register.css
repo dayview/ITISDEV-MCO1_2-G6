@@ -99,22 +99,6 @@ body {
   overflow-y: auto;
 }
 
-/* Escape Toggle Anchor Button */
-.modal-close-btn {
-  position: absolute;
-  top: 18px;
-  right: 20px;
-  background: none;
-  border: none;
-  font-size: 16px;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: color 0.15s ease;
-}
-.modal-close-btn:hover {
-  color: var(--text-main);
-}
-
 /* Header Branding Elements */
 .brand-logo {
   width: 56px;
