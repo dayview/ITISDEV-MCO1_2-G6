@@ -78,7 +78,7 @@ function renderApplications() {
         <div class="table-cell">${formatDate(app.submittedDate)}</div>
         <div>
           <span class="chip chip--${docsStatusColor}">
-            <span class="chip__dot"></span>${capitalize(app.documentsStatus)}
+            <span class="chip__dot"></span>${capitalize(app.documentsStatus || 'incomplete')}
           </span>
         </div>
         <div>
@@ -470,7 +470,8 @@ function formatDate(dateStr) {
  * Helper: Capitalize string
  */
 function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
+  const value = typeof str === 'string' ? str : '';
+  return value ? value.charAt(0).toUpperCase() + value.slice(1) : 'Not available';
 }
 
 /**
