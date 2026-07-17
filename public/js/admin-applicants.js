@@ -1,4 +1,5 @@
 (function() {
+  const STATUS = window.GEMSApplicationStatus;
   const pageSize = 8;
   let currentPage = 1;
   let applicants = [];
@@ -14,22 +15,29 @@
   const reviewMessage = document.getElementById('document-review-message');
   let reviewingApplicationId = '';
 
-  const statusLabels = {
-    submitted: 'Pending Review',
-    'under-review': 'Needs Revision',
-    nominated: 'Approved',
-    accepted: 'Approved',
-    rejected: 'Rejected'
-  };
-
   function escapeHtml(value) {
     const node = document.createElement('div');
     node.textContent = String(value || '');
     return node.innerHTML;
   }
 
+  // Single source of truth for labels — identical to what the student tracker renders,
+  // so the same status code never reads differently on the two sides of the system.
   function displayStatus(status) {
-    return statusLabels[status] || status;
+    return STATUS.getStatusLabel(status);
+  }
+
+  // Derives the row's action buttons from the shared transition map, so an admin can only
+  // ever move an application to a stage the lifecycle actually allows next.
+  function renderRowActions(applicant) {
+    const transitions = STATUS.getAllowedTransitions(applicant.status);
+    if (!transitions.length) {
+      return '<span class="applicant-final-note">Final decision</span>';
+    }
+    return transitions.map(status => {
+      const isReject = status === 'rejected';
+      return `<button type="button" class="applicant-transition-action${isReject ? ' applicant-transition-action--reject' : ''}" data-status="${escapeHtml(status)}" aria-label="Move ${escapeHtml(applicant.name)} to ${escapeHtml(STATUS.getStatusLabel(status))}">${escapeHtml(STATUS.getStatusLabel(status))}</button>`;
+    }).join('');
   }
 
   function displayDocuments(status) {
@@ -98,8 +106,7 @@
         <div class="applicant-cell" data-label="Status">${escapeHtml(applicant.statusLabel)}</div>
         <div class="applicant-cell" data-label="Documents"><span class="applicant-documents applicant-documents--${applicant.documents.toLowerCase()}">${escapeHtml(applicant.documents)}</span></div>
         <div class="applicant-row-actions" data-label="Actions">
-          <button type="button" class="applicant-icon-action applicant-icon-action--approve" data-action="approve" title="Approve" aria-label="Approve ${escapeHtml(applicant.name)}">&#10003;</button>
-          <button type="button" class="applicant-icon-action applicant-icon-action--reject" data-action="reject" title="Reject" aria-label="Reject ${escapeHtml(applicant.name)}">&times;</button>
+          ${renderRowActions(applicant)}
           <button type="button" class="program-overflow__trigger" data-action="more" aria-label="More actions for ${escapeHtml(applicant.name)}">&#8942;</button>
         </div>
       </article>
@@ -136,14 +143,13 @@
       else selected.delete(id);
       updateBulkBar();
     }));
-    body.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', async () => {
+    body.querySelectorAll('[data-action="more"]').forEach(button => button.addEventListener('click', async () => {
       const applicant = applicants.find(item => item.id === button.closest('.applicant-row').dataset.applicantId);
-      if (button.dataset.action === 'more') {
-        await openDocumentReview(applicant);
-        return;
-      }
-      const status = button.dataset.action === 'approve' ? 'nominated' : 'rejected';
-      await updateStatus(applicant.id, status);
+      await openDocumentReview(applicant);
+    }));
+    body.querySelectorAll('[data-status]').forEach(button => button.addEventListener('click', async () => {
+      const applicant = applicants.find(item => item.id === button.closest('.applicant-row').dataset.applicantId);
+      await updateStatus(applicant.id, button.dataset.status);
     }));
   }
 
@@ -254,6 +260,9 @@
     if (!response.ok || !result.success) {
       alert(result.error || `HTTP ${response.status}`);
       return;
+    }
+    if (result.skipped) {
+      alert(`${result.count} application${result.count === 1 ? '' : 's'} updated. ${result.skipped} skipped (their current stage does not allow this change).`);
     }
     selected.clear();
     await loadApplicants();

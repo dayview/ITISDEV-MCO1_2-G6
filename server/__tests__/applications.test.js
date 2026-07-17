@@ -1,11 +1,15 @@
 const {
     APPLICATION_STATUSES,
+    ALLOWED_TRANSITIONS,
     isValidStatus,
+    getAllowedTransitions,
+    canTransition,
     buildApplicationPayload,
     appendStatusHistory,
     toApplicationsCsv,
     applicationPipeline,
     getReviewedAt,
+    buildStatusTimeline,
     mapStudentApplication
 } = require('../lib/applications');
 
@@ -22,6 +26,87 @@ describe('Application Logic - status transition / bulk status validation', () =>
 
     test('APPLICATION_STATUSES exposes exactly the five known statuses', () => {
         expect(APPLICATION_STATUSES).toEqual(['submitted', 'under-review', 'nominated', 'accepted', 'rejected']);
+    });
+});
+
+describe('Application Logic - lifecycle transitions', () => {
+    test('allows only the next linear stage or a rejection from each active stage', () => {
+        expect(getAllowedTransitions('submitted')).toEqual(['under-review', 'rejected']);
+        expect(getAllowedTransitions('under-review')).toEqual(['nominated', 'rejected']);
+        expect(getAllowedTransitions('nominated')).toEqual(['accepted', 'rejected']);
+    });
+
+    test('treats accepted and rejected as terminal', () => {
+        expect(getAllowedTransitions('accepted')).toEqual([]);
+        expect(getAllowedTransitions('rejected')).toEqual([]);
+    });
+
+    test('canTransition permits a legal forward step', () => {
+        expect(canTransition('submitted', 'under-review')).toBe(true);
+        expect(canTransition('nominated', 'accepted')).toBe(true);
+        expect(canTransition('under-review', 'rejected')).toBe(true);
+    });
+
+    test('canTransition rejects stage-skipping, backward moves, and changes to a decided application', () => {
+        expect(canTransition('submitted', 'nominated')).toBe(false);
+        expect(canTransition('submitted', 'accepted')).toBe(false);
+        expect(canTransition('nominated', 'under-review')).toBe(false);
+        expect(canTransition('accepted', 'rejected')).toBe(false);
+        expect(canTransition('rejected', 'submitted')).toBe(false);
+    });
+
+    test('every active stage can always reach a rejection', () => {
+        ['submitted', 'under-review', 'nominated'].forEach(stage => {
+            expect(canTransition(stage, 'rejected')).toBe(true);
+        });
+    });
+
+    test('an unknown current status permits no transitions', () => {
+        expect(getAllowedTransitions('draft')).toEqual([]);
+        expect(canTransition('draft', 'submitted')).toBe(false);
+    });
+
+    test('ALLOWED_TRANSITIONS is keyed by exactly the five known statuses', () => {
+        expect(Object.keys(ALLOWED_TRANSITIONS).sort()).toEqual([...APPLICATION_STATUSES].sort());
+    });
+});
+
+describe('Application Logic - buildStatusTimeline', () => {
+    const viewerId = 'student-1';
+    const history = [
+        { status: 'submitted', changedAt: new Date('2026-06-01'), changedBy: 'student-1' },
+        { status: 'under-review', changedAt: new Date('2026-06-05'), changedBy: 'admin-9' }
+    ];
+
+    test('attributes an entry to "you" when the viewer made the change, "admin" otherwise', () => {
+        expect(buildStatusTimeline(history, viewerId)).toEqual([
+            { status: 'submitted', at: new Date('2026-06-01'), by: 'you' },
+            { status: 'under-review', at: new Date('2026-06-05'), by: 'admin' }
+        ]);
+    });
+
+    test('never leaks the actor identity, only the role', () => {
+        const timeline = buildStatusTimeline(history, viewerId);
+        timeline.forEach(entry => {
+            expect(['you', 'admin']).toContain(entry.by);
+            expect(entry).not.toHaveProperty('changedBy');
+        });
+    });
+
+    test('falls back on the submit-is-always-the-student rule for legacy entries with no actor', () => {
+        const legacy = [
+            { status: 'submitted', changedAt: new Date('2026-06-01') },
+            { status: 'nominated', changedAt: new Date('2026-06-10') }
+        ];
+        expect(buildStatusTimeline(legacy, viewerId)).toEqual([
+            { status: 'submitted', at: new Date('2026-06-01'), by: 'you' },
+            { status: 'nominated', at: new Date('2026-06-10'), by: 'admin' }
+        ]);
+    });
+
+    test('returns an empty timeline for missing history', () => {
+        expect(buildStatusTimeline(undefined, viewerId)).toEqual([]);
+        expect(buildStatusTimeline([], viewerId)).toEqual([]);
     });
 });
 
@@ -146,7 +231,12 @@ describe('Application Logic - mapStudentApplication', () => {
             documentsStatus: 'complete',
             submittedAt: '2026-06-01',
             deadline: new Date('2026-09-01'),
-            reviewedAt: new Date('2026-06-05')
+            reviewedAt: new Date('2026-06-05'),
+            timeline: [
+                { status: 'submitted', at: new Date('2026-06-01'), by: 'you' },
+                { status: 'under-review', at: new Date('2026-06-05'), by: 'admin' }
+            ],
+            lastUpdatedAt: new Date('2026-06-05')
         });
     });
 

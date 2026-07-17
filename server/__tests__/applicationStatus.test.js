@@ -1,4 +1,5 @@
 const STATUS = require('../../public/js/application-status');
+const { ALLOWED_TRANSITIONS: SERVER_TRANSITIONS } = require('../lib/applications');
 
 describe('Application Status - canonical status mapping', () => {
     test.each([
@@ -71,5 +72,18 @@ describe('Application Status - filterApplications', () => {
 
     test('a filter matching nothing returns an empty array rather than throwing', () => {
         expect(STATUS.filterApplications([{ status: 'submitted' }], 'completed')).toEqual([]);
+    });
+});
+
+describe('Application Status - transition map mirrors the server', () => {
+    test('the client ALLOWED_TRANSITIONS is identical to the server authority', () => {
+        expect(STATUS.ALLOWED_TRANSITIONS).toEqual(SERVER_TRANSITIONS);
+    });
+
+    test('getAllowedTransitions / canTransition agree with the map', () => {
+        expect(STATUS.getAllowedTransitions('submitted')).toEqual(['under-review', 'rejected']);
+        expect(STATUS.canTransition('nominated', 'accepted')).toBe(true);
+        expect(STATUS.canTransition('accepted', 'rejected')).toBe(false);
+        expect(STATUS.getAllowedTransitions('unknown-status')).toEqual([]);
     });
 });

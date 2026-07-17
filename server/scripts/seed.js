@@ -62,6 +62,21 @@ const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
 const randDate = (s, e) => new Date(s.getTime() + Math.random() * (e.getTime() - s.getTime())).toISOString().split('T')[0];
 const randDateTime = (s, e) => new Date(s.getTime() + Math.random() * (e.getTime() - s.getTime()));
 
+// Builds a lifecycle-consistent statusHistory: the student submits, then an admin advances
+// the application one legal stage at a time. Mirrors ALLOWED_TRANSITIONS in lib/applications.js.
+const LINEAR_STAGES = ['submitted', 'under-review', 'nominated', 'accepted'];
+const buildStatusHistory = (targetStatus, studentId, adminId, submittedDate) => {
+    const base = new Date(`${submittedDate}T08:00:00Z`);
+    const stages = targetStatus === 'rejected'
+        ? ['submitted', 'rejected']
+        : LINEAR_STAGES.slice(0, LINEAR_STAGES.indexOf(targetStatus) + 1);
+    return stages.map((status, index) => ({
+        status,
+        changedAt: new Date(base.getTime() + index * 3 * 24 * 60 * 60 * 1000),
+        changedBy: status === 'submitted' ? studentId : adminId
+    }));
+};
+
 // Gives each student a random subset of document types on file (2 to all 6), so some
 // students are missing a type entirely -- exercising the "incomplete" path.
 const buildDocumentsForStudents = (students) => students.flatMap((student, index) => {
@@ -103,6 +118,7 @@ async function seed() {
     const passwordHashed = await bcrypt.hash(SEED_PASSWORD, 10);
     const students = await User.insertMany(studentData.map(user => ({ ...user, passwordHashed })));
     const nonAdmins = students.filter(s => s.role === 'Student');
+    const admin = students.find(s => s.role !== 'Student');
 
     const documents = buildDocumentsForStudents(nonAdmins);
     await Document.insertMany(documents);
@@ -121,12 +137,15 @@ async function seed() {
     const appDocs = Array.from({ length: 55 }, (_, index) => {
         const student = nonAdmins[index % nonAdmins.length];
         const opportunity = opps[Math.floor(index / nonAdmins.length) % opps.length];
+        const status = pick(STATUSES);
+        const submittedDate = randDate(new Date('2026-05-01'), new Date('2026-06-24'));
         return {
             userId: student._id,
             opportunityId: opportunity._id,
-            status: pick(STATUSES),
-            submittedDate: randDate(new Date('2026-05-01'), new Date('2026-06-24')),
+            status,
+            submittedDate,
             documentsStatus: hasAllRequiredDocuments(student._id, opportunity) ? 'complete' : 'incomplete',
+            statusHistory: buildStatusHistory(status, student._id, admin._id, submittedDate),
         };
     });
 

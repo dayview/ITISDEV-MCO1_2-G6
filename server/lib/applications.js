@@ -4,6 +4,21 @@ const APPLICATION_STATUSES = ['submitted', 'under-review', 'nominated', 'accepte
 
 const isValidStatus = (status) => APPLICATION_STATUSES.includes(status);
 
+// Strict, linear lifecycle. `rejected` is reachable from any active stage; `accepted`
+// and `rejected` are terminal. This is the single authority the API enforces so the
+// student tracker can never display an impossible sequence of stages.
+const ALLOWED_TRANSITIONS = {
+    submitted: ['under-review', 'rejected'],
+    'under-review': ['nominated', 'rejected'],
+    nominated: ['accepted', 'rejected'],
+    accepted: [],
+    rejected: []
+};
+
+const getAllowedTransitions = (from) => ALLOWED_TRANSITIONS[from] || [];
+
+const canTransition = (from, to) => getAllowedTransitions(from).includes(to);
+
 const applicationPipeline = ({ status = '', college = '', search = '', sort = 'recency', documentsStatus = '', ids = [] } = {}) => {
     const pipeline = [
         { $addFields: { studentRef: { $ifNull: ['$userId', '$studentId'] } } },
@@ -89,10 +104,27 @@ const getReviewedAt = (statusHistory = []) => {
     return reviewEntry ? reviewEntry.changedAt : null;
 };
 
-const mapStudentApplication = (application) => {
+// Resolves each history entry to a role rather than an identity: the student sees that a
+// stage was set by "you" or by an "admin", never which administrator acted. Legacy entries
+// with no `changedBy` fall back on the fact that only the student ever submits.
+const resolveActorRole = (entry, viewerId) => {
+    if (entry.changedBy && viewerId && String(entry.changedBy) === String(viewerId)) return 'you';
+    if (!entry.changedBy) return entry.status === 'submitted' ? 'you' : 'admin';
+    return 'admin';
+};
+
+const buildStatusTimeline = (statusHistory = [], viewerId) =>
+    statusHistory.map(entry => ({
+        status: entry.status,
+        at: entry.changedAt,
+        by: resolveActorRole(entry, viewerId)
+    }));
+
+const mapStudentApplication = (application, viewerId) => {
     const opportunity = application.opportunityId && typeof application.opportunityId === 'object'
         ? application.opportunityId
         : null;
+    const history = Array.isArray(application.statusHistory) ? application.statusHistory : [];
 
     return {
         id: String(application._id),
@@ -104,7 +136,9 @@ const mapStudentApplication = (application) => {
         documentsStatus: application.documentsStatus,
         submittedAt: application.submittedDate || application.createdAt,
         deadline: opportunity?.deadline || null,
-        reviewedAt: getReviewedAt(application.statusHistory)
+        reviewedAt: getReviewedAt(history),
+        timeline: buildStatusTimeline(history, viewerId),
+        lastUpdatedAt: history.length ? history[history.length - 1].changedAt : (application.updatedAt || null)
     };
 };
 
@@ -126,12 +160,16 @@ const toApplicationsCsv = (data) => {
 
 module.exports = {
     APPLICATION_STATUSES,
+    ALLOWED_TRANSITIONS,
     isValidStatus,
+    getAllowedTransitions,
+    canTransition,
     applicationPipeline,
     buildApplicationPayload,
     getInitialDocumentsStatus,
     appendStatusHistory,
     toApplicationsCsv,
     getReviewedAt,
+    buildStatusTimeline,
     mapStudentApplication
 };

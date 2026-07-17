@@ -23,6 +23,24 @@
     { key: 'completed', label: 'Completed' }
   ];
 
+  // Mirrors ALLOWED_TRANSITIONS in server/lib/applications.js. The admin action controls
+  // are derived from this map so the UI can only ever offer a legal next stage.
+  const ALLOWED_TRANSITIONS = {
+    submitted: ['under-review', 'rejected'],
+    'under-review': ['nominated', 'rejected'],
+    nominated: ['accepted', 'rejected'],
+    accepted: [],
+    rejected: []
+  };
+
+  function getAllowedTransitions(status) {
+    return ALLOWED_TRANSITIONS[status] || [];
+  }
+
+  function canTransition(from, to) {
+    return getAllowedTransitions(from).includes(to);
+  }
+
   function getStatusConfig(status) {
     return STATUS_CONFIG[status] || UNKNOWN_STATUS;
   }
@@ -57,10 +75,13 @@
     STATUS_CONFIG,
     UNKNOWN_STATUS,
     FILTERS,
+    ALLOWED_TRANSITIONS,
     getStatusConfig,
     getStatusLabel,
     getStatusGroup,
     getStatusProgress,
+    getAllowedTransitions,
+    canTransition,
     countByFilter,
     filterApplications
   };

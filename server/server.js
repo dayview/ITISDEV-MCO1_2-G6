@@ -14,7 +14,7 @@ const adminRoutes = require('./routes/admin');
 const { mapOpportunity, normalizeOpportunityInput, mapAdminOpportunity } = require('./lib/opportunities');
 const { normalizeDocumentType, mapDocument, buildDocumentChecklist, validateDocumentReview, getApplicationDocumentStatus } = require('./lib/documents');
 const { evaluateStudentEligibility, isOpportunityOpenForApplication } = require('./lib/eligibility');
-const { applicationPipeline, buildApplicationPayload, toApplicationsCsv, isValidStatus, APPLICATION_STATUSES, mapStudentApplication } = require('./lib/applications');
+const { applicationPipeline, buildApplicationPayload, toApplicationsCsv, isValidStatus, canTransition, getAllowedTransitions, APPLICATION_STATUSES, mapStudentApplication } = require('./lib/applications');
 const { computeStatisticsSummary, getUrgentCutoff } = require('./lib/statistics');
 const { determineOpportunityUpdateAction } = require('./lib/audit');
 const { buildStudentDashboard } = require('./lib/studentDashboard');
@@ -527,7 +527,7 @@ app.get('/api/applications/my', requireStudentSession, async (req, res) => {
         const data = await Application.find({ userId: req.session.user._id })
             .populate('opportunityId')
             .sort({ createdAt: -1 });
-        res.json({ success: true, data: data.map(mapStudentApplication) });
+        res.json({ success: true, data: data.map(application => mapStudentApplication(application, req.session.user._id)) });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -613,11 +613,30 @@ app.patch('/api/applications/:id/status', requireAdminSession, async (req, res) 
             return res.status(400).json({ success: false, error: `Status must be one of: ${APPLICATION_STATUSES.join(', ')}` });
         }
         const previous = await Application.findById(req.params.id).select('status');
+        if (!previous) {
+            return res.status(404).json({ success: false, error: 'Application not found' });
+        }
+        if (!canTransition(previous.status, req.body.status)) {
+            const allowed = getAllowedTransitions(previous.status);
+            return res.status(409).json({
+                success: false,
+                error: allowed.length
+                    ? `Cannot change a "${previous.status}" application to "${req.body.status}". Allowed next stages: ${allowed.join(', ')}.`
+                    : `A "${previous.status}" application has reached a final decision and cannot be changed.`
+            });
+        }
         const application = await Application.findByIdAndUpdate(
             req.params.id,
             {
                 $set: { status: req.body.status },
-                $push: { statusHistory: { status: req.body.status, changedAt: new Date() } }
+                $push: {
+                    statusHistory: {
+                        status: req.body.status,
+                        changedAt: new Date(),
+                        changedBy: req.session.user._id,
+                        ...(req.body.note ? { note: String(req.body.note).slice(0, 500) } : {})
+                    }
+                }
             },
             { new: true, runValidators: true }
         );
@@ -650,27 +669,37 @@ app.post('/api/applications/bulk-action', requireAdminSession, async (req, res) 
             return res.status(400).json({ success: false, error: `Status must be one of: ${APPLICATION_STATUSES.join(', ')}` });
         }
         const targets = await Application.find({ _id: { $in: ids } }).select('status');
+        // Only advance applications whose current stage legally allows the requested one;
+        // the rest (e.g. already decided) are reported back as skipped rather than forced.
+        const eligible = targets.filter(app => canTransition(app.status, req.body.status));
+        const eligibleIds = eligible.map(app => app._id);
+        const skipped = targets.length - eligible.length;
+        if (!eligibleIds.length) {
+            return res.status(409).json({
+                success: false,
+                error: `None of the selected applications can move to "${req.body.status}".`,
+                skipped
+            });
+        }
         await Application.updateMany(
-            { _id: { $in: ids } },
+            { _id: { $in: eligibleIds } },
             {
                 $set: { status: req.body.status },
-                $push: { statusHistory: { status: req.body.status, changedAt: new Date() } }
+                $push: { statusHistory: { status: req.body.status, changedAt: new Date(), changedBy: req.session.user._id } }
             }
         );
-        if (targets.length) {
-            await AuditLog.insertMany(targets.map(app => ({
-                userId: req.session.user._id,
-                userRole: req.session.user.role,
-                action: 'application_bulk_status_changed',
-                targetType: 'Application',
-                targetId: app._id,
-                targetLabel: `Application ${app._id}`,
-                changes: [{ field: 'status', from: app.status, to: req.body.status }],
-                ip: req.ip
-            })));
-        }
-        const data = await Application.find({ _id: { $in: ids } });
-        res.json({ success: true, data });
+        await AuditLog.insertMany(eligible.map(app => ({
+            userId: req.session.user._id,
+            userRole: req.session.user.role,
+            action: 'application_bulk_status_changed',
+            targetType: 'Application',
+            targetId: app._id,
+            targetLabel: `Application ${app._id}`,
+            changes: [{ field: 'status', from: app.status, to: req.body.status }],
+            ip: req.ip
+        })));
+        const data = await Application.find({ _id: { $in: eligibleIds } });
+        res.json({ success: true, data, count: eligible.length, skipped });
     } catch (err) {
         res.status(400).json({ success: false, error: err.message });
     }
