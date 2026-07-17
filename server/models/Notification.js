@@ -13,6 +13,10 @@ const notificationSchema = new mongoose.Schema({
     deadline: { type: Date, required: true },
     reminderWindowDays: { type: Number, required: true },
     deduplicationKey: { type: String, required: true, unique: true },
+    emailStatus: { type: String, enum: ['pending', 'sending', 'sent', 'failed', 'skipped'], default: 'pending', index: true },
+    emailAttempts: { type: Number, default: 0, min: 0 },
+    emailSentAt: Date,
+    emailError: { type: String, trim: true, maxlength: 500 },
     isRead: { type: Boolean, default: false, index: true },
     readAt: Date
 }, { timestamps: true });
