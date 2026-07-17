@@ -1,10 +1,14 @@
 jest.mock('../models/Applications');
 jest.mock('../models/Document');
 jest.mock('../models/Notification');
+jest.mock('../models/User');
+jest.mock('../lib/email');
 
 const Application = require('../models/Applications');
 const Document = require('../models/Document');
 const Notification = require('../models/Notification');
+const User = require('../models/User');
+const { isEmailNotificationsEnabled, sendDeadlineReminderEmail } = require('../lib/email');
 const {
     DEADLINE_REMINDER_WINDOWS,
     ACTIVE_APPLICATION_STATUSES,
@@ -93,7 +97,10 @@ describe('Deadline reminders - content and deduplication', () => {
 });
 
 describe('Deadline reminders - generation', () => {
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => {
+        jest.clearAllMocks();
+        isEmailNotificationsEnabled.mockReturnValue(false);
+    });
 
     function mockQueries(applications, documents = []) {
         Application.find.mockReturnValue({ populate: jest.fn().mockResolvedValue(applications) });
@@ -116,6 +123,37 @@ describe('Deadline reminders - generation', () => {
         const summary = await generateDeadlineReminders({ now });
         expect(summary.createdReminders).toBe(0);
         expect(summary.skippedDuplicates).toBe(1);
+    });
+
+    test('sends a new reminder email once and records delivery', async () => {
+        isEmailNotificationsEnabled.mockReturnValue(true);
+        mockQueries([application(3)]);
+        const usersQuery = { select: jest.fn().mockResolvedValue([{ _id: 'user1', name: 'Student One', email: 'student@dlsu.edu.ph' }]) };
+        User.find.mockReturnValue(usersQuery);
+        Notification.updateOne.mockResolvedValue({ upsertedCount: 1 });
+        Notification.findOneAndUpdate.mockResolvedValue({
+            _id: 'notification1',
+            deduplicationKey: 'dedupe-key',
+            title: 'Passport due in 3 days',
+            message: 'Upload it.',
+            opportunityName: 'NUS Exchange',
+            requirementLabel: 'Passport Bio-Page',
+            deadline: opportunity(3).deadline
+        });
+        sendDeadlineReminderEmail.mockResolvedValue({ status: 'sent', messageId: 'message-1' });
+
+        const summary = await generateDeadlineReminders({ now });
+
+        expect(User.find).toHaveBeenCalledWith({ _id: { $in: ['user1'] } });
+        expect(sendDeadlineReminderEmail).toHaveBeenCalledWith(expect.objectContaining({
+            recipientEmail: 'student@dlsu.edu.ph',
+            recipientName: 'Student One'
+        }));
+        expect(Notification.updateOne).toHaveBeenLastCalledWith(
+            { _id: 'notification1', emailStatus: 'sending' },
+            expect.objectContaining({ $set: expect.objectContaining({ emailStatus: 'sent' }) })
+        );
+        expect(summary.emailsSent).toBe(1);
     });
 
     test('a later reminder window produces a different notification key', () => {

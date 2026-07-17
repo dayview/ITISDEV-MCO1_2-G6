@@ -1,13 +1,16 @@
 const Application = require('../models/Applications');
 const Document = require('../models/Document');
 const Notification = require('../models/Notification');
+const User = require('../models/User');
 const { buildRequirementChecklist } = require('./documents');
+const { isEmailNotificationsEnabled, sendDeadlineReminderEmail } = require('./email');
 
 const DEADLINE_REMINDER_WINDOWS = [7, 3, 1, 0];
 const APP_TIMEZONE = process.env.APP_TIMEZONE || 'Asia/Manila';
 const ACTIVE_APPLICATION_STATUSES = ['submitted', 'under-review', 'nominated'];
 const INCOMPLETE_REQUIREMENT_STATUSES = ['missing', 'pending', 'rejected'];
 const DAY_MS = 24 * 60 * 60 * 1000;
+const EMAIL_MAX_ATTEMPTS = Math.max(1, Number(process.env.DEADLINE_REMINDER_EMAIL_MAX_ATTEMPTS || 3));
 
 const calendarDateParts = (value, timeZone = APP_TIMEZONE) => {
     const date = value instanceof Date ? value : new Date(value);
@@ -85,9 +88,60 @@ const buildDeadlineReminder = ({ application, requirement, daysRemaining }) => {
         requirementLabel: requirement.label,
         opportunityName: opportunity.name,
         deadline: opportunity.deadline,
-        reminderWindowDays: daysRemaining
+        reminderWindowDays: daysRemaining,
+        emailStatus: 'pending',
+        emailAttempts: 0
     };
     return { ...input, deduplicationKey: buildReminderDeduplicationKey(input) };
+};
+
+const deliverReminderEmail = async ({ reminder, recipient, summary }) => {
+    if (!recipient?.email) {
+        summary.emailsSkipped += 1;
+        return;
+    }
+
+    const notification = await Notification.findOneAndUpdate(
+        {
+            deduplicationKey: reminder.deduplicationKey,
+            emailStatus: { $in: ['pending', 'failed'] },
+            emailAttempts: { $lt: EMAIL_MAX_ATTEMPTS }
+        },
+        {
+            $set: { emailStatus: 'sending', emailError: '' },
+            $inc: { emailAttempts: 1 }
+        },
+        { new: true }
+    );
+
+    if (!notification) {
+        summary.skippedEmailDuplicates += 1;
+        return;
+    }
+
+    const outcome = await sendDeadlineReminderEmail({
+        recipientEmail: recipient.email,
+        recipientName: recipient.name,
+        reminder: notification
+    });
+
+    if (outcome.status === 'sent') {
+        await Notification.updateOne(
+            { _id: notification._id, emailStatus: 'sending' },
+            { $set: { emailStatus: 'sent', emailSentAt: new Date(), emailError: '' } }
+        );
+        summary.emailsSent += 1;
+        return;
+    }
+
+    const emailStatus = outcome.status === 'failed' ? 'failed' : 'skipped';
+    await Notification.updateOne(
+        { _id: notification._id, emailStatus: 'sending' },
+        { $set: { emailStatus, emailError: outcome.reason || outcome.error || '' } }
+    );
+
+    if (emailStatus === 'failed') summary.emailsFailed += 1;
+    else summary.emailsSkipped += 1;
 };
 
 const generateDeadlineReminders = async ({ now = new Date() } = {}) => {
@@ -98,13 +152,22 @@ const generateDeadlineReminders = async ({ now = new Date() } = {}) => {
         skippedDuplicates: 0,
         skippedComplete: 0,
         skippedOutsideWindow: 0,
-        skippedFinalizedOrExpired: 0
+        skippedFinalizedOrExpired: 0,
+        emailsSent: 0,
+        emailsFailed: 0,
+        emailsSkipped: 0,
+        skippedEmailDuplicates: 0
     };
     const applications = await Application.find({}).populate('opportunityId');
     summary.processedApplications = applications.length;
     const userIds = [...new Set(applications.map(item => String(item.userId)).filter(Boolean))];
     const documents = await Document.find({ userId: { $in: userIds } }).sort({ uploadedAt: -1 });
+    const emailEnabled = isEmailNotificationsEnabled();
+    const users = emailEnabled && userIds.length
+        ? await User.find({ _id: { $in: userIds } }).select('_id name email')
+        : [];
     const documentsByUser = new Map();
+    const usersById = new Map(users.map(user => [String(user._id), user]));
     documents.forEach(document => {
         const key = String(document.userId);
         if (!documentsByUser.has(key)) documentsByUser.set(key, []);
@@ -141,6 +204,19 @@ const generateDeadlineReminders = async ({ now = new Date() } = {}) => {
             );
             if (result.upsertedCount === 1) summary.createdReminders += 1;
             else summary.skippedDuplicates += 1;
+
+            if (emailEnabled) {
+                try {
+                    await deliverReminderEmail({
+                        reminder,
+                        recipient: usersById.get(String(application.userId)),
+                        summary
+                    });
+                } catch (error) {
+                    summary.emailsFailed += 1;
+                    console.error(`Deadline reminder email processing failed for ${reminder.deduplicationKey}:`, error.message);
+                }
+            }
         }
     }
     return summary;
@@ -157,5 +233,6 @@ module.exports = {
     getIncompleteRequirements,
     buildReminderDeduplicationKey,
     buildDeadlineReminder,
+    deliverReminderEmail,
     generateDeadlineReminders
 };
