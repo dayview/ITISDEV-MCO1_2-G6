@@ -138,6 +138,7 @@ module.exports = {
     DOCUMENT_LABELS,
     mapDocument,
     buildDocumentChecklist,
+    buildRequirementChecklist,
     canDeleteDocument,
     validateDocumentReview,
     getApplicationDocumentStatus
