@@ -90,14 +90,7 @@ function renderApplications() {
             <span class="chip__dot"></span>${capitalize(app.status.replace('-', ' '))}
           </span>
         </div>
-        <div class="table-actions">
-          <button class="btn-icon approve-btn" title="Approve" data-id="${app.id}" data-status="nominated">
-            ✓
-          </button>
-          <button class="btn-icon reject-btn" title="Reject" data-id="${app.id}" data-status="rejected">
-            ✕
-          </button>
-        </div>
+        <div class="table-actions">${renderApplicationActions(app)}</div>
       </div>
     `;
   });
@@ -107,6 +100,36 @@ function renderApplications() {
   // Attach event listeners
   attachCheckboxListeners();
   attachActionButtonListeners();
+}
+
+function canTransition(app, nextStatus) {
+  const transitions = {
+    submitted: ['under-review', 'nominated', 'rejected'],
+    'under-review': ['nominated', 'rejected'],
+    nominated: ['accepted', 'rejected'],
+    accepted: [],
+    rejected: []
+  };
+  const requiresCompleteDocuments = nextStatus === 'nominated' || nextStatus === 'accepted';
+  return Boolean(
+    transitions[app.status]?.includes(nextStatus)
+    && (!requiresCompleteDocuments || app.documentsStatus === 'complete')
+  );
+}
+
+function renderApplicationActions(app) {
+  const primaryStatus = app.status === 'nominated' ? 'accepted' : 'nominated';
+  const primaryLabel = primaryStatus === 'accepted' ? 'Accept' : 'Nominate';
+  const primaryAction = canTransition(app, primaryStatus)
+    ? `<button class="btn-icon approve-btn" title="${primaryLabel}" aria-label="${primaryLabel} application" data-id="${app.id}" data-status="${primaryStatus}">✓</button>`
+    : '';
+  const rejectAction = canTransition(app, 'rejected')
+    ? `<button class="btn-icon reject-btn" title="Reject" aria-label="Reject application" data-id="${app.id}" data-status="rejected">✕</button>`
+    : '';
+
+  return primaryAction || rejectAction
+    ? `${primaryAction}${rejectAction}`
+    : '<span class="table-cell-secondary">Final</span>';
 }
 
 /**
@@ -158,7 +181,7 @@ function attachActionButtonListeners() {
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
       const appId = btn.dataset.id;
-      const status = 'nominated';
+      const status = btn.dataset.status;
       await updateApplicationStatus(appId, status);
     });
   });
@@ -184,9 +207,8 @@ async function updateApplicationStatus(appId, status) {
       body: JSON.stringify({ status })
     });
 
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const result = await response.json();
-    if (!result.success) throw new Error(result.error);
+    if (!response.ok || !result.success) throw new Error(result.error || `HTTP ${response.status}`);
 
     // Refetch to update UI
     await fetchApplications();
@@ -212,11 +234,20 @@ function updateBulkActionButtons() {
     badge.style.display = 'inline-block';
     document.getElementById('selection-count').textContent = count;
     exportBtn.style.display = 'inline-block';
+    const selectedApplications = currentApplications.filter(app => selectedIds.has(app.id));
+    const canNominateSelection = selectedApplications.length === count
+      && selectedApplications.every(app => canTransition(app, 'nominated'));
     batchApproveBtn.style.display = 'inline-block';
+    batchApproveBtn.disabled = !canNominateSelection;
+    batchApproveBtn.title = canNominateSelection
+      ? 'Nominate all selected applications'
+      : 'Only applications with complete documents in Submitted or Under Review can be batch nominated';
   } else {
     badge.style.display = 'none';
     exportBtn.style.display = 'none';
     batchApproveBtn.style.display = 'none';
+    batchApproveBtn.disabled = false;
+    batchApproveBtn.removeAttribute('title');
   }
 }
 
@@ -225,11 +256,17 @@ function updateBulkActionButtons() {
  */
 async function batchApprove() {
   if (selectedIds.size === 0) {
-    alert('Please select applications to approve');
+    alert('Please select applications to nominate');
     return;
   }
 
-  if (!confirm(`Approve ${selectedIds.size} applications?`)) return;
+  const selectedApplications = currentApplications.filter(app => selectedIds.has(app.id));
+  if (selectedApplications.length !== selectedIds.size || !selectedApplications.every(app => canTransition(app, 'nominated'))) {
+    alert('Only applications with complete documents in Submitted or Under Review can be batch nominated.');
+    return;
+  }
+
+  if (!confirm(`Nominate ${selectedIds.size} applications?`)) return;
 
   try {
     const response = await fetch(`${API_BASE}/applications/bulk-action`, {
@@ -238,13 +275,12 @@ async function batchApprove() {
       body: JSON.stringify({ ids: Array.from(selectedIds), status: 'nominated' })
     });
 
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const result = await response.json();
-    if (!result.success) throw new Error(result.error);
+    if (!response.ok || !result.success) throw new Error(result.error || `HTTP ${response.status}`);
 
     selectedIds.clear();
     await fetchApplications();
-    console.log(`Batch approved ${result.count} applications`);
+    console.log(`Batch nominated ${result.count} applications`);
   } catch (err) {
     console.error('Error batch approving:', err);
     alert(`Error: ${err.message}`);

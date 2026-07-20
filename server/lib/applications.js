@@ -2,7 +2,36 @@ const mongoose = require('mongoose');
 
 const APPLICATION_STATUSES = ['submitted', 'under-review', 'nominated', 'accepted', 'rejected'];
 
+const APPLICATION_STATUS_TRANSITIONS = Object.freeze({
+    submitted: Object.freeze(['under-review', 'nominated', 'rejected']),
+    'under-review': Object.freeze(['nominated', 'rejected']),
+    nominated: Object.freeze(['accepted', 'rejected']),
+    accepted: Object.freeze([]),
+    rejected: Object.freeze([])
+});
+
+const COMPLETE_DOCUMENT_STATUSES = new Set(['nominated', 'accepted']);
+
 const isValidStatus = (status) => APPLICATION_STATUSES.includes(status);
+
+const validateStatusTransition = (currentStatus, nextStatus, documentsStatus) => {
+    if (!isValidStatus(currentStatus)) {
+        return { valid: false, error: `Application has an unsupported current status: ${currentStatus || 'missing'}.` };
+    }
+    if (!isValidStatus(nextStatus)) {
+        return { valid: false, error: `Status must be one of: ${APPLICATION_STATUSES.join(', ')}.` };
+    }
+    if (!APPLICATION_STATUS_TRANSITIONS[currentStatus].includes(nextStatus)) {
+        if (!APPLICATION_STATUS_TRANSITIONS[currentStatus].length) {
+            return { valid: false, error: `Applications with status "${currentStatus}" are final and cannot be changed.` };
+        }
+        return { valid: false, error: `Cannot change application status from "${currentStatus}" to "${nextStatus}".` };
+    }
+    if (COMPLETE_DOCUMENT_STATUSES.has(nextStatus) && documentsStatus !== 'complete') {
+        return { valid: false, error: `Documents must be complete before an application can be ${nextStatus}.` };
+    }
+    return { valid: true, error: '' };
+};
 
 const applicationPipeline = ({ status = '', college = '', search = '', sort = 'recency', documentsStatus = '', ids = [] } = {}) => {
     const pipeline = [
@@ -126,7 +155,9 @@ const toApplicationsCsv = (data) => {
 
 module.exports = {
     APPLICATION_STATUSES,
+    APPLICATION_STATUS_TRANSITIONS,
     isValidStatus,
+    validateStatusTransition,
     applicationPipeline,
     buildApplicationPayload,
     getInitialDocumentsStatus,
