@@ -4,7 +4,9 @@ const {
     OPPORTUNITY_DEADLINE_OFFSETS,
     buildSeedOpportunities,
     buildDocumentsForStudents,
-    buildSeedApplications
+    buildSeedApplications,
+    databaseNameFromMongoUri,
+    validateSeedEnvironment
 } = require('../scripts/seed');
 
 const now = new Date('2026-07-20T04:00:00.000Z');
@@ -20,6 +22,55 @@ const withIds = documents => documents.map((document, index) => ({
     ...document,
     _id: `document-${index + 1}`
 }));
+
+describe('Deterministic seed - destructive execution guard', () => {
+    test('extracts the database name without exposing credentials or query parameters', () => {
+        expect(databaseNameFromMongoUri('mongodb+srv://user:password@example.mongodb.net/gems_demo?retryWrites=true'))
+            .toBe('gems_demo');
+    });
+
+    test('allows an explicitly opted-in development, test, or demo database', () => {
+        for (const databaseName of ['gems_dev', 'gems_development', 'gems_test', 'gems_demo']) {
+            expect(validateSeedEnvironment({
+                nodeEnv: 'development',
+                mongoUri: `mongodb://localhost:27017/${databaseName}`,
+                allowDatabaseSeed: 'true'
+            })).toEqual({ valid: true, databaseName });
+        }
+    });
+
+    test('always rejects production even when opt-in and database name appear safe', () => {
+        expect(validateSeedEnvironment({
+            nodeEnv: 'production',
+            mongoUri: 'mongodb://localhost:27017/gems_demo',
+            allowDatabaseSeed: 'true'
+        })).toEqual({ valid: false, error: 'Refusing to seed while NODE_ENV=production.' });
+    });
+
+    test('rejects execution without explicit opt-in', () => {
+        expect(validateSeedEnvironment({
+            nodeEnv: 'development',
+            mongoUri: 'mongodb://localhost:27017/gems_dev',
+            allowDatabaseSeed: 'false'
+        })).toEqual({ valid: false, error: 'Refusing to seed unless ALLOW_DATABASE_SEED=true.' });
+    });
+
+    test('rejects missing, malformed, and production-like database names', () => {
+        for (const mongoUri of [
+            '',
+            'not-a-mongodb-uri',
+            'mongodb://localhost:27017',
+            'mongodb://localhost:27017/gems_production',
+            'mongodb://localhost:27017/gems_db'
+        ]) {
+            expect(validateSeedEnvironment({
+                nodeEnv: 'development',
+                mongoUri,
+                allowDatabaseSeed: 'true'
+            }).valid).toBe(false);
+        }
+    });
+});
 
 describe('Deterministic seed - opportunity deadlines', () => {
     test('creates the same opportunities for the same clock value', () => {

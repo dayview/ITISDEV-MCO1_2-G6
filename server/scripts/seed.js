@@ -62,6 +62,7 @@ const DOCUMENT_TYPES = ['transcript', 'recommendation', 'validId', 'passport', '
 const DOCUMENT_STATUS_SEQUENCE = ['pending', 'verified', 'rejected', 'verified'];
 const APPLICATION_STATUS_SEQUENCE = ['submitted', 'under-review', 'nominated', 'accepted', 'rejected'];
 const OPPORTUNITY_DEADLINE_OFFSETS = [7, 3, 1, 0, -1, 30, 45, 60, 75, 90];
+const SEEDABLE_DATABASE_NAME = /(?:^|_)(?:dev|development|test|demo)$/i;
 
 /** These named accounts are stable presentation fixtures. Other students use a deterministic rotation so the dashboard remains varied without changing per run. */
 const DEMO_DOCUMENT_SCENARIOS = {
@@ -204,13 +205,47 @@ const generateSeedRemindersWithoutEmail = async () => {
     }
 };
 
-async function seed() {
-    if (process.env.NODE_ENV === 'production') {
-        throw new Error('Refusing to run: this script clears collections and NODE_ENV=production.');
+const databaseNameFromMongoUri = value => {
+    try {
+        return decodeURIComponent(new URL(String(value || '')).pathname.replace(/^\//, ''));
+    } catch (error) {
+        return '';
     }
+};
+
+const validateSeedEnvironment = ({
+    nodeEnv = process.env.NODE_ENV,
+    mongoUri = process.env.MONGO_URI,
+    allowDatabaseSeed = process.env.ALLOW_DATABASE_SEED
+} = {}) => {
+    if (nodeEnv === 'production') {
+        return { valid: false, error: 'Refusing to seed while NODE_ENV=production.' };
+    }
+    if (allowDatabaseSeed !== 'true') {
+        return { valid: false, error: 'Refusing to seed unless ALLOW_DATABASE_SEED=true.' };
+    }
+
+    const databaseName = databaseNameFromMongoUri(mongoUri);
+    if (!databaseName) {
+        return { valid: false, error: 'Refusing to seed because MONGO_URI does not specify a database name.' };
+    }
+    if (!SEEDABLE_DATABASE_NAME.test(databaseName)) {
+        return {
+            valid: false,
+            error: `Refusing to seed database "${databaseName}". Its name must end in _dev, _development, _test, or _demo.`
+        };
+    }
+
+    return { valid: true, databaseName };
+};
+
+async function seed() {
+    const environment = validateSeedEnvironment();
+    if (!environment.valid) throw new Error(environment.error);
 
     await connectDB();
     console.log('Seeding...');
+    console.log('Validated seed database:', environment.databaseName);
     console.log('Connected database:', mongoose.connection.name);
 
     await Application.deleteMany({});
@@ -274,5 +309,7 @@ module.exports = {
     buildSeedOpportunities,
     buildDocumentsForStudents,
     buildSeedApplications,
+    databaseNameFromMongoUri,
+    validateSeedEnvironment,
     seed
 };
