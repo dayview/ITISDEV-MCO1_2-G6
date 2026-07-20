@@ -11,6 +11,10 @@ const AuditLog = require('./models/AuditLog');
 const User = require('./models/User');
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
+const notificationRoutes = require('./routes/notifications');
+const reminderRoutes = require('./routes/reminders');
+const { startDeadlineReminderScheduler } = require('./lib/reminderScheduler');
+const { notifyApplicationStatusChange, notifyOpportunityEvent } = require('./lib/eventNotifications');
 const { mapOpportunity, normalizeOpportunityInput, mapAdminOpportunity } = require('./lib/opportunities');
 const { normalizeDocumentType, mapDocument, buildDocumentChecklist, validateDocumentReview, getApplicationDocumentStatus } = require('./lib/documents');
 const { evaluateStudentEligibility, isOpportunityOpenForApplication } = require('./lib/eligibility');
@@ -60,6 +64,8 @@ const requireStudentSession = (req, res, next) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/admin/reminders', reminderRoutes);
 
 app.get('/', (_req, res) => {
     res.sendFile(path.join(studentViewsRoot, 'login.html'));
@@ -298,6 +304,24 @@ app.patch('/api/opportunities/:id', requireAdminSession, async (req, res) => {
             changes: statusChanged ? [{ field: 'status', from: existing.status, to: opportunity.status }] : [],
             ip: req.ip
         });
+        // An opportunity status change (e.g. published -> closed) is an opportunity event:
+        // notify every student with an active application. Emails are best-effort.
+        if (statusChanged) {
+            const eventType = `opportunity-${opportunity.status}`;
+            const message = `${opportunity.name} is now ${opportunity.status}.`;
+            try {
+                const affected = await Application.find({
+                    opportunityId: opportunity._id,
+                    status: { $in: ['submitted', 'under-review', 'nominated'] }
+                }).select('userId opportunityId');
+                for (const application of affected) {
+                    notifyOpportunityEvent({ application, opportunity, eventType, message })
+                        .catch(err => console.error('Opportunity-event notification failed:', err.message));
+                }
+            } catch (err) {
+                console.error('Opportunity-event fan-out failed:', err.message);
+            }
+        }
         res.json({
             success: true,
             data: mapOpportunity(opportunity),
@@ -653,6 +677,21 @@ app.patch('/api/applications/:id/status', requireAdminSession, async (req, res) 
             changes: [{ field: 'status', from: previous?.status, to: application.status }],
             ip: req.ip
         });
+        // Email + in-app notification to the student, immediately on the status change.
+        // Reuses the deadline-reminder email plumbing; failures never block the response.
+        if (previous.status !== application.status) {
+            let opportunityName = '';
+            try {
+                const opp = await Opportunity.findById(application.opportunityId).select('name');
+                opportunityName = opp?.name || '';
+            } catch (_) { /* name is best-effort */ }
+            notifyApplicationStatusChange({
+                application,
+                fromStatus: previous.status,
+                toStatus: application.status,
+                opportunityName
+            }).catch(err => console.error('Status-change notification failed:', err.message));
+        }
         res.json({ success: true, data: application });
     } catch (err) {
         res.status(400).json({ success: false, error: err.message });
@@ -699,6 +738,22 @@ app.post('/api/applications/bulk-action', requireAdminSession, async (req, res) 
             ip: req.ip
         })));
         const data = await Application.find({ _id: { $in: eligibleIds } });
+        // Notify each affected student of their new status. The prior status comes from
+        // the pre-update snapshot; opportunity names are batch-loaded. Best-effort email.
+        const fromById = new Map(eligible.map(app => [String(app._id), app.status]));
+        const oppNames = new Map();
+        try {
+            const opps = await Opportunity.find({ _id: { $in: data.map(app => app.opportunityId) } }).select('name');
+            opps.forEach(opp => oppNames.set(String(opp._id), opp.name));
+        } catch (_) { /* names are best-effort */ }
+        for (const application of data) {
+            notifyApplicationStatusChange({
+                application,
+                fromStatus: fromById.get(String(application._id)),
+                toStatus: application.status,
+                opportunityName: oppNames.get(String(application.opportunityId)) || ''
+            }).catch(err => console.error('Bulk status-change notification failed:', err.message));
+        }
         res.json({ success: true, data, count: eligible.length, skipped });
     } catch (err) {
         res.status(400).json({ success: false, error: err.message });
@@ -733,6 +788,7 @@ app.get('/api/statistics', requireAdminSession, async (_req, res) => {
 
 const startServer = async () => {
     await connectDB();
+    startDeadlineReminderScheduler();
     app.listen(PORT, () => {
         console.log(`Server running at http://localhost:${PORT}`);
     });
