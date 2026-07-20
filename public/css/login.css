@@ -314,6 +314,41 @@ body {
   text-align: center;
 }
 
+.auth-message.auth-message--success {
+  color: var(--primary-gems);
+}
+
+/* OTP verification */
+.otp-code-field {
+  padding-left: 16px !important;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 12px;
+  text-align: center;
+}
+
+.btn-resend {
+  padding: 0;
+  color: var(--primary-gems);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.btn-resend:hover:not(:disabled) {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+.btn-resend:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
 .view {
   display: none;
 }

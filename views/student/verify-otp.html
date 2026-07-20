@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verify Code — GEMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" href="../../public/images/OVPERI-white.png" />
+  <link rel="stylesheet" href="../../public/css/gems.css" />
+  <link rel="stylesheet" href="../../public/css/login.css" />
+</head>
+<body>
+
+<!-- ============================================== -->
+<!-- OTP VERIFICATION MODAL OVERLAY BACKGROUND      -->
+<!-- ============================================== -->
+<div class="login-bg active" id="auth-modal">
+
+  <div class="auth-container" id="auth-container">
+    <div class="card">
+      <div class="brand-logo" aria-hidden="true">
+        <img src="../../public/images/OVPERI-white.png" alt="OVPERI Logo" class="brand-logo-img">
+      </div>
+
+      <div id="otp-view" class="view active">
+        <h2 style="text-align: center;">Verify Your Identity</h2>
+        <p class="subtext" style="line-height: 1.5; margin: 10px 0 26px; text-align: center; color: var(--text-muted); font-size: 13px;">
+          Enter the 6-digit code we sent to <strong id="otp-email">your DLSU email</strong>. The code expires in 5 minutes.
+        </p>
+
+        <form id="otp-form">
+          <div class="form-group">
+            <label class="form-label" for="otp-code">Verification Code</label>
+            <input
+              id="otp-code"
+              name="code"
+              type="text"
+              class="mock-field otp-code-field"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              pattern="[0-9]*"
+              maxlength="6"
+              placeholder="000000"
+              required
+              autofocus
+            >
+          </div>
+
+          <div id="otp-message" class="auth-message" role="alert" aria-live="polite" hidden></div>
+
+          <button type="submit" class="btn btn-primary" id="otp-submit">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M5 12l5 5l10 -10" />
+            </svg>
+            Verify Code
+          </button>
+        </form>
+
+        <div class="toggle-link" style="margin-top: 20px;">
+          Didn't get a code?
+          <button type="button" class="btn-resend" id="otp-resend">Resend code</button>
+        </div>
+
+        <div class="toggle-link">
+          <a href="login.html">Back to login</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../public/js/auth-pages.js"></script>
+</body>
+</html>
