@@ -31,7 +31,11 @@ async function fetchApplications() {
     const result = await response.json();
     if (!result.success) throw new Error(result.error);
 
-    currentApplications = result.data;
+    currentApplications = (result.data || []).map(app => ({
+      ...app,
+      documentsStatus: app.documentsStatus ?? app.documents_status ?? 'incomplete',
+      submittedDate: app.submittedDate ?? app.submitted_date ?? null
+    }));
     renderApplications();
     updateStatistics();
 
@@ -462,8 +466,12 @@ function getStatusColor(status) {
  * Helper: Format date from YYYY-MM-DD
  */
 function formatDate(dateStr) {
+  if (!dateStr) return 'Not available';
+
   const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return Number.isNaN(date.getTime())
+    ? 'Not available'
+    : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 /**
