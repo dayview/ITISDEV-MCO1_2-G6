@@ -6005,8 +6005,6 @@ body.catalog-page {
   }
 
   .student-page:not(.catalog-page) .catalog-nav__search { display: none; }
-  .mobile-admin-logout { color: #fff; border: 0; background: transparent; cursor: pointer; }
-  .mobile-admin-logout:disabled { opacity: .6; cursor: wait; }
 
   .post-layout {
     grid-template-columns: minmax(0, 1fr) 310px;
@@ -6364,7 +6362,61 @@ button, input, select, textarea { font: inherit; }
 .mobile-nav-toggle,
 .mobile-nav-backdrop { display: none; }
 
-.mobile-admin-logout { display: none; }
+/* Account dropdown (profile avatar -> View Profile / Sign Out). */
+.topnav-account {
+  position: relative;
+}
+
+.topnav-account__trigger {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.topnav-account__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 190px;
+  padding: 6px;
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(16, 24, 40, .16);
+}
+
+.topnav-account__menu[hidden] { display: none; }
+
+.topnav-account__item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dark);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.topnav-account__item:hover,
+.topnav-account__item:focus-visible {
+  background: var(--green-light);
+  color: var(--green-text);
+  outline: none;
+}
+
+.topnav-account__signout:disabled { opacity: .6; cursor: wait; }
 
 .student-page :where(.card, .stat-card, .opportunity-card, .profile-section, .review-table),
 .student-page :where(.dashboard-grid, .stat-grid, .profile-grid, .opportunity-layout) > * {
@@ -6476,7 +6528,17 @@ button, input, select, textarea { font: inherit; }
   }
 
   .student-page .student-topnav__link-label { display: inline; }
-  .student-page .catalog-account-link { margin-top: auto; }
+  .student-page .topnav-account { margin-top: auto; width: 100%; }
+
+  /* Inline expansion beneath the trigger instead of a floating overlay -
+     the drawer is a narrow, scrollable fixed panel, so an absolutely
+     positioned menu would risk clipping or overflow inside it. */
+  .student-page .topnav-account__menu {
+    position: static;
+    width: 100%;
+    margin-top: 6px;
+    box-shadow: none;
+  }
 
   .student-page .catalog-nav__search {
     grid-column: 1 / -1;

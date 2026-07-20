@@ -1,9 +1,11 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const path = require('path');
 const mongoose = require('mongoose');
 const connectDB = require('./config/db');
+const { SESSION_COOKIE_NAME, sessionCookieOptions } = require('./config/session');
 const Opportunity = require('./models/Opportunity');
 const Application = require('./models/Applications');
 const Document = require('./models/Document');
@@ -35,10 +37,19 @@ const adminViewsRoot = path.join(root, 'views', 'admin');
 
 app.use(express.json());
 app.use(session({
+    name: SESSION_COOKIE_NAME,
     secret: process.env.SESSION_SECRET || 'gems-dev-session-secret',
     resave: false,
     saveUninitialized: false,
-    cookie: { httpOnly: true, sameSite: 'lax' }
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGO_URI,
+        collectionName: 'sessions',
+        ttl: 60 * 60 * 24 * 7 // 7 days, matches the cookie maxAge below
+    }),
+    cookie: {
+        ...sessionCookieOptions(),
+        maxAge: 1000 * 60 * 60 * 24 * 7
+    }
 }));
 app.use('/public', express.static(path.join(root, 'public')));
 
