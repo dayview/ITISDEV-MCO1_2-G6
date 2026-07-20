@@ -32,22 +32,6 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    // Email-OTP 2FA state. otpCodeHash is an HMAC-SHA256 hex digest, never the raw code.
-    otpCodeHash: String,
-    otpExpiresAt: Date,
-    otpAttempts: {
-        type: Number,
-        default: 0
-    },
-    otpLastSentAt: Date,
-    // Rolling 1-hour send-window counter, separate from the 60s per-send cooldown
-    // (otpLastSentAt) — caps total OTP emails per user even if each individual resend
-    // otherwise respects the cooldown.
-    otpSendCount: {
-        type: Number,
-        default: 0
-    },
-    otpSendWindowStart: Date,
     studentId: {
         type: String,
         unique: true,

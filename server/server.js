@@ -82,8 +82,7 @@ const studentPages = new Set([
     'login.html',
     'opportunity.html',
     'profile.html',
-    'register.html',
-    'verify-otp.html'
+    'register.html'
 ]);
 
 app.get('/:page', (req, res, next) => {

@@ -30,11 +30,6 @@
           email: document.getElementById('login-email').value,
           password: document.getElementById('login-password').value
         });
-        if (result.requires2fa) {
-          if (result.email) sessionStorage.setItem('gems_otp_email', result.email);
-          window.location.href = '/verify-otp.html';
-          return;
-        }
         window.location.href = result.redirectTo || '/dashboard.html';
       } catch (error) {
         showMessage(message, error.message);
@@ -169,92 +164,6 @@
       event.preventDefault();
       showMessage(message, 'Password reset email delivery is not configured yet. Please contact an administrator.');
     });
-  }
-
-  const otpForm = document.getElementById('otp-form');
-  if (otpForm) {
-    const message = document.getElementById('otp-message');
-    const codeInput = document.getElementById('otp-code');
-    const submitBtn = document.getElementById('otp-submit');
-    const resendBtn = document.getElementById('otp-resend');
-    const emailLabel = document.getElementById('otp-email');
-
-    const storedEmail = sessionStorage.getItem('gems_otp_email');
-    if (emailLabel && storedEmail) {
-      emailLabel.textContent = storedEmail;
-    }
-
-    if (codeInput) {
-      codeInput.addEventListener('input', () => {
-        codeInput.value = codeInput.value.replace(/\D/g, '').slice(0, 6);
-      });
-    }
-
-    const RESEND_COOLDOWN_SECONDS = 60;
-    let cooldownRemaining = 0;
-    let cooldownTimer = null;
-
-    function updateResendLabel() {
-      if (!resendBtn) return;
-      resendBtn.disabled = cooldownRemaining > 0;
-      resendBtn.textContent = cooldownRemaining > 0
-        ? `Resend code (${cooldownRemaining}s)`
-        : 'Resend code';
-    }
-
-    function startCooldown(seconds) {
-      cooldownRemaining = seconds;
-      updateResendLabel();
-      clearInterval(cooldownTimer);
-      cooldownTimer = setInterval(() => {
-        cooldownRemaining -= 1;
-        if (cooldownRemaining <= 0) {
-          clearInterval(cooldownTimer);
-          cooldownRemaining = 0;
-        }
-        updateResendLabel();
-      }, 1000);
-    }
-
-    // A code is always freshly emailed right before this page loads (from the
-    // login 2FA branch or the Google OAuth pending-2FA redirect), so the server's
-    // 60s per-send cooldown is already in effect. Mirror it immediately instead of
-    // letting the user hit resend and get bounced with a 429.
-    startCooldown(RESEND_COOLDOWN_SECONDS);
-
-    otpForm.addEventListener('submit', async event => {
-      event.preventDefault();
-      message.hidden = true;
-      message.classList.remove('auth-message--success');
-      if (submitBtn) submitBtn.disabled = true;
-      try {
-        const result = await submitJson('/api/auth/verify-otp', { code: codeInput.value });
-        sessionStorage.removeItem('gems_otp_email');
-        window.location.href = result.redirectTo || '/dashboard.html';
-      } catch (error) {
-        showMessage(message, error.message);
-      } finally {
-        if (submitBtn) submitBtn.disabled = false;
-      }
-    });
-
-    if (resendBtn) {
-      resendBtn.addEventListener('click', async () => {
-        message.hidden = true;
-        message.classList.remove('auth-message--success');
-        try {
-          const result = await submitJson('/api/auth/resend-otp', {});
-          showMessage(message, result.message || 'A new verification code has been sent.');
-          message.classList.add('auth-message--success');
-        } catch (error) {
-          showMessage(message, error.message);
-        } finally {
-          // Whether the resend succeeded or hit the server's own cooldown/rate-limit,
-          // re-arm the client-side cooldown so the button can't be hammered.
-          startCooldown(RESEND_COOLDOWN_SECONDS);
-        }
-      });
-    }
   }
 
   const googleLogin = document.getElementById('google-login');

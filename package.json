@@ -37,8 +37,7 @@
     "google-auth-library": "^10.9.0",
     "lucide": "^1.21.0",
     "mongoose": "^8.24.1",
-    "multer": "^2.2.0",
-    "nodemailer": "^9.0.3"
+    "multer": "^2.2.0"
   },
   "devDependencies": {
     "jest": "^30.4.2"

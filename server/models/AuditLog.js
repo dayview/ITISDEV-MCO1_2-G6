@@ -24,10 +24,6 @@ const auditLogSchema = new mongoose.Schema({
             'document_verified',
             'document_rejected',
             'application_submitted',
-            'otp_sent',
-            'otp_verified',
-            'otp_failed',
-            'otp_send_failed',
         ],
         required: true
     },
