@@ -29,6 +29,7 @@ const { uploadSingleFile } = require('./middleware/upload');
 const { resolveAbsolutePath, relativeFilePath, deleteStoredFile, removeFileIfExists, sanitizeDownloadFileName } = require('./lib/storage');
 const fs = require('fs');
 
+const databaseConfig = connectDB.buildDatabaseConfig();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const root = path.join(__dirname, '..');
@@ -42,7 +43,8 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-        mongoUrl: process.env.MONGO_URI,
+        mongoUrl: databaseConfig.mongoUri,
+        mongoOptions: databaseConfig.options,
         collectionName: 'sessions',
         ttl: 60 * 60 * 24 * 7 // 7 days, matches the cookie maxAge below
     }),
@@ -742,11 +744,14 @@ app.get('/api/statistics', requireAdminSession, async (_req, res) => {
 });
 
 const startServer = async () => {
-    await connectDB();
+    await connectDB(databaseConfig);
     startDeadlineReminderScheduler();
     app.listen(PORT, () => {
         console.log(`Server running at http://localhost:${PORT}`);
     });
 };
 
-startServer();
+startServer().catch(error => {
+    console.error(error.message);
+    process.exit(1);
+});
