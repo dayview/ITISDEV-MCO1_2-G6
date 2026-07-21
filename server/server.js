@@ -19,7 +19,7 @@ const { startDeadlineReminderScheduler } = require('./lib/reminderScheduler');
 const { mapOpportunity, normalizeOpportunityInput, mapAdminOpportunity } = require('./lib/opportunities');
 const { normalizeDocumentType, mapDocument, buildDocumentChecklist, validateDocumentReview, getApplicationDocumentStatus } = require('./lib/documents');
 const { evaluateStudentEligibility, isOpportunityOpenForApplication } = require('./lib/eligibility');
-const { applicationPipeline, buildApplicationPayload, toApplicationsCsv, isValidStatus, APPLICATION_STATUSES, mapStudentApplication } = require('./lib/applications');
+const { applicationPipeline, buildApplicationPayload, toApplicationsCsv, isValidStatus, validateStatusTransition, APPLICATION_STATUSES, mapStudentApplication } = require('./lib/applications');
 const { computeStatisticsSummary, getUrgentCutoff } = require('./lib/statistics');
 const { determineOpportunityUpdateAction } = require('./lib/audit');
 const { buildStudentDashboard } = require('./lib/studentDashboard');
@@ -29,6 +29,7 @@ const { uploadSingleFile } = require('./middleware/upload');
 const { resolveAbsolutePath, relativeFilePath, deleteStoredFile, removeFileIfExists, sanitizeDownloadFileName } = require('./lib/storage');
 const fs = require('fs');
 
+const databaseConfig = connectDB.buildDatabaseConfig();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const root = path.join(__dirname, '..');
@@ -42,7 +43,8 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-        mongoUrl: process.env.MONGO_URI,
+        mongoUrl: databaseConfig.mongoUri,
+        mongoOptions: databaseConfig.options,
         collectionName: 'sessions',
         ttl: 60 * 60 * 24 * 7 // 7 days, matches the cookie maxAge below
     }),
@@ -628,17 +630,24 @@ app.patch('/api/applications/:id/status', requireAdminSession, async (req, res) 
         if (!isValidStatus(req.body.status)) {
             return res.status(400).json({ success: false, error: `Status must be one of: ${APPLICATION_STATUSES.join(', ')}` });
         }
-        const previous = await Application.findById(req.params.id).select('status');
-        const application = await Application.findByIdAndUpdate(
-            req.params.id,
+        const previous = await Application.findById(req.params.id).select('status documentsStatus');
+        if (!previous) {
+            return res.status(404).json({ success: false, error: 'Application not found.' });
+        }
+        const validation = validateStatusTransition(previous.status, req.body.status, previous.documentsStatus);
+        if (!validation.valid) {
+            return res.status(409).json({ success: false, error: validation.error });
+        }
+        const application = await Application.findOneAndUpdate(
+            { _id: req.params.id, status: previous.status },
             {
                 $set: { status: req.body.status },
-                $push: { statusHistory: { status: req.body.status, changedAt: new Date() } }
+                $push: { statusHistory: { status: req.body.status, changedAt: new Date(), changedBy: req.session.user._id } }
             },
             { new: true, runValidators: true }
         );
         if (!application) {
-            return res.status(404).json({ success: false, error: 'Application not found' });
+            return res.status(409).json({ success: false, error: 'Application status changed while this request was being processed. Refresh and try again.' });
         }
         await AuditLog.create({
             userId: req.session.user._id,
@@ -658,19 +667,35 @@ app.patch('/api/applications/:id/status', requireAdminSession, async (req, res) 
 
 app.post('/api/applications/bulk-action', requireAdminSession, async (req, res) => {
     try {
-        const ids = Array.isArray(req.body.ids) ? req.body.ids.filter(id => mongoose.Types.ObjectId.isValid(id)) : [];
-        if (!ids.length) {
+        const requestedIds = Array.isArray(req.body.ids) ? req.body.ids : [];
+        if (!requestedIds.length) {
             return res.status(400).json({ success: false, error: 'Select at least one application.' });
+        }
+        if (requestedIds.some(id => !mongoose.Types.ObjectId.isValid(id))) {
+            return res.status(400).json({ success: false, error: 'One or more application ids are invalid.' });
         }
         if (!isValidStatus(req.body.status)) {
             return res.status(400).json({ success: false, error: `Status must be one of: ${APPLICATION_STATUSES.join(', ')}` });
         }
-        const targets = await Application.find({ _id: { $in: ids } }).select('status');
+        const ids = [...new Set(requestedIds.map(String))];
+        const targets = await Application.find({ _id: { $in: ids } }).select('status documentsStatus');
+        if (targets.length !== ids.length) {
+            return res.status(404).json({ success: false, error: 'One or more selected applications were not found.' });
+        }
+        const invalidTarget = targets
+            .map(application => ({ application, validation: validateStatusTransition(application.status, req.body.status, application.documentsStatus) }))
+            .find(({ validation }) => !validation.valid);
+        if (invalidTarget) {
+            return res.status(409).json({
+                success: false,
+                error: `Application ${invalidTarget.application._id}: ${invalidTarget.validation.error}`
+            });
+        }
         await Application.updateMany(
             { _id: { $in: ids } },
             {
                 $set: { status: req.body.status },
-                $push: { statusHistory: { status: req.body.status, changedAt: new Date() } }
+                $push: { statusHistory: { status: req.body.status, changedAt: new Date(), changedBy: req.session.user._id } }
             }
         );
         if (targets.length) {
@@ -686,7 +711,7 @@ app.post('/api/applications/bulk-action', requireAdminSession, async (req, res) 
             })));
         }
         const data = await Application.find({ _id: { $in: ids } });
-        res.json({ success: true, data });
+        res.json({ success: true, data, count: data.length });
     } catch (err) {
         res.status(400).json({ success: false, error: err.message });
     }
@@ -719,11 +744,14 @@ app.get('/api/statistics', requireAdminSession, async (_req, res) => {
 });
 
 const startServer = async () => {
-    await connectDB();
+    await connectDB(databaseConfig);
     startDeadlineReminderScheduler();
     app.listen(PORT, () => {
         console.log(`Server running at http://localhost:${PORT}`);
     });
 };
 
-startServer();
+startServer().catch(error => {
+    console.error(error.message);
+    process.exit(1);
+});

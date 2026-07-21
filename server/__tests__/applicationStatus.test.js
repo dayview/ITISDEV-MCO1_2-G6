@@ -73,3 +73,38 @@ describe('Application Status - filterApplications', () => {
         expect(STATUS.filterApplications([{ status: 'submitted' }], 'completed')).toEqual([]);
     });
 });
+
+describe('Application Status - admin workflow actions', () => {
+    test.each([
+        ['submitted', 'complete', 'nominated'],
+        ['under-review', 'complete', 'nominated'],
+        ['nominated', 'complete', 'accepted']
+    ])('%s with %s documents can transition to %s', (status, documentsStatus, nextStatus) => {
+        expect(STATUS.canTransition({ status, documentsStatus }, nextStatus)).toBe(true);
+    });
+
+    test.each([
+        ['submitted', 'incomplete', 'nominated'],
+        ['under-review', 'incomplete', 'nominated'],
+        ['nominated', 'incomplete', 'accepted'],
+        ['accepted', 'complete', 'nominated'],
+        ['rejected', 'complete', 'submitted']
+    ])('%s with %s documents cannot transition to %s', (status, documentsStatus, nextStatus) => {
+        expect(STATUS.canTransition({ status, documentsStatus }, nextStatus)).toBe(false);
+    });
+
+    test('allows active incomplete applications to be rejected', () => {
+        expect(STATUS.canTransition({ status: 'submitted', documentsStatus: 'incomplete' }, 'rejected')).toBe(true);
+        expect(STATUS.canTransition({ status: 'under-review', documentsStatus: 'incomplete' }, 'rejected')).toBe(true);
+        expect(STATUS.canTransition({ status: 'nominated', documentsStatus: 'incomplete' }, 'rejected')).toBe(true);
+    });
+
+    test('returns the correct primary admin action for each actionable state', () => {
+        expect(STATUS.getPrimaryAdminAction({ status: 'submitted', documentsStatus: 'complete' }))
+            .toEqual({ status: 'nominated', label: 'Nominate' });
+        expect(STATUS.getPrimaryAdminAction({ status: 'nominated', documentsStatus: 'complete' }))
+            .toEqual({ status: 'accepted', label: 'Accept' });
+        expect(STATUS.getPrimaryAdminAction({ status: 'accepted', documentsStatus: 'complete' })).toBeNull();
+        expect(STATUS.getPrimaryAdminAction({ status: 'submitted', documentsStatus: 'incomplete' })).toBeNull();
+    });
+});

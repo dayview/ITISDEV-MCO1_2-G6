@@ -23,6 +23,16 @@
     { key: 'completed', label: 'Completed' }
   ];
 
+  const STATUS_TRANSITIONS = {
+    submitted: ['under-review', 'nominated', 'rejected'],
+    'under-review': ['nominated', 'rejected'],
+    nominated: ['accepted', 'rejected'],
+    accepted: [],
+    rejected: []
+  };
+
+  const COMPLETE_DOCUMENT_STATUSES = ['nominated', 'accepted'];
+
   function getStatusConfig(status) {
     return STATUS_CONFIG[status] || UNKNOWN_STATUS;
   }
@@ -53,15 +63,33 @@
     return applications.filter(application => getStatusGroup(application.status) === filterKey);
   }
 
+  function canTransition(application, nextStatus) {
+    if (!application || !STATUS_TRANSITIONS[application.status]?.includes(nextStatus)) return false;
+    return !COMPLETE_DOCUMENT_STATUSES.includes(nextStatus) || application.documentsStatus === 'complete';
+  }
+
+  function getPrimaryAdminAction(application) {
+    if (application?.status === 'nominated' && canTransition(application, 'accepted')) {
+      return { status: 'accepted', label: 'Accept' };
+    }
+    if (canTransition(application, 'nominated')) {
+      return { status: 'nominated', label: 'Nominate' };
+    }
+    return null;
+  }
+
   return {
     STATUS_CONFIG,
     UNKNOWN_STATUS,
     FILTERS,
+    STATUS_TRANSITIONS,
     getStatusConfig,
     getStatusLabel,
     getStatusGroup,
     getStatusProgress,
     countByFilter,
-    filterApplications
+    filterApplications,
+    canTransition,
+    getPrimaryAdminAction
   };
 });

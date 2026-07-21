@@ -125,7 +125,25 @@
         <button type="button" class="pill pill--filter" data-filter-type="sort" data-filter-value="urgency">Urgent</button>
         <button type="button" class="pill pill--filter" data-filter-type="documentsStatus" data-filter-value="incomplete">Incomplete</button>
       </div>
-      <a class="admin-student-view" href="/dashboard.html">Switch to student view &rarr;</a>
+      <div class="admin-toolbar__right">
+        <label class="review-sort-control" for="review-sort">
+          <span>Sort by</span>
+          <select id="review-sort">
+            <option value="recency">Newest submitted</option>
+            <option value="urgency">Nearest deadline</option>
+            <option value="firstNameAsc">First name: A–Z</option>
+            <option value="firstNameDesc">First name: Z–A</option>
+            <option value="lastNameAsc">Last name: A–Z</option>
+            <option value="lastNameDesc">Last name: Z–A</option>
+            <option value="studentIdAsc">Student ID: ascending</option>
+            <option value="studentIdDesc">Student ID: descending</option>
+            <option value="collegeAsc">College: A–Z</option>
+            <option value="collegeDesc">College: Z–A</option>
+            <option value="cgpaDesc">CGPA: highest to lowest</option>
+            <option value="cgpaAsc">CGPA: lowest to highest</option>
+          </select>
+        </label>
+      </div>
     </div>
 
     <section class="review-table" aria-labelledby="review-queue-title">
@@ -137,7 +155,7 @@
         <div class="review-table__actions">
           <span id="selection-badge" class="selection-badge" style="display:none;"><span id="selection-count">0</span> selected</span>
           <button type="button" id="export-btn" class="btn btn--secondary" style="display:none;">&#8595; Export list</button>
-          <button type="button" id="batch-approve-btn" class="btn btn--primary" style="display:none;">&#10003; Batch approve</button>
+          <button type="button" id="batch-approve-btn" class="btn btn--primary" style="display:none;">&#10003; Batch nominate</button>
         </div>
       </div>
 
