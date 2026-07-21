@@ -4570,16 +4570,24 @@ body.catalog-page {
   margin: 0;
 }
 
-.admin-student-view {
-  flex: none;
-  color: #0F7A3D;
-  font-size: 13px;
-  font-weight: 800;
+.admin-toolbar__right,
+.review-sort-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.admin-student-view:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.admin-toolbar__right {
+  flex: none;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.review-sort-control span {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .admin-page .review-table {
@@ -5237,7 +5245,8 @@ body.catalog-page {
   height: 16px;
 }
 
-.applicant-sort-control select {
+.applicant-sort-control select,
+.review-sort-control select {
   min-height: 42px;
   padding: 0 40px 0 12px;
   border: 1px solid #D0D5DD;
@@ -5255,7 +5264,8 @@ body.catalog-page {
   outline: none;
 }
 
-.applicant-sort-control select:focus {
+.applicant-sort-control select:focus,
+.review-sort-control select:focus {
   border-color: #0F7A3D;
   box-shadow: 0 0 0 3px rgba(15, 122, 61, .1);
 }
@@ -6281,6 +6291,11 @@ body.catalog-page {
 
   .admin-page .review-table__actions {
     justify-content: flex-start;
+  }
+
+  .admin-toolbar__right {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .student-page .student-shell {

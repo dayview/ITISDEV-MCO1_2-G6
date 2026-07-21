@@ -64,13 +64,38 @@ const applicationPipeline = ({ status = '', college = '', search = '', sort = 'r
     }
     if (Object.keys(match).length) pipeline.push({ $match: match });
 
+    pipeline.push({
+        $addFields: {
+            sortFirstName: {
+                $toLower: {
+                    $ifNull: [{ $arrayElemAt: [{ $split: [{ $ifNull: ['$student.name', ''] }, ' '] }, 0] }, '']
+                }
+            },
+            sortLastName: {
+                $toLower: {
+                    $ifNull: [{ $arrayElemAt: [{ $split: [{ $ifNull: ['$student.name', ''] }, ' '] }, -1] }, '']
+                }
+            }
+        }
+    });
+
     const sortMap = {
         recency: { createdAt: -1, submittedDate: -1 },
         oldest: { createdAt: 1, submittedDate: 1 },
         urgency: { 'opportunity.deadline': 1 },
         status: { status: 1 },
-        college: { 'student.college': 1 },
-        cgpa: { 'student.cgpa': -1 },
+        firstNameAsc: { sortFirstName: 1, sortLastName: 1, 'student.studentId': 1 },
+        firstNameDesc: { sortFirstName: -1, sortLastName: -1, 'student.studentId': 1 },
+        lastNameAsc: { sortLastName: 1, sortFirstName: 1, 'student.studentId': 1 },
+        lastNameDesc: { sortLastName: -1, sortFirstName: -1, 'student.studentId': 1 },
+        studentIdAsc: { 'student.studentId': 1, sortLastName: 1, sortFirstName: 1 },
+        studentIdDesc: { 'student.studentId': -1, sortLastName: 1, sortFirstName: 1 },
+        college: { 'student.college': 1, sortLastName: 1, sortFirstName: 1 },
+        collegeAsc: { 'student.college': 1, sortLastName: 1, sortFirstName: 1 },
+        collegeDesc: { 'student.college': -1, sortLastName: 1, sortFirstName: 1 },
+        cgpa: { 'student.cgpa': -1, sortLastName: 1, sortFirstName: 1 },
+        cgpaDesc: { 'student.cgpa': -1, sortLastName: 1, sortFirstName: 1 },
+        cgpaAsc: { 'student.cgpa': 1, sortLastName: 1, sortFirstName: 1 },
         documents: { documentsStatus: 1 }
     };
     pipeline.push({ $sort: sortMap[sort] || sortMap.recency });

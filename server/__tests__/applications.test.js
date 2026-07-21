@@ -242,4 +242,29 @@ describe('Application Logic - applicationPipeline query builder', () => {
         const sortStage = pipeline.find(stage => stage.$sort);
         expect(sortStage.$sort).toEqual({ createdAt: -1, submittedDate: -1 });
     });
+
+    test.each([
+        ['firstNameAsc', { sortFirstName: 1, sortLastName: 1, 'student.studentId': 1 }],
+        ['firstNameDesc', { sortFirstName: -1, sortLastName: -1, 'student.studentId': 1 }],
+        ['lastNameAsc', { sortLastName: 1, sortFirstName: 1, 'student.studentId': 1 }],
+        ['lastNameDesc', { sortLastName: -1, sortFirstName: -1, 'student.studentId': 1 }],
+        ['studentIdAsc', { 'student.studentId': 1, sortLastName: 1, sortFirstName: 1 }],
+        ['studentIdDesc', { 'student.studentId': -1, sortLastName: 1, sortFirstName: 1 }],
+        ['collegeAsc', { 'student.college': 1, sortLastName: 1, sortFirstName: 1 }],
+        ['collegeDesc', { 'student.college': -1, sortLastName: 1, sortFirstName: 1 }],
+        ['cgpaDesc', { 'student.cgpa': -1, sortLastName: 1, sortFirstName: 1 }],
+        ['cgpaAsc', { 'student.cgpa': 1, sortLastName: 1, sortFirstName: 1 }]
+    ])('builds a stable %s sort', (sort, expected) => {
+        const pipeline = applicationPipeline({ sort });
+        const sortStage = pipeline.find(stage => stage.$sort);
+        expect(sortStage.$sort).toEqual(expected);
+    });
+
+    test('derives case-insensitive first-name and last-name sort keys from the stored full name', () => {
+        const pipeline = applicationPipeline({ sort: 'lastNameAsc' });
+        const nameSortStage = pipeline.find(stage => stage.$addFields?.sortFirstName);
+
+        expect(nameSortStage.$addFields.sortFirstName).toHaveProperty('$toLower');
+        expect(nameSortStage.$addFields.sortLastName).toHaveProperty('$toLower');
+    });
 });

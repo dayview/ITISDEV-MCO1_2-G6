@@ -9,6 +9,21 @@ let currentFilters = {};
 
 const API_BASE = '/api';
 
+const SORT_LABELS = {
+  recency: 'newest submitted first',
+  urgency: 'nearest deadline first',
+  firstNameAsc: 'first name A–Z',
+  firstNameDesc: 'first name Z–A',
+  lastNameAsc: 'last name A–Z',
+  lastNameDesc: 'last name Z–A',
+  studentIdAsc: 'student ID ascending',
+  studentIdDesc: 'student ID descending',
+  collegeAsc: 'college A–Z',
+  collegeDesc: 'college Z–A',
+  cgpaDesc: 'CGPA highest to lowest',
+  cgpaAsc: 'CGPA lowest to highest'
+};
+
 /**
  * Fetch applications from backend with current filters and sort
  */
@@ -342,34 +357,32 @@ function updateStatCard(statKey, value, subtitle) {
   if (subEl) subEl.innerHTML = subtitle;
 }
 
+function updateQueueSubtitle() {
+  const subtitle = document.getElementById('queue-subtitle');
+  if (!subtitle) return;
+
+  const descriptions = [];
+  if (currentFilters.documentsStatus === 'incomplete') descriptions.push('Incomplete documents only');
+  if (currentFilters.status) descriptions.push(`${capitalize(currentFilters.status.replace('-', ' '))} only`);
+  descriptions.push(`Sorted by ${SORT_LABELS[currentSort] || SORT_LABELS.recency}`);
+  subtitle.textContent = descriptions.join(' · ');
+}
+
 /**
- * Setup sort buttons
+ * Setup the review queue sort selector.
  */
-function setupSortButtons() {
-  const sortBtns = document.querySelectorAll('.sort-btn');
-  sortBtns.forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      currentSort = btn.dataset.sort;
+function setupSortControl() {
+  const sortControl = document.getElementById('review-sort');
+  if (!sortControl) return;
 
-      // Update active state
-      sortBtns.forEach(b => b.classList.remove('sort-btn--active'));
-      btn.classList.add('sort-btn--active');
-
-      // Update subtitle
-      const subtitle = document.getElementById('queue-subtitle');
-      const sortLabels = {
-        'recency': 'Sorted by recency (newest first)',
-        'urgency': 'Sorted by urgency (nearest deadline)',
-        'status': 'Sorted by status',
-        'college': 'Sorted by college',
-        'cgpa': 'Sorted by CGPA (highest first)',
-        'documents': 'Sorted by documents'
-      };
-      if (subtitle) subtitle.textContent = sortLabels[currentSort];
-
-      await fetchApplications();
+  sortControl.value = currentSort;
+  sortControl.addEventListener('change', async () => {
+    currentSort = sortControl.value;
+    document.querySelectorAll('.pill--filter[data-filter-type="sort"]').forEach(pill => {
+      pill.classList.toggle('pill--active', pill.dataset.filterValue === currentSort);
     });
+    updateQueueSubtitle();
+    await fetchApplications();
   });
 }
 
@@ -401,14 +414,9 @@ function setupFilterPills() {
       filterPills.forEach(p => p.classList.remove('pill--active'));
       pill.classList.add('pill--active');
 
-      const subtitle = document.getElementById('queue-subtitle');
-      if (subtitle) {
-        subtitle.textContent = filterType === 'sort'
-          ? 'Sorted by urgency · nearest deadline first'
-          : filterValue === 'incomplete'
-            ? 'Showing applications with incomplete documents'
-            : 'Sorted by recency · newest first';
-      }
+      const sortControl = document.getElementById('review-sort');
+      if (sortControl) sortControl.value = currentSort;
+      updateQueueSubtitle();
 
       await fetchApplications();
     });
@@ -525,6 +533,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.log('Initializing GEMS Admin Dashboard...');
 
   setupFilterPills();
+  setupSortControl();
   setupSearchInput();
   setupBatchActionButtons();
   setupTopbarActions();
