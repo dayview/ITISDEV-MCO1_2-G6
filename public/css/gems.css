@@ -5491,6 +5491,12 @@ body.catalog-page {
   gap: 5px;
 }
 
+.applicant-action-final {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .applicant-view-link {
   margin-right: 3px;
   padding: 6px 8px;

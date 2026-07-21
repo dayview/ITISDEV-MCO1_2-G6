@@ -17,8 +17,8 @@
   const statusLabels = {
     submitted: 'Pending Review',
     'under-review': 'Needs Revision',
-    nominated: 'Approved',
-    accepted: 'Approved',
+    nominated: 'Nominated',
+    accepted: 'Accepted',
     rejected: 'Rejected'
   };
 
@@ -60,6 +60,28 @@
     return String(name || '?').split(' ').map(part => part[0]).slice(0, 2).join('');
   }
 
+  function renderApplicantActions(applicant) {
+    const primary = GEMSApplicationStatus.getPrimaryAdminAction({
+      status: applicant.status,
+      documentsStatus: applicant.documentsStatus
+    });
+    const canReject = GEMSApplicationStatus.canTransition({
+      status: applicant.status,
+      documentsStatus: applicant.documentsStatus
+    }, 'rejected');
+    const primaryButton = primary
+      ? `<button type="button" class="applicant-icon-action applicant-icon-action--approve" data-action="status" data-status="${primary.status}" title="${primary.label}" aria-label="${primary.label} ${escapeHtml(applicant.name)}">&#10003;</button>`
+      : '';
+    const rejectButton = canReject
+      ? `<button type="button" class="applicant-icon-action applicant-icon-action--reject" data-action="status" data-status="rejected" title="Reject" aria-label="Reject ${escapeHtml(applicant.name)}">&times;</button>`
+      : '';
+    const finalLabel = !primary && !canReject
+      ? '<span class="applicant-action-final">Final</span>'
+      : '';
+
+    return `${primaryButton}${rejectButton}${finalLabel}<button type="button" class="program-overflow__trigger" data-action="more" aria-label="More actions for ${escapeHtml(applicant.name)}">&#8942;</button>`;
+  }
+
   function updateProgramFilter() {
     const current = programFilter.value;
     const programs = [...new Set(applicants.map(item => item.program).filter(Boolean))].sort();
@@ -97,11 +119,7 @@
         <div class="applicant-cell" data-label="Submitted Date">${escapeHtml(formatDate(applicant.submitted))}</div>
         <div class="applicant-cell" data-label="Status">${escapeHtml(applicant.statusLabel)}</div>
         <div class="applicant-cell" data-label="Documents"><span class="applicant-documents applicant-documents--${applicant.documents.toLowerCase()}">${escapeHtml(applicant.documents)}</span></div>
-        <div class="applicant-row-actions" data-label="Actions">
-          <button type="button" class="applicant-icon-action applicant-icon-action--approve" data-action="approve" title="Approve" aria-label="Approve ${escapeHtml(applicant.name)}">&#10003;</button>
-          <button type="button" class="applicant-icon-action applicant-icon-action--reject" data-action="reject" title="Reject" aria-label="Reject ${escapeHtml(applicant.name)}">&times;</button>
-          <button type="button" class="program-overflow__trigger" data-action="more" aria-label="More actions for ${escapeHtml(applicant.name)}">&#8942;</button>
-        </div>
+        <div class="applicant-row-actions" data-label="Actions">${renderApplicantActions(applicant)}</div>
       </article>
     `).join('');
 
@@ -142,8 +160,7 @@
         await openDocumentReview(applicant);
         return;
       }
-      const status = button.dataset.action === 'approve' ? 'nominated' : 'rejected';
-      await updateStatus(applicant.id, status);
+      await updateStatus(applicant.id, button.dataset.status);
     }));
   }
 
@@ -228,6 +245,23 @@
     document.getElementById('selected-applicant-count').textContent = String(selected.size);
     const visible = getMatches().slice((currentPage - 1) * pageSize, currentPage * pageSize);
     document.getElementById('select-all-applicants').checked = visible.length > 0 && visible.every(item => selected.has(item.id));
+    const selectedApplicants = applicants.filter(applicant => selected.has(applicant.id));
+    const completeSelection = selectedApplicants.length === selected.size;
+    const nominateButton = document.querySelector('[data-applicant-bulk="approve"]');
+    const rejectButton = document.querySelector('[data-applicant-bulk="reject"]');
+    const canNominate = selected.size > 0 && completeSelection && selectedApplicants.every(applicant => GEMSApplicationStatus.canTransition({
+      status: applicant.status,
+      documentsStatus: applicant.documentsStatus
+    }, 'nominated'));
+    const canReject = selected.size > 0 && completeSelection && selectedApplicants.every(applicant => GEMSApplicationStatus.canTransition({
+      status: applicant.status,
+      documentsStatus: applicant.documentsStatus
+    }, 'rejected'));
+
+    nominateButton.disabled = !canNominate;
+    nominateButton.title = canNominate ? 'Nominate selected applications' : 'Only complete Submitted or Under Review applications can be nominated';
+    rejectButton.disabled = !canReject;
+    rejectButton.title = canReject ? 'Reject selected applications' : 'Accepted and rejected applications are final';
   }
 
   async function updateStatus(id, status) {
@@ -245,6 +279,19 @@
   }
 
   async function bulkStatus(status) {
+    const selectedApplicants = applicants.filter(applicant => selected.has(applicant.id));
+    const eligible = selectedApplicants.length === selected.size && selectedApplicants.every(applicant => (
+      GEMSApplicationStatus.canTransition({
+        status: applicant.status,
+        documentsStatus: applicant.documentsStatus
+      }, status)
+    ));
+    if (!selected.size || !eligible) {
+      alert(status === 'nominated'
+        ? 'Only complete Submitted or Under Review applications can be nominated.'
+        : 'One or more selected applications cannot be rejected.');
+      return;
+    }
     const response = await fetch('/api/applications/bulk-action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -273,7 +320,8 @@
       submitted: item.submitted_date,
       status: item.status,
       statusLabel: displayStatus(item.status),
-      documents: displayDocuments(item.documents_status)
+      documents: displayDocuments(item.documents_status),
+      documentsStatus: item.documents_status
     }));
     updateProgramFilter();
     updateSummary();
