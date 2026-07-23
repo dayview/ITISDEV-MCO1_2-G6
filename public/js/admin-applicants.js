@@ -1,5 +1,4 @@
 (function() {
-  const STATUS = window.GEMSApplicationStatus;
   const pageSize = 8;
   let currentPage = 1;
   let applicants = [];
@@ -15,29 +14,22 @@
   const reviewMessage = document.getElementById('document-review-message');
   let reviewingApplicationId = '';
 
+  const statusLabels = {
+    submitted: 'Pending Review',
+    'under-review': 'Needs Revision',
+    nominated: 'Nominated',
+    accepted: 'Accepted',
+    rejected: 'Rejected'
+  };
+
   function escapeHtml(value) {
     const node = document.createElement('div');
     node.textContent = String(value || '');
     return node.innerHTML;
   }
 
-  // Single source of truth for labels — identical to what the student tracker renders,
-  // so the same status code never reads differently on the two sides of the system.
   function displayStatus(status) {
-    return STATUS.getStatusLabel(status);
-  }
-
-  // Derives the row's action buttons from the shared transition map, so an admin can only
-  // ever move an application to a stage the lifecycle actually allows next.
-  function renderRowActions(applicant) {
-    const transitions = STATUS.getAllowedTransitions(applicant.status);
-    if (!transitions.length) {
-      return '<span class="applicant-final-note">Final decision</span>';
-    }
-    return transitions.map(status => {
-      const isReject = status === 'rejected';
-      return `<button type="button" class="applicant-transition-action${isReject ? ' applicant-transition-action--reject' : ''}" data-status="${escapeHtml(status)}" aria-label="Move ${escapeHtml(applicant.name)} to ${escapeHtml(STATUS.getStatusLabel(status))}">${escapeHtml(STATUS.getStatusLabel(status))}</button>`;
-    }).join('');
+    return statusLabels[status] || status;
   }
 
   function displayDocuments(status) {
@@ -66,6 +58,28 @@
 
   function initials(name) {
     return String(name || '?').split(' ').map(part => part[0]).slice(0, 2).join('');
+  }
+
+  function renderApplicantActions(applicant) {
+    const primary = GEMSApplicationStatus.getPrimaryAdminAction({
+      status: applicant.status,
+      documentsStatus: applicant.documentsStatus
+    });
+    const canReject = GEMSApplicationStatus.canTransition({
+      status: applicant.status,
+      documentsStatus: applicant.documentsStatus
+    }, 'rejected');
+    const primaryButton = primary
+      ? `<button type="button" class="applicant-icon-action applicant-icon-action--approve" data-action="status" data-status="${primary.status}" title="${primary.label}" aria-label="${primary.label} ${escapeHtml(applicant.name)}">&#10003;</button>`
+      : '';
+    const rejectButton = canReject
+      ? `<button type="button" class="applicant-icon-action applicant-icon-action--reject" data-action="status" data-status="rejected" title="Reject" aria-label="Reject ${escapeHtml(applicant.name)}">&times;</button>`
+      : '';
+    const finalLabel = !primary && !canReject
+      ? '<span class="applicant-action-final">Final</span>'
+      : '';
+
+    return `${primaryButton}${rejectButton}${finalLabel}<button type="button" class="program-overflow__trigger" data-action="more" aria-label="More actions for ${escapeHtml(applicant.name)}">&#8942;</button>`;
   }
 
   function updateProgramFilter() {
@@ -105,10 +119,7 @@
         <div class="applicant-cell" data-label="Submitted Date">${escapeHtml(formatDate(applicant.submitted))}</div>
         <div class="applicant-cell" data-label="Status">${escapeHtml(applicant.statusLabel)}</div>
         <div class="applicant-cell" data-label="Documents"><span class="applicant-documents applicant-documents--${applicant.documents.toLowerCase()}">${escapeHtml(applicant.documents)}</span></div>
-        <div class="applicant-row-actions" data-label="Actions">
-          ${renderRowActions(applicant)}
-          <button type="button" class="program-overflow__trigger" data-action="more" aria-label="More actions for ${escapeHtml(applicant.name)}">&#8942;</button>
-        </div>
+        <div class="applicant-row-actions" data-label="Actions">${renderApplicantActions(applicant)}</div>
       </article>
     `).join('');
 
@@ -143,12 +154,12 @@
       else selected.delete(id);
       updateBulkBar();
     }));
-    body.querySelectorAll('[data-action="more"]').forEach(button => button.addEventListener('click', async () => {
+    body.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', async () => {
       const applicant = applicants.find(item => item.id === button.closest('.applicant-row').dataset.applicantId);
-      await openDocumentReview(applicant);
-    }));
-    body.querySelectorAll('[data-status]').forEach(button => button.addEventListener('click', async () => {
-      const applicant = applicants.find(item => item.id === button.closest('.applicant-row').dataset.applicantId);
+      if (button.dataset.action === 'more') {
+        await openDocumentReview(applicant);
+        return;
+      }
       await updateStatus(applicant.id, button.dataset.status);
     }));
   }
@@ -234,6 +245,23 @@
     document.getElementById('selected-applicant-count').textContent = String(selected.size);
     const visible = getMatches().slice((currentPage - 1) * pageSize, currentPage * pageSize);
     document.getElementById('select-all-applicants').checked = visible.length > 0 && visible.every(item => selected.has(item.id));
+    const selectedApplicants = applicants.filter(applicant => selected.has(applicant.id));
+    const completeSelection = selectedApplicants.length === selected.size;
+    const nominateButton = document.querySelector('[data-applicant-bulk="approve"]');
+    const rejectButton = document.querySelector('[data-applicant-bulk="reject"]');
+    const canNominate = selected.size > 0 && completeSelection && selectedApplicants.every(applicant => GEMSApplicationStatus.canTransition({
+      status: applicant.status,
+      documentsStatus: applicant.documentsStatus
+    }, 'nominated'));
+    const canReject = selected.size > 0 && completeSelection && selectedApplicants.every(applicant => GEMSApplicationStatus.canTransition({
+      status: applicant.status,
+      documentsStatus: applicant.documentsStatus
+    }, 'rejected'));
+
+    nominateButton.disabled = !canNominate;
+    nominateButton.title = canNominate ? 'Nominate selected applications' : 'Only complete Submitted or Under Review applications can be nominated';
+    rejectButton.disabled = !canReject;
+    rejectButton.title = canReject ? 'Reject selected applications' : 'Accepted and rejected applications are final';
   }
 
   async function updateStatus(id, status) {
@@ -251,6 +279,19 @@
   }
 
   async function bulkStatus(status) {
+    const selectedApplicants = applicants.filter(applicant => selected.has(applicant.id));
+    const eligible = selectedApplicants.length === selected.size && selectedApplicants.every(applicant => (
+      GEMSApplicationStatus.canTransition({
+        status: applicant.status,
+        documentsStatus: applicant.documentsStatus
+      }, status)
+    ));
+    if (!selected.size || !eligible) {
+      alert(status === 'nominated'
+        ? 'Only complete Submitted or Under Review applications can be nominated.'
+        : 'One or more selected applications cannot be rejected.');
+      return;
+    }
     const response = await fetch('/api/applications/bulk-action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -260,9 +301,6 @@
     if (!response.ok || !result.success) {
       alert(result.error || `HTTP ${response.status}`);
       return;
-    }
-    if (result.skipped) {
-      alert(`${result.count} application${result.count === 1 ? '' : 's'} updated. ${result.skipped} skipped (their current stage does not allow this change).`);
     }
     selected.clear();
     await loadApplicants();
@@ -282,7 +320,8 @@
       submitted: item.submitted_date,
       status: item.status,
       statusLabel: displayStatus(item.status),
-      documents: displayDocuments(item.documents_status)
+      documents: displayDocuments(item.documents_status),
+      documentsStatus: item.documents_status
     }));
     updateProgramFilter();
     updateSummary();

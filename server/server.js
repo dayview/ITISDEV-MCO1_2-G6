@@ -1,9 +1,11 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const path = require('path');
 const mongoose = require('mongoose');
 const connectDB = require('./config/db');
+const { SESSION_COOKIE_NAME, sessionCookieOptions } = require('./config/session');
 const Opportunity = require('./models/Opportunity');
 const Application = require('./models/Applications');
 const Document = require('./models/Document');
@@ -18,7 +20,7 @@ const { notifyApplicationStatusChange, notifyOpportunityEvent } = require('./lib
 const { mapOpportunity, normalizeOpportunityInput, mapAdminOpportunity } = require('./lib/opportunities');
 const { normalizeDocumentType, mapDocument, buildDocumentChecklist, validateDocumentReview, getApplicationDocumentStatus } = require('./lib/documents');
 const { evaluateStudentEligibility, isOpportunityOpenForApplication } = require('./lib/eligibility');
-const { applicationPipeline, buildApplicationPayload, toApplicationsCsv, isValidStatus, canTransition, getAllowedTransitions, APPLICATION_STATUSES, mapStudentApplication } = require('./lib/applications');
+const { applicationPipeline, buildApplicationPayload, toApplicationsCsv, isValidStatus, validateStatusTransition, APPLICATION_STATUSES, mapStudentApplication } = require('./lib/applications');
 const { computeStatisticsSummary, getUrgentCutoff } = require('./lib/statistics');
 const { determineOpportunityUpdateAction } = require('./lib/audit');
 const { buildStudentDashboard } = require('./lib/studentDashboard');
@@ -28,6 +30,7 @@ const { uploadSingleFile } = require('./middleware/upload');
 const { resolveAbsolutePath, relativeFilePath, deleteStoredFile, removeFileIfExists, sanitizeDownloadFileName } = require('./lib/storage');
 const fs = require('fs');
 
+const databaseConfig = connectDB.buildDatabaseConfig();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const root = path.join(__dirname, '..');
@@ -36,10 +39,20 @@ const adminViewsRoot = path.join(root, 'views', 'admin');
 
 app.use(express.json());
 app.use(session({
+    name: SESSION_COOKIE_NAME,
     secret: process.env.SESSION_SECRET || 'gems-dev-session-secret',
     resave: false,
     saveUninitialized: false,
-    cookie: { httpOnly: true, sameSite: 'lax' }
+    store: MongoStore.create({
+        mongoUrl: databaseConfig.mongoUri,
+        mongoOptions: databaseConfig.options,
+        collectionName: 'sessions',
+        ttl: 60 * 60 * 24 * 7 // 7 days, matches the cookie maxAge below
+    }),
+    cookie: {
+        ...sessionCookieOptions(),
+        maxAge: 1000 * 60 * 60 * 24 * 7
+    }
 }));
 app.use('/public', express.static(path.join(root, 'public')));
 
@@ -551,7 +564,7 @@ app.get('/api/applications/my', requireStudentSession, async (req, res) => {
         const data = await Application.find({ userId: req.session.user._id })
             .populate('opportunityId')
             .sort({ createdAt: -1 });
-        res.json({ success: true, data: data.map(application => mapStudentApplication(application, req.session.user._id)) });
+        res.json({ success: true, data: data.map(mapStudentApplication) });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -636,36 +649,24 @@ app.patch('/api/applications/:id/status', requireAdminSession, async (req, res) 
         if (!isValidStatus(req.body.status)) {
             return res.status(400).json({ success: false, error: `Status must be one of: ${APPLICATION_STATUSES.join(', ')}` });
         }
-        const previous = await Application.findById(req.params.id).select('status');
+        const previous = await Application.findById(req.params.id).select('status documentsStatus');
         if (!previous) {
-            return res.status(404).json({ success: false, error: 'Application not found' });
+            return res.status(404).json({ success: false, error: 'Application not found.' });
         }
-        if (!canTransition(previous.status, req.body.status)) {
-            const allowed = getAllowedTransitions(previous.status);
-            return res.status(409).json({
-                success: false,
-                error: allowed.length
-                    ? `Cannot change a "${previous.status}" application to "${req.body.status}". Allowed next stages: ${allowed.join(', ')}.`
-                    : `A "${previous.status}" application has reached a final decision and cannot be changed.`
-            });
+        const validation = validateStatusTransition(previous.status, req.body.status, previous.documentsStatus);
+        if (!validation.valid) {
+            return res.status(409).json({ success: false, error: validation.error });
         }
-        const application = await Application.findByIdAndUpdate(
-            req.params.id,
+        const application = await Application.findOneAndUpdate(
+            { _id: req.params.id, status: previous.status },
             {
                 $set: { status: req.body.status },
-                $push: {
-                    statusHistory: {
-                        status: req.body.status,
-                        changedAt: new Date(),
-                        changedBy: req.session.user._id,
-                        ...(req.body.note ? { note: String(req.body.note).slice(0, 500) } : {})
-                    }
-                }
+                $push: { statusHistory: { status: req.body.status, changedAt: new Date(), changedBy: req.session.user._id } }
             },
             { new: true, runValidators: true }
         );
         if (!application) {
-            return res.status(404).json({ success: false, error: 'Application not found' });
+            return res.status(409).json({ success: false, error: 'Application status changed while this request was being processed. Refresh and try again.' });
         }
         await AuditLog.create({
             userId: req.session.user._id,
@@ -678,7 +679,8 @@ app.patch('/api/applications/:id/status', requireAdminSession, async (req, res) 
             ip: req.ip
         });
         // Email + in-app notification to the student, immediately on the status change.
-        // Reuses the deadline-reminder email plumbing; failures never block the response.
+        // Fire-and-forget: email failures are recorded on the notification, never surfaced
+        // as a request error, and the workflow validation above stays untouched.
         if (previous.status !== application.status) {
             let opportunityName = '';
             try {
@@ -700,47 +702,53 @@ app.patch('/api/applications/:id/status', requireAdminSession, async (req, res) 
 
 app.post('/api/applications/bulk-action', requireAdminSession, async (req, res) => {
     try {
-        const ids = Array.isArray(req.body.ids) ? req.body.ids.filter(id => mongoose.Types.ObjectId.isValid(id)) : [];
-        if (!ids.length) {
+        const requestedIds = Array.isArray(req.body.ids) ? req.body.ids : [];
+        if (!requestedIds.length) {
             return res.status(400).json({ success: false, error: 'Select at least one application.' });
+        }
+        if (requestedIds.some(id => !mongoose.Types.ObjectId.isValid(id))) {
+            return res.status(400).json({ success: false, error: 'One or more application ids are invalid.' });
         }
         if (!isValidStatus(req.body.status)) {
             return res.status(400).json({ success: false, error: `Status must be one of: ${APPLICATION_STATUSES.join(', ')}` });
         }
-        const targets = await Application.find({ _id: { $in: ids } }).select('status');
-        // Only advance applications whose current stage legally allows the requested one;
-        // the rest (e.g. already decided) are reported back as skipped rather than forced.
-        const eligible = targets.filter(app => canTransition(app.status, req.body.status));
-        const eligibleIds = eligible.map(app => app._id);
-        const skipped = targets.length - eligible.length;
-        if (!eligibleIds.length) {
+        const ids = [...new Set(requestedIds.map(String))];
+        const targets = await Application.find({ _id: { $in: ids } }).select('status documentsStatus');
+        if (targets.length !== ids.length) {
+            return res.status(404).json({ success: false, error: 'One or more selected applications were not found.' });
+        }
+        const invalidTarget = targets
+            .map(application => ({ application, validation: validateStatusTransition(application.status, req.body.status, application.documentsStatus) }))
+            .find(({ validation }) => !validation.valid);
+        if (invalidTarget) {
             return res.status(409).json({
                 success: false,
-                error: `None of the selected applications can move to "${req.body.status}".`,
-                skipped
+                error: `Application ${invalidTarget.application._id}: ${invalidTarget.validation.error}`
             });
         }
         await Application.updateMany(
-            { _id: { $in: eligibleIds } },
+            { _id: { $in: ids } },
             {
                 $set: { status: req.body.status },
                 $push: { statusHistory: { status: req.body.status, changedAt: new Date(), changedBy: req.session.user._id } }
             }
         );
-        await AuditLog.insertMany(eligible.map(app => ({
-            userId: req.session.user._id,
-            userRole: req.session.user.role,
-            action: 'application_bulk_status_changed',
-            targetType: 'Application',
-            targetId: app._id,
-            targetLabel: `Application ${app._id}`,
-            changes: [{ field: 'status', from: app.status, to: req.body.status }],
-            ip: req.ip
-        })));
-        const data = await Application.find({ _id: { $in: eligibleIds } });
-        // Notify each affected student of their new status. The prior status comes from
-        // the pre-update snapshot; opportunity names are batch-loaded. Best-effort email.
-        const fromById = new Map(eligible.map(app => [String(app._id), app.status]));
+        if (targets.length) {
+            await AuditLog.insertMany(targets.map(app => ({
+                userId: req.session.user._id,
+                userRole: req.session.user.role,
+                action: 'application_bulk_status_changed',
+                targetType: 'Application',
+                targetId: app._id,
+                targetLabel: `Application ${app._id}`,
+                changes: [{ field: 'status', from: app.status, to: req.body.status }],
+                ip: req.ip
+            })));
+        }
+        const data = await Application.find({ _id: { $in: ids } });
+        // Notify each affected student of their new status. Prior statuses come from the
+        // pre-update snapshot; opportunity names are batch-loaded. Emails are best-effort.
+        const fromById = new Map(targets.map(app => [String(app._id), app.status]));
         const oppNames = new Map();
         try {
             const opps = await Opportunity.find({ _id: { $in: data.map(app => app.opportunityId) } }).select('name');
@@ -754,7 +762,7 @@ app.post('/api/applications/bulk-action', requireAdminSession, async (req, res) 
                 opportunityName: oppNames.get(String(application.opportunityId)) || ''
             }).catch(err => console.error('Bulk status-change notification failed:', err.message));
         }
-        res.json({ success: true, data, count: eligible.length, skipped });
+        res.json({ success: true, data, count: data.length });
     } catch (err) {
         res.status(400).json({ success: false, error: err.message });
     }
@@ -787,11 +795,14 @@ app.get('/api/statistics', requireAdminSession, async (_req, res) => {
 });
 
 const startServer = async () => {
-    await connectDB();
+    await connectDB(databaseConfig);
     startDeadlineReminderScheduler();
     app.listen(PORT, () => {
         console.log(`Server running at http://localhost:${PORT}`);
     });
 };
 
-startServer();
+startServer().catch(error => {
+    console.error(error.message);
+    process.exit(1);
+});

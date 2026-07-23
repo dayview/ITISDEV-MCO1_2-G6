@@ -103,8 +103,6 @@ const buildDocumentChecklist = (documents = []) => {
     };
 };
 
-// Like buildDocumentChecklist, but scoped to an opportunity's required document types
-// and operating on raw (unmapped) Document records. Used by the deadline reminder job.
 const buildRequirementChecklist = (requiredTypes = [], documents = []) => {
     const latestByType = new Map();
     documents.forEach(document => {

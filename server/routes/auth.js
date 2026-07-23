@@ -6,6 +6,7 @@ const router = express.Router();
 const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
 const { roleHome, sanitizeUser, isDlsuEmail, isValidPassword, validateRegistrationProfile } = require('../lib/authValidation');
+const { SESSION_COOKIE_NAME, sessionCookieOptions } = require('../config/session');
 
 const googleClient = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID,
@@ -173,17 +174,35 @@ router.post('/logout', async (req, res, next) => {
     try {
         const user = req.session?.user;
         if (user) {
-            await AuditLog.create({
-                userId: user._id,
-                userRole: user.role,
-                action: 'user_logout',
-                targetType: 'User',
-                targetId: user._id,
-                targetLabel: user.name,
-                ip: req.ip
-            });
+            // A failed audit write must never block logout - the session
+            // still needs to be destroyed and the cookie still needs to go.
+            try {
+                await AuditLog.create({
+                    userId: user._id,
+                    userRole: user.role,
+                    action: 'user_logout',
+                    targetType: 'User',
+                    targetId: user._id,
+                    targetLabel: user.name,
+                    ip: req.ip
+                });
+            } catch (auditErr) {
+                console.error('Failed to write logout audit log:', auditErr.message);
+            }
         }
-        req.session.destroy(() => res.json({ success: true, message: 'Logged out.' }));
+
+        const finish = () => res.json({ success: true, message: 'Logged out successfully.' });
+
+        if (!req.session) {
+            res.clearCookie(SESSION_COOKIE_NAME, sessionCookieOptions());
+            return finish();
+        }
+
+        req.session.destroy((err) => {
+            if (err) console.error('Session destroy failed:', err.message);
+            res.clearCookie(SESSION_COOKIE_NAME, sessionCookieOptions());
+            finish();
+        });
     } catch (err) { next(err); }
 });
 

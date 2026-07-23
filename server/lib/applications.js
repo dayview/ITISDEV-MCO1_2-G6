@@ -2,22 +2,36 @@ const mongoose = require('mongoose');
 
 const APPLICATION_STATUSES = ['submitted', 'under-review', 'nominated', 'accepted', 'rejected'];
 
+const APPLICATION_STATUS_TRANSITIONS = Object.freeze({
+    submitted: Object.freeze(['under-review', 'nominated', 'rejected']),
+    'under-review': Object.freeze(['nominated', 'rejected']),
+    nominated: Object.freeze(['accepted', 'rejected']),
+    accepted: Object.freeze([]),
+    rejected: Object.freeze([])
+});
+
+const COMPLETE_DOCUMENT_STATUSES = new Set(['nominated', 'accepted']);
+
 const isValidStatus = (status) => APPLICATION_STATUSES.includes(status);
 
-// Strict, linear lifecycle. `rejected` is reachable from any active stage; `accepted`
-// and `rejected` are terminal. This is the single authority the API enforces so the
-// student tracker can never display an impossible sequence of stages.
-const ALLOWED_TRANSITIONS = {
-    submitted: ['under-review', 'rejected'],
-    'under-review': ['nominated', 'rejected'],
-    nominated: ['accepted', 'rejected'],
-    accepted: [],
-    rejected: []
+const validateStatusTransition = (currentStatus, nextStatus, documentsStatus) => {
+    if (!isValidStatus(currentStatus)) {
+        return { valid: false, error: `Application has an unsupported current status: ${currentStatus || 'missing'}.` };
+    }
+    if (!isValidStatus(nextStatus)) {
+        return { valid: false, error: `Status must be one of: ${APPLICATION_STATUSES.join(', ')}.` };
+    }
+    if (!APPLICATION_STATUS_TRANSITIONS[currentStatus].includes(nextStatus)) {
+        if (!APPLICATION_STATUS_TRANSITIONS[currentStatus].length) {
+            return { valid: false, error: `Applications with status "${currentStatus}" are final and cannot be changed.` };
+        }
+        return { valid: false, error: `Cannot change application status from "${currentStatus}" to "${nextStatus}".` };
+    }
+    if (COMPLETE_DOCUMENT_STATUSES.has(nextStatus) && documentsStatus !== 'complete') {
+        return { valid: false, error: `Documents must be complete before an application can be ${nextStatus}.` };
+    }
+    return { valid: true, error: '' };
 };
-
-const getAllowedTransitions = (from) => ALLOWED_TRANSITIONS[from] || [];
-
-const canTransition = (from, to) => getAllowedTransitions(from).includes(to);
 
 const applicationPipeline = ({ status = '', college = '', search = '', sort = 'recency', documentsStatus = '', ids = [] } = {}) => {
     const pipeline = [
@@ -50,13 +64,38 @@ const applicationPipeline = ({ status = '', college = '', search = '', sort = 'r
     }
     if (Object.keys(match).length) pipeline.push({ $match: match });
 
+    pipeline.push({
+        $addFields: {
+            sortFirstName: {
+                $toLower: {
+                    $ifNull: [{ $arrayElemAt: [{ $split: [{ $ifNull: ['$student.name', ''] }, ' '] }, 0] }, '']
+                }
+            },
+            sortLastName: {
+                $toLower: {
+                    $ifNull: [{ $arrayElemAt: [{ $split: [{ $ifNull: ['$student.name', ''] }, ' '] }, -1] }, '']
+                }
+            }
+        }
+    });
+
     const sortMap = {
         recency: { createdAt: -1, submittedDate: -1 },
         oldest: { createdAt: 1, submittedDate: 1 },
         urgency: { 'opportunity.deadline': 1 },
         status: { status: 1 },
-        college: { 'student.college': 1 },
-        cgpa: { 'student.cgpa': -1 },
+        firstNameAsc: { sortFirstName: 1, sortLastName: 1, 'student.studentId': 1 },
+        firstNameDesc: { sortFirstName: -1, sortLastName: -1, 'student.studentId': 1 },
+        lastNameAsc: { sortLastName: 1, sortFirstName: 1, 'student.studentId': 1 },
+        lastNameDesc: { sortLastName: -1, sortFirstName: -1, 'student.studentId': 1 },
+        studentIdAsc: { 'student.studentId': 1, sortLastName: 1, sortFirstName: 1 },
+        studentIdDesc: { 'student.studentId': -1, sortLastName: 1, sortFirstName: 1 },
+        college: { 'student.college': 1, sortLastName: 1, sortFirstName: 1 },
+        collegeAsc: { 'student.college': 1, sortLastName: 1, sortFirstName: 1 },
+        collegeDesc: { 'student.college': -1, sortLastName: 1, sortFirstName: 1 },
+        cgpa: { 'student.cgpa': -1, sortLastName: 1, sortFirstName: 1 },
+        cgpaDesc: { 'student.cgpa': -1, sortLastName: 1, sortFirstName: 1 },
+        cgpaAsc: { 'student.cgpa': 1, sortLastName: 1, sortFirstName: 1 },
         documents: { documentsStatus: 1 }
     };
     pipeline.push({ $sort: sortMap[sort] || sortMap.recency });
@@ -104,27 +143,10 @@ const getReviewedAt = (statusHistory = []) => {
     return reviewEntry ? reviewEntry.changedAt : null;
 };
 
-// Resolves each history entry to a role rather than an identity: the student sees that a
-// stage was set by "you" or by an "admin", never which administrator acted. Legacy entries
-// with no `changedBy` fall back on the fact that only the student ever submits.
-const resolveActorRole = (entry, viewerId) => {
-    if (entry.changedBy && viewerId && String(entry.changedBy) === String(viewerId)) return 'you';
-    if (!entry.changedBy) return entry.status === 'submitted' ? 'you' : 'admin';
-    return 'admin';
-};
-
-const buildStatusTimeline = (statusHistory = [], viewerId) =>
-    statusHistory.map(entry => ({
-        status: entry.status,
-        at: entry.changedAt,
-        by: resolveActorRole(entry, viewerId)
-    }));
-
-const mapStudentApplication = (application, viewerId) => {
+const mapStudentApplication = (application) => {
     const opportunity = application.opportunityId && typeof application.opportunityId === 'object'
         ? application.opportunityId
         : null;
-    const history = Array.isArray(application.statusHistory) ? application.statusHistory : [];
 
     return {
         id: String(application._id),
@@ -136,9 +158,7 @@ const mapStudentApplication = (application, viewerId) => {
         documentsStatus: application.documentsStatus,
         submittedAt: application.submittedDate || application.createdAt,
         deadline: opportunity?.deadline || null,
-        reviewedAt: getReviewedAt(history),
-        timeline: buildStatusTimeline(history, viewerId),
-        lastUpdatedAt: history.length ? history[history.length - 1].changedAt : (application.updatedAt || null)
+        reviewedAt: getReviewedAt(application.statusHistory)
     };
 };
 
@@ -160,16 +180,14 @@ const toApplicationsCsv = (data) => {
 
 module.exports = {
     APPLICATION_STATUSES,
-    ALLOWED_TRANSITIONS,
+    APPLICATION_STATUS_TRANSITIONS,
     isValidStatus,
-    getAllowedTransitions,
-    canTransition,
+    validateStatusTransition,
     applicationPipeline,
     buildApplicationPayload,
     getInitialDocumentsStatus,
     appendStatusHistory,
     toApplicationsCsv,
     getReviewedAt,
-    buildStatusTimeline,
     mapStudentApplication
 };

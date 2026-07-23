@@ -55,11 +55,34 @@
     `;
   }
 
-  function renderOpportunity(opportunity, existing) {
+  function renderDocumentLoadError() {
+    return `
+      <div class="quick-apply-alert quick-apply-alert--warning" role="alert">
+        <strong>Unable to load your document vault</strong>
+        <span>Refresh this page to try again, or review your uploaded files before applying.</span>
+        <a href="documents.html">Review uploaded documents &rarr;</a>
+      </div>
+    `;
+  }
+
+  function renderOpportunity(opportunity, existing, documentLoadError = null) {
     const evaluation = window.GEMSApplicationStore.evaluateOpportunity(opportunity);
     const icon = window.GEMSOpportunityInitials(opportunity.hostInstitution);
     const eligibleLabel = opportunity.eligible ? 'Eligible' : 'Not eligible';
     const eligibleClass = opportunity.eligible ? 'chip--green' : 'chip--ineligible';
+    const applyDisabled = !evaluation.ready || Boolean(existing) || Boolean(documentLoadError);
+    const applyButtonContent = existing
+      ? 'Application submitted'
+      : documentLoadError
+        ? 'Documents unavailable'
+        : !evaluation.ready
+          ? 'Complete documents to apply'
+          : `
+            <svg class="quick-apply-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M13 2 4.5 13h6L9 22l8.5-11h-6L13 2Z" fill="currentColor"></path>
+            </svg>
+            <span>Quick Apply</span>
+          `;
 
     detailContainer.innerHTML = `
       <div class="opportunity-layout">
@@ -114,19 +137,14 @@
                 <span>Your document bundle is now with OVPERI for review.</span>
                 <a href="applications.html">View application tracker &rarr;</a>
               </div>
-            ` : renderBundle(evaluation)}
+            ` : documentLoadError ? renderDocumentLoadError() : renderBundle(evaluation)}
           </div>
           <button
             type="button"
             class="btn btn--primary opportunity-apply-button"
             id="quick-apply-button"
-            ${!opportunity.eligible || existing ? 'disabled' : ''}
-          >${existing ? 'Application submitted' : `
-            <svg class="quick-apply-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M13 2 4.5 13h6L9 22l8.5-11h-6L13 2Z" fill="currentColor"></path>
-            </svg>
-            <span>Quick Apply</span>
-          `}</button>
+            ${applyDisabled ? 'disabled' : ''}
+          >${applyButtonContent}</button>
           <p class="quick-apply-privacy">By applying, your profile and listed documents will be securely bundled and submitted to OVPERI.</p>
           <a class="btn btn--secondary opportunity-catalog-button" href="catalog.html">Back to catalog</a>
         </aside>
@@ -155,7 +173,7 @@
       }
       const uploadLink = feedback.querySelector('a');
       if (uploadLink) uploadLink.focus();
-      button.disabled = false;
+      button.disabled = Boolean(result.evaluation?.missing?.length);
       return;
     }
 
@@ -202,7 +220,18 @@
         return;
       }
       const existing = await loadExistingApplication(data.id);
-      renderOpportunity(data, existing);
+      let documentLoadError = null;
+
+      if (!existing) {
+        try {
+          await window.GEMSApplicationStore.loadDocuments();
+        } catch (error) {
+          documentLoadError = error;
+          console.error('Failed to load student documents:', error);
+        }
+      }
+
+      renderOpportunity(data, existing, documentLoadError);
     } catch (error) {
       loadingState.hidden = true;
       errorState.querySelector('h2').textContent = 'Unable to load opportunity';

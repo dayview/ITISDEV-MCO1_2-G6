@@ -1,5 +1,4 @@
 const STATUS = require('../../public/js/application-status');
-const { ALLOWED_TRANSITIONS: SERVER_TRANSITIONS } = require('../lib/applications');
 
 describe('Application Status - canonical status mapping', () => {
     test.each([
@@ -75,15 +74,37 @@ describe('Application Status - filterApplications', () => {
     });
 });
 
-describe('Application Status - transition map mirrors the server', () => {
-    test('the client ALLOWED_TRANSITIONS is identical to the server authority', () => {
-        expect(STATUS.ALLOWED_TRANSITIONS).toEqual(SERVER_TRANSITIONS);
+describe('Application Status - admin workflow actions', () => {
+    test.each([
+        ['submitted', 'complete', 'nominated'],
+        ['under-review', 'complete', 'nominated'],
+        ['nominated', 'complete', 'accepted']
+    ])('%s with %s documents can transition to %s', (status, documentsStatus, nextStatus) => {
+        expect(STATUS.canTransition({ status, documentsStatus }, nextStatus)).toBe(true);
     });
 
-    test('getAllowedTransitions / canTransition agree with the map', () => {
-        expect(STATUS.getAllowedTransitions('submitted')).toEqual(['under-review', 'rejected']);
-        expect(STATUS.canTransition('nominated', 'accepted')).toBe(true);
-        expect(STATUS.canTransition('accepted', 'rejected')).toBe(false);
-        expect(STATUS.getAllowedTransitions('unknown-status')).toEqual([]);
+    test.each([
+        ['submitted', 'incomplete', 'nominated'],
+        ['under-review', 'incomplete', 'nominated'],
+        ['nominated', 'incomplete', 'accepted'],
+        ['accepted', 'complete', 'nominated'],
+        ['rejected', 'complete', 'submitted']
+    ])('%s with %s documents cannot transition to %s', (status, documentsStatus, nextStatus) => {
+        expect(STATUS.canTransition({ status, documentsStatus }, nextStatus)).toBe(false);
+    });
+
+    test('allows active incomplete applications to be rejected', () => {
+        expect(STATUS.canTransition({ status: 'submitted', documentsStatus: 'incomplete' }, 'rejected')).toBe(true);
+        expect(STATUS.canTransition({ status: 'under-review', documentsStatus: 'incomplete' }, 'rejected')).toBe(true);
+        expect(STATUS.canTransition({ status: 'nominated', documentsStatus: 'incomplete' }, 'rejected')).toBe(true);
+    });
+
+    test('returns the correct primary admin action for each actionable state', () => {
+        expect(STATUS.getPrimaryAdminAction({ status: 'submitted', documentsStatus: 'complete' }))
+            .toEqual({ status: 'nominated', label: 'Nominate' });
+        expect(STATUS.getPrimaryAdminAction({ status: 'nominated', documentsStatus: 'complete' }))
+            .toEqual({ status: 'accepted', label: 'Accept' });
+        expect(STATUS.getPrimaryAdminAction({ status: 'accepted', documentsStatus: 'complete' })).toBeNull();
+        expect(STATUS.getPrimaryAdminAction({ status: 'submitted', documentsStatus: 'incomplete' })).toBeNull();
     });
 });

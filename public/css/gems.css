@@ -1288,7 +1288,7 @@ button {
 /* Column header row */
 .table-col-headers {
   display: grid;
-  grid-template-columns: 30px 1.7fr 1.5fr .8fr .9fr 1fr 1fr;
+  grid-template-columns: 30px 1.7fr 1.5fr .8fr .9fr 1fr 1fr minmax(84px, .7fr);
   padding: 11px 20px;
   background: #FAFBFB;
   font-size: 11px;
@@ -1302,7 +1302,7 @@ button {
 /* Data row */
 .table-row {
   display: grid;
-  grid-template-columns: 30px 1.7fr 1.5fr .8fr .9fr 1fr 1fr;
+  grid-template-columns: 30px 1.7fr 1.5fr .8fr .9fr 1fr 1fr minmax(84px, .7fr);
   padding: 14px 20px;
   border-bottom: 1px solid #F2F4F3;
   align-items: center;
@@ -1342,6 +1342,63 @@ button {
 .table-cell {
   font-size: 13px;
   color: var(--text-mid);
+}
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.btn-icon {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--border-inner);
+  border-radius: 8px;
+  background: #FFFFFF;
+  color: var(--text-mid);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, color .15s ease, transform .15s ease;
+}
+
+.btn-icon:hover {
+  transform: translateY(-1px);
+}
+
+.btn-icon:focus-visible {
+  outline: 3px solid rgba(15, 122, 61, .18);
+  outline-offset: 2px;
+}
+
+.approve-btn {
+  border-color: #ABEFC6;
+  background: #ECFDF3;
+  color: #067647;
+}
+
+.approve-btn:hover {
+  border-color: #75E0A7;
+  background: #D1FADF;
+}
+
+.reject-btn {
+  border-color: #FECDCA;
+  background: #FEF3F2;
+  color: #B42318;
+}
+
+.reject-btn:hover {
+  border-color: #FDA29B;
+  background: #FEE4E2;
 }
 
 /* Badge for "N selected" */
@@ -2201,6 +2258,56 @@ button {
   font-size: 11px;
   font-weight: 700;
   line-height: 18px;
+}
+
+.notification-panel {
+  position: fixed;
+  top: 70px;
+  right: 24px;
+  z-index: 60;
+  width: min(430px, calc(100vw - 32px));
+  max-height: min(680px, calc(100vh - 90px));
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg-white);
+  box-shadow: 0 22px 55px rgba(15, 23, 42, .18);
+}
+
+.notification-panel__header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-white);
+}
+
+.notification-panel__header h2 { margin: 2px 0 0; font-size: 18px; }
+.notification-panel__eyebrow { color: var(--green-dark); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.notification-panel__mark-all { border: 0; background: none; color: var(--green-dark); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.notification-panel__status { padding: 32px 20px; color: var(--text-muted); text-align: center; }
+.notification-panel__status p { margin: 0 0 14px; }
+.notification-panel__list { display: grid; }
+.notification-item { display: grid; grid-template-columns: 8px minmax(0, 1fr); gap: 10px; padding: 18px 20px; border-bottom: 1px solid var(--border); }
+.notification-item:last-child { border-bottom: 0; }
+.notification-item--unread { background: #f1faf5; }
+.notification-item__marker { width: 7px; height: 7px; margin-top: 7px; border-radius: 50%; background: transparent; }
+.notification-item--unread .notification-item__marker { background: var(--green-dark); }
+.notification-item__content h3 { margin: 0 0 5px; color: var(--text-main); font-size: 14px; }
+.notification-item__content p { margin: 0 0 7px; color: var(--text-mid); font-size: 12px; line-height: 1.5; }
+.notification-item__context { font-weight: 700; }
+.notification-item__meta { color: var(--text-muted) !important; }
+.notification-item__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
+.notification-item__actions a,
+.notification-item__actions button { border: 0; padding: 0; background: none; color: var(--green-dark); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: none; }
+
+@media (max-width: 640px) {
+  .notification-panel { top: 66px; right: 12px; width: calc(100vw - 24px); }
 }
 
 .catalog-shell {
@@ -4557,16 +4664,24 @@ body.catalog-page {
   margin: 0;
 }
 
-.admin-student-view {
-  flex: none;
-  color: #0F7A3D;
-  font-size: 13px;
-  font-weight: 800;
+.admin-toolbar__right,
+.review-sort-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.admin-student-view:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.admin-toolbar__right {
+  flex: none;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.review-sort-control span {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .admin-page .review-table {
@@ -4601,8 +4716,8 @@ body.catalog-page {
 
 .admin-page .table-col-headers,
 .admin-page .table-row {
-  grid-template-columns: 30px minmax(170px, 1.7fr) minmax(190px, 1.5fr) .65fr .8fr 1fr 1fr;
-  min-width: 980px;
+  grid-template-columns: 30px minmax(170px, 1.7fr) minmax(190px, 1.5fr) .65fr .8fr 1fr 1fr minmax(84px, .7fr);
+  min-width: 1080px;
 }
 
 .admin-page .table-col-headers {
@@ -5224,7 +5339,8 @@ body.catalog-page {
   height: 16px;
 }
 
-.applicant-sort-control select {
+.applicant-sort-control select,
+.review-sort-control select {
   min-height: 42px;
   padding: 0 40px 0 12px;
   border: 1px solid #D0D5DD;
@@ -5242,7 +5358,8 @@ body.catalog-page {
   outline: none;
 }
 
-.applicant-sort-control select:focus {
+.applicant-sort-control select:focus,
+.review-sort-control select:focus {
   border-color: #0F7A3D;
   box-shadow: 0 0 0 3px rgba(15, 122, 61, .1);
 }
@@ -5474,8 +5591,14 @@ body.catalog-page {
 .applicant-row-actions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 5px;
+}
+
+.applicant-action-final {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .applicant-view-link {
@@ -6027,8 +6150,6 @@ body.catalog-page {
   }
 
   .student-page:not(.catalog-page) .catalog-nav__search { display: none; }
-  .mobile-admin-logout { color: #fff; border: 0; background: transparent; cursor: pointer; }
-  .mobile-admin-logout:disabled { opacity: .6; cursor: wait; }
 
   .post-layout {
     grid-template-columns: minmax(0, 1fr) 310px;
@@ -6301,6 +6422,11 @@ body.catalog-page {
     justify-content: flex-start;
   }
 
+  .admin-toolbar__right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .student-page .student-shell {
     width: min(100% - 24px, 1480px);
     padding-top: 24px;
@@ -6386,7 +6512,61 @@ button, input, select, textarea { font: inherit; }
 .mobile-nav-toggle,
 .mobile-nav-backdrop { display: none; }
 
-.mobile-admin-logout { display: none; }
+/* Account dropdown (profile avatar -> View Profile / Sign Out). */
+.topnav-account {
+  position: relative;
+}
+
+.topnav-account__trigger {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.topnav-account__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 190px;
+  padding: 6px;
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(16, 24, 40, .16);
+}
+
+.topnav-account__menu[hidden] { display: none; }
+
+.topnav-account__item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dark);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.topnav-account__item:hover,
+.topnav-account__item:focus-visible {
+  background: var(--green-light);
+  color: var(--green-text);
+  outline: none;
+}
+
+.topnav-account__signout:disabled { opacity: .6; cursor: wait; }
 
 .student-page :where(.card, .stat-card, .opportunity-card, .profile-section, .review-table),
 .student-page :where(.dashboard-grid, .stat-grid, .profile-grid, .opportunity-layout) > * {
@@ -6498,7 +6678,17 @@ button, input, select, textarea { font: inherit; }
   }
 
   .student-page .student-topnav__link-label { display: inline; }
-  .student-page .catalog-account-link { margin-top: auto; }
+  .student-page .topnav-account { margin-top: auto; width: 100%; }
+
+  /* Inline expansion beneath the trigger instead of a floating overlay -
+     the drawer is a narrow, scrollable fixed panel, so an absolutely
+     positioned menu would risk clipping or overflow inside it. */
+  .student-page .topnav-account__menu {
+    position: static;
+    width: 100%;
+    margin-top: 6px;
+    box-shadow: none;
+  }
 
   .student-page .catalog-nav__search {
     grid-column: 1 / -1;

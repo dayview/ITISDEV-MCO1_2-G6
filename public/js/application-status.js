@@ -23,23 +23,15 @@
     { key: 'completed', label: 'Completed' }
   ];
 
-  // Mirrors ALLOWED_TRANSITIONS in server/lib/applications.js. The admin action controls
-  // are derived from this map so the UI can only ever offer a legal next stage.
-  const ALLOWED_TRANSITIONS = {
-    submitted: ['under-review', 'rejected'],
+  const STATUS_TRANSITIONS = {
+    submitted: ['under-review', 'nominated', 'rejected'],
     'under-review': ['nominated', 'rejected'],
     nominated: ['accepted', 'rejected'],
     accepted: [],
     rejected: []
   };
 
-  function getAllowedTransitions(status) {
-    return ALLOWED_TRANSITIONS[status] || [];
-  }
-
-  function canTransition(from, to) {
-    return getAllowedTransitions(from).includes(to);
-  }
+  const COMPLETE_DOCUMENT_STATUSES = ['nominated', 'accepted'];
 
   function getStatusConfig(status) {
     return STATUS_CONFIG[status] || UNKNOWN_STATUS;
@@ -71,18 +63,33 @@
     return applications.filter(application => getStatusGroup(application.status) === filterKey);
   }
 
+  function canTransition(application, nextStatus) {
+    if (!application || !STATUS_TRANSITIONS[application.status]?.includes(nextStatus)) return false;
+    return !COMPLETE_DOCUMENT_STATUSES.includes(nextStatus) || application.documentsStatus === 'complete';
+  }
+
+  function getPrimaryAdminAction(application) {
+    if (application?.status === 'nominated' && canTransition(application, 'accepted')) {
+      return { status: 'accepted', label: 'Accept' };
+    }
+    if (canTransition(application, 'nominated')) {
+      return { status: 'nominated', label: 'Nominate' };
+    }
+    return null;
+  }
+
   return {
     STATUS_CONFIG,
     UNKNOWN_STATUS,
     FILTERS,
-    ALLOWED_TRANSITIONS,
+    STATUS_TRANSITIONS,
     getStatusConfig,
     getStatusLabel,
     getStatusGroup,
     getStatusProgress,
-    getAllowedTransitions,
-    canTransition,
     countByFilter,
-    filterApplications
+    filterApplications,
+    canTransition,
+    getPrimaryAdminAction
   };
 });

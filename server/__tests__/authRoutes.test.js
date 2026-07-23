@@ -3,8 +3,11 @@ jest.mock('../models/AuditLog');
 jest.mock('bcrypt');
 
 const User = require('../models/User');
+const AuditLog = require('../models/AuditLog');
 const bcrypt = require('bcrypt');
 const authRouter = require('../routes/auth');
+const { requireAuth } = require('../middleware/auth');
+const { SESSION_COOKIE_NAME } = require('../config/session');
 
 function getHandler(method, routePath) {
     const layer = authRouter.stack.find(
@@ -378,5 +381,155 @@ describe('Authentication - login', () => {
 
         expect(bcrypt.compare).toHaveBeenCalledWith('anything123', '');
         expect(res.status).toHaveBeenCalledWith(401);
+    });
+});
+
+describe('Authentication - logout', () => {
+    const logoutHandler = getHandler('post', '/logout');
+
+    function mockDestroyableSession(user) {
+        const session = {
+            user,
+            destroy: jest.fn((cb) => {
+                delete session.user;
+                cb();
+            })
+        };
+        return session;
+    }
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    test('logs out an authenticated student: destroys the session, clears the cookie, and responds success', async () => {
+        AuditLog.create.mockResolvedValue({});
+        const session = mockDestroyableSession({ _id: 's1', name: 'Juan', role: 'Student' });
+        const req = { session, ip: '127.0.0.1' };
+        const res = mockRes();
+        res.clearCookie = jest.fn().mockReturnValue(res);
+
+        await logoutHandler(req, res, jest.fn());
+
+        expect(session.destroy).toHaveBeenCalledTimes(1);
+        expect(res.clearCookie).toHaveBeenCalledWith(SESSION_COOKIE_NAME, expect.objectContaining({
+            path: '/',
+            httpOnly: true,
+            sameSite: 'lax'
+        }));
+        expect(res.json).toHaveBeenCalledWith({ success: true, message: 'Logged out successfully.' });
+        expect(AuditLog.create).toHaveBeenCalledWith(expect.objectContaining({ action: 'user_logout', userRole: 'Student' }));
+    });
+
+    test('logs out an authenticated admin the same way', async () => {
+        AuditLog.create.mockResolvedValue({});
+        const session = mockDestroyableSession({ _id: 'a1', name: 'Admin One', role: 'OVPERI_Admin' });
+        const req = { session, ip: '127.0.0.1' };
+        const res = mockRes();
+        res.clearCookie = jest.fn().mockReturnValue(res);
+
+        await logoutHandler(req, res, jest.fn());
+
+        expect(session.destroy).toHaveBeenCalledTimes(1);
+        expect(res.clearCookie).toHaveBeenCalledWith(SESSION_COOKIE_NAME, expect.any(Object));
+        expect(AuditLog.create).toHaveBeenCalledWith(expect.objectContaining({ action: 'user_logout', userRole: 'OVPERI_Admin' }));
+        expect(res.json).toHaveBeenCalledWith({ success: true, message: 'Logged out successfully.' });
+    });
+
+    test('the destroyed session is rejected by the requireAuth middleware, as a later request on the old cookie would be', async () => {
+        AuditLog.create.mockResolvedValue({});
+        const session = mockDestroyableSession({ _id: 's1', name: 'Juan', role: 'Student' });
+        const req = { session, ip: '127.0.0.1' };
+
+        await logoutHandler(req, mockRes(), jest.fn());
+
+        const guardRes = mockRes();
+        const next = jest.fn();
+        requireAuth(req, guardRes, next);
+
+        expect(guardRes.status).toHaveBeenCalledWith(401);
+        expect(next).not.toHaveBeenCalled();
+    });
+
+    test('logging out when already logged out (no session user) does not crash', async () => {
+        const session = { destroy: jest.fn((cb) => cb()) };
+        const req = { session, ip: '127.0.0.1' };
+        const res = mockRes();
+        res.clearCookie = jest.fn().mockReturnValue(res);
+        const next = jest.fn();
+
+        await expect(logoutHandler(req, res, next)).resolves.not.toThrow();
+
+        expect(AuditLog.create).not.toHaveBeenCalled();
+        expect(session.destroy).toHaveBeenCalledTimes(1);
+        expect(res.json).toHaveBeenCalledWith({ success: true, message: 'Logged out successfully.' });
+        expect(next).not.toHaveBeenCalled();
+    });
+
+    test('logging out with no session object at all is handled without crashing', async () => {
+        const req = { ip: '127.0.0.1' };
+        const res = mockRes();
+        res.clearCookie = jest.fn().mockReturnValue(res);
+
+        await logoutHandler(req, res, jest.fn());
+
+        expect(res.clearCookie).toHaveBeenCalledWith(SESSION_COOKIE_NAME, expect.any(Object));
+        expect(res.json).toHaveBeenCalledWith({ success: true, message: 'Logged out successfully.' });
+    });
+
+    test('a session-store error during destroy is logged but still clears the cookie and responds success', async () => {
+        AuditLog.create.mockResolvedValue({});
+        const session = {
+            user: { _id: 's1', name: 'Juan', role: 'Student' },
+            destroy: jest.fn((cb) => cb(new Error('store unavailable')))
+        };
+        const req = { session, ip: '127.0.0.1' };
+        const res = mockRes();
+        res.clearCookie = jest.fn().mockReturnValue(res);
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+        await logoutHandler(req, res, jest.fn());
+
+        expect(res.clearCookie).toHaveBeenCalled();
+        expect(res.json).toHaveBeenCalledWith({ success: true, message: 'Logged out successfully.' });
+        consoleSpy.mockRestore();
+    });
+
+    test('an audit log failure during logout does not block session destruction or the response', async () => {
+        AuditLog.create.mockRejectedValue(new Error('db down'));
+        const session = mockDestroyableSession({ _id: 's1', name: 'Juan', role: 'Student' });
+        const req = { session, ip: '127.0.0.1' };
+        const res = mockRes();
+        res.clearCookie = jest.fn().mockReturnValue(res);
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+        await logoutHandler(req, res, jest.fn());
+
+        expect(session.destroy).toHaveBeenCalledTimes(1);
+        expect(res.json).toHaveBeenCalledWith({ success: true, message: 'Logged out successfully.' });
+        consoleSpy.mockRestore();
+    });
+
+    test('logging in again after logout starts a brand new, independent session', async () => {
+        const oldSession = mockDestroyableSession({ _id: 's1', name: 'Juan', role: 'Student' });
+        AuditLog.create.mockResolvedValue({});
+        await logoutHandler({ session: oldSession, ip: '127.0.0.1' }, mockRes(), jest.fn());
+        expect(oldSession.user).toBeUndefined();
+
+        const loginHandler = getHandler('post', '/login');
+        User.findOne.mockResolvedValue({
+            _id: 's1', email: 'juan@dlsu.edu.ph', name: 'Juan', role: 'Student', passwordHashed: '$2b$10$hash'
+        });
+        bcrypt.compare.mockResolvedValue(true);
+        const newSession = {};
+        const req = { body: { email: 'juan@dlsu.edu.ph', password: 'password123' }, session: newSession };
+        const res = mockRes();
+
+        await loginHandler(req, res, jest.fn());
+
+        expect(newSession.user).toBeDefined();
+        expect(newSession.user.role).toBe('Student');
+        expect(oldSession.user).toBeUndefined();
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
     });
 });

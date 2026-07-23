@@ -1,15 +1,13 @@
 const {
     APPLICATION_STATUSES,
-    ALLOWED_TRANSITIONS,
+    APPLICATION_STATUS_TRANSITIONS,
     isValidStatus,
-    getAllowedTransitions,
-    canTransition,
+    validateStatusTransition,
     buildApplicationPayload,
     appendStatusHistory,
     toApplicationsCsv,
     applicationPipeline,
     getReviewedAt,
-    buildStatusTimeline,
     mapStudentApplication
 } = require('../lib/applications');
 
@@ -27,86 +25,59 @@ describe('Application Logic - status transition / bulk status validation', () =>
     test('APPLICATION_STATUSES exposes exactly the five known statuses', () => {
         expect(APPLICATION_STATUSES).toEqual(['submitted', 'under-review', 'nominated', 'accepted', 'rejected']);
     });
-});
 
-describe('Application Logic - lifecycle transitions', () => {
-    test('allows only the next linear stage or a rejection from each active stage', () => {
-        expect(getAllowedTransitions('submitted')).toEqual(['under-review', 'rejected']);
-        expect(getAllowedTransitions('under-review')).toEqual(['nominated', 'rejected']);
-        expect(getAllowedTransitions('nominated')).toEqual(['accepted', 'rejected']);
-    });
-
-    test('treats accepted and rejected as terminal', () => {
-        expect(getAllowedTransitions('accepted')).toEqual([]);
-        expect(getAllowedTransitions('rejected')).toEqual([]);
-    });
-
-    test('canTransition permits a legal forward step', () => {
-        expect(canTransition('submitted', 'under-review')).toBe(true);
-        expect(canTransition('nominated', 'accepted')).toBe(true);
-        expect(canTransition('under-review', 'rejected')).toBe(true);
-    });
-
-    test('canTransition rejects stage-skipping, backward moves, and changes to a decided application', () => {
-        expect(canTransition('submitted', 'nominated')).toBe(false);
-        expect(canTransition('submitted', 'accepted')).toBe(false);
-        expect(canTransition('nominated', 'under-review')).toBe(false);
-        expect(canTransition('accepted', 'rejected')).toBe(false);
-        expect(canTransition('rejected', 'submitted')).toBe(false);
-    });
-
-    test('every active stage can always reach a rejection', () => {
-        ['submitted', 'under-review', 'nominated'].forEach(stage => {
-            expect(canTransition(stage, 'rejected')).toBe(true);
+    test('defines the complete application workflow without allowing terminal states to change', () => {
+        expect(APPLICATION_STATUS_TRANSITIONS).toEqual({
+            submitted: ['under-review', 'nominated', 'rejected'],
+            'under-review': ['nominated', 'rejected'],
+            nominated: ['accepted', 'rejected'],
+            accepted: [],
+            rejected: []
         });
     });
 
-    test('an unknown current status permits no transitions', () => {
-        expect(getAllowedTransitions('draft')).toEqual([]);
-        expect(canTransition('draft', 'submitted')).toBe(false);
+    test.each([
+        ['submitted', 'under-review'],
+        ['submitted', 'nominated'],
+        ['submitted', 'rejected'],
+        ['under-review', 'nominated'],
+        ['under-review', 'rejected'],
+        ['nominated', 'accepted'],
+        ['nominated', 'rejected']
+    ])('allows the transition from %s to %s when documents are complete', (currentStatus, nextStatus) => {
+        expect(validateStatusTransition(currentStatus, nextStatus, 'complete')).toEqual({ valid: true, error: '' });
     });
 
-    test('ALLOWED_TRANSITIONS is keyed by exactly the five known statuses', () => {
-        expect(Object.keys(ALLOWED_TRANSITIONS).sort()).toEqual([...APPLICATION_STATUSES].sort());
-    });
-});
-
-describe('Application Logic - buildStatusTimeline', () => {
-    const viewerId = 'student-1';
-    const history = [
-        { status: 'submitted', changedAt: new Date('2026-06-01'), changedBy: 'student-1' },
-        { status: 'under-review', changedAt: new Date('2026-06-05'), changedBy: 'admin-9' }
-    ];
-
-    test('attributes an entry to "you" when the viewer made the change, "admin" otherwise', () => {
-        expect(buildStatusTimeline(history, viewerId)).toEqual([
-            { status: 'submitted', at: new Date('2026-06-01'), by: 'you' },
-            { status: 'under-review', at: new Date('2026-06-05'), by: 'admin' }
-        ]);
+    test.each([
+        ['accepted', 'nominated'],
+        ['rejected', 'submitted'],
+        ['submitted', 'accepted'],
+        ['under-review', 'accepted'],
+        ['nominated', 'nominated']
+    ])('rejects the transition from %s to %s', (currentStatus, nextStatus) => {
+        expect(validateStatusTransition(currentStatus, nextStatus, 'complete').valid).toBe(false);
     });
 
-    test('never leaks the actor identity, only the role', () => {
-        const timeline = buildStatusTimeline(history, viewerId);
-        timeline.forEach(entry => {
-            expect(['you', 'admin']).toContain(entry.by);
-            expect(entry).not.toHaveProperty('changedBy');
+    test.each([
+        ['submitted', 'nominated'],
+        ['under-review', 'nominated'],
+        ['nominated', 'accepted']
+    ])('requires complete documents for the transition from %s to %s', (currentStatus, nextStatus) => {
+        expect(validateStatusTransition(currentStatus, nextStatus, 'incomplete')).toEqual({
+            valid: false,
+            error: `Documents must be complete before an application can be ${nextStatus}.`
         });
     });
 
-    test('falls back on the submit-is-always-the-student rule for legacy entries with no actor', () => {
-        const legacy = [
-            { status: 'submitted', changedAt: new Date('2026-06-01') },
-            { status: 'nominated', changedAt: new Date('2026-06-10') }
-        ];
-        expect(buildStatusTimeline(legacy, viewerId)).toEqual([
-            { status: 'submitted', at: new Date('2026-06-01'), by: 'you' },
-            { status: 'nominated', at: new Date('2026-06-10'), by: 'admin' }
-        ]);
+    test('still allows an incomplete application to enter review or be rejected', () => {
+        expect(validateStatusTransition('submitted', 'under-review', 'incomplete').valid).toBe(true);
+        expect(validateStatusTransition('submitted', 'rejected', 'incomplete').valid).toBe(true);
+        expect(validateStatusTransition('nominated', 'rejected', 'incomplete').valid).toBe(true);
     });
 
-    test('returns an empty timeline for missing history', () => {
-        expect(buildStatusTimeline(undefined, viewerId)).toEqual([]);
-        expect(buildStatusTimeline([], viewerId)).toEqual([]);
+    test('rejects unsupported current and target statuses with useful errors', () => {
+        expect(validateStatusTransition('legacy', 'submitted', 'complete').valid).toBe(false);
+        expect(validateStatusTransition('submitted', 'approved', 'complete').valid).toBe(false);
     });
 });
 
@@ -231,12 +202,7 @@ describe('Application Logic - mapStudentApplication', () => {
             documentsStatus: 'complete',
             submittedAt: '2026-06-01',
             deadline: new Date('2026-09-01'),
-            reviewedAt: new Date('2026-06-05'),
-            timeline: [
-                { status: 'submitted', at: new Date('2026-06-01'), by: 'you' },
-                { status: 'under-review', at: new Date('2026-06-05'), by: 'admin' }
-            ],
-            lastUpdatedAt: new Date('2026-06-05')
+            reviewedAt: new Date('2026-06-05')
         });
     });
 
@@ -275,5 +241,30 @@ describe('Application Logic - applicationPipeline query builder', () => {
         const pipeline = applicationPipeline({ sort: 'not-a-real-sort' });
         const sortStage = pipeline.find(stage => stage.$sort);
         expect(sortStage.$sort).toEqual({ createdAt: -1, submittedDate: -1 });
+    });
+
+    test.each([
+        ['firstNameAsc', { sortFirstName: 1, sortLastName: 1, 'student.studentId': 1 }],
+        ['firstNameDesc', { sortFirstName: -1, sortLastName: -1, 'student.studentId': 1 }],
+        ['lastNameAsc', { sortLastName: 1, sortFirstName: 1, 'student.studentId': 1 }],
+        ['lastNameDesc', { sortLastName: -1, sortFirstName: -1, 'student.studentId': 1 }],
+        ['studentIdAsc', { 'student.studentId': 1, sortLastName: 1, sortFirstName: 1 }],
+        ['studentIdDesc', { 'student.studentId': -1, sortLastName: 1, sortFirstName: 1 }],
+        ['collegeAsc', { 'student.college': 1, sortLastName: 1, sortFirstName: 1 }],
+        ['collegeDesc', { 'student.college': -1, sortLastName: 1, sortFirstName: 1 }],
+        ['cgpaDesc', { 'student.cgpa': -1, sortLastName: 1, sortFirstName: 1 }],
+        ['cgpaAsc', { 'student.cgpa': 1, sortLastName: 1, sortFirstName: 1 }]
+    ])('builds a stable %s sort', (sort, expected) => {
+        const pipeline = applicationPipeline({ sort });
+        const sortStage = pipeline.find(stage => stage.$sort);
+        expect(sortStage.$sort).toEqual(expected);
+    });
+
+    test('derives case-insensitive first-name and last-name sort keys from the stored full name', () => {
+        const pipeline = applicationPipeline({ sort: 'lastNameAsc' });
+        const nameSortStage = pipeline.find(stage => stage.$addFields?.sortFirstName);
+
+        expect(nameSortStage.$addFields.sortFirstName).toHaveProperty('$toLower');
+        expect(nameSortStage.$addFields.sortLastName).toHaveProperty('$toLower');
     });
 });
