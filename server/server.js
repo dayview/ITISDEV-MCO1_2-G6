@@ -614,8 +614,14 @@ app.get('/api/applications', requireAdminSession, async (req, res) => {
 app.get('/api/applications/export', requireAdminSession, async (req, res) => {
     try {
         const data = await Application.aggregate(applicationPipeline(req.query));
+        if (!data.length) {
+            return res.status(404).json({ success: false, error: 'No applications match the selected export criteria.' });
+        }
+        const ids = Array.isArray(req.query.ids) ? req.query.ids : req.query.ids ? [req.query.ids] : [];
+        const hasFilters = ['status', 'college', 'search', 'documentsStatus', 'program'].some(key => req.query[key]);
+        const filename = ids.length ? 'selected-applications.csv' : hasFilters ? 'filtered-applications.csv' : 'applications.csv';
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-        res.setHeader('Content-Disposition', 'attachment; filename="applications.csv"');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
         res.send(toApplicationsCsv(data));
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });

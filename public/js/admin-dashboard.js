@@ -304,14 +304,10 @@ async function batchApprove() {
  */
 async function exportCSV() {
   try {
-    const params = new URLSearchParams();
-    Array.from(selectedIds).forEach(id => params.append('ids', id));
-    if (currentFilters.status) params.append('status', currentFilters.status);
-    if (currentFilters.college) params.append('college', currentFilters.college);
-    if (currentFilters.search) params.append('search', currentFilters.search);
-    if (currentFilters.documentsStatus) params.append('documentsStatus', currentFilters.documentsStatus);
-
-    window.location.href = `${API_BASE}/applications/export?${params}`;
+    await GEMSApplicationExport.downloadApplicationsCsv({
+      ids: Array.from(selectedIds),
+      sort: currentSort
+    });
   } catch (err) {
     console.error('Error exporting:', err);
     alert(`Error: ${err.message}`);

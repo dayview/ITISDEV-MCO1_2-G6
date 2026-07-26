@@ -22,6 +22,14 @@
     rejected: 'Rejected'
   };
 
+  const statusValues = Object.fromEntries(Object.entries(statusLabels).map(([value, label]) => [label, value]));
+  const exportSortValues = {
+    newest: 'recency',
+    oldest: 'oldest',
+    name: 'firstNameAsc',
+    status: 'status'
+  };
+
   function escapeHtml(value) {
     const node = document.createElement('div');
     node.textContent = String(value || '');
@@ -307,6 +315,26 @@
     await loadApplicants();
   }
 
+  async function exportApplications(ids = []) {
+    const selectedIds = Array.isArray(ids) ? ids : [];
+    const filters = selectedIds.length ? {} : {
+      search: search.value.trim(),
+      status: statusValues[statusFilter.value] || '',
+      documentsStatus: documentsFilter.value.toLowerCase(),
+      program: programFilter.value
+    };
+
+    try {
+      await GEMSApplicationExport.downloadApplicationsCsv({
+        ids: selectedIds,
+        filters,
+        sort: exportSortValues[sort.value] || 'recency'
+      });
+    } catch (error) {
+      alert(`Export failed: ${error.message}`);
+    }
+  }
+
   async function loadApplicants() {
     body.innerHTML = '<p class="post-list-empty">Loading applicants...</p>';
     const response = await fetch('/api/applications?pageSize=100');
@@ -344,12 +372,12 @@
   });
   document.getElementById('applicant-prev').addEventListener('click', () => { if (currentPage > 1) { currentPage -= 1; render(); } });
   document.getElementById('applicant-next').addEventListener('click', () => { if (currentPage < Math.ceil(getMatches().length / pageSize)) { currentPage += 1; render(); } });
-  document.getElementById('applicant-export').addEventListener('click', () => alert('Applicant export prepared.'));
+  document.getElementById('applicant-export').addEventListener('click', () => exportApplications());
   document.getElementById('applicant-batch-button').addEventListener('click', () => document.getElementById('applicant-bulk-bar').scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
   document.querySelectorAll('[data-applicant-bulk]').forEach(button => button.addEventListener('click', () => {
     if (button.dataset.applicantBulk === 'primary') bulkStatus(button.dataset.status);
     else if (button.dataset.applicantBulk === 'reject') bulkStatus('rejected');
-    else alert(`Export selected for ${selected.size} applicant${selected.size === 1 ? '' : 's'}.`);
+    else exportApplications(Array.from(selected));
   }));
   document.querySelectorAll('[data-close-review-modal]').forEach(button => button.addEventListener('click', closeDocumentReview));
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && !reviewModal.hidden) closeDocumentReview(); });
