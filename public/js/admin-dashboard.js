@@ -118,18 +118,7 @@ function renderApplications() {
 }
 
 function canTransition(app, nextStatus) {
-  const transitions = {
-    submitted: ['under-review', 'nominated', 'rejected'],
-    'under-review': ['nominated', 'rejected'],
-    nominated: ['accepted', 'rejected'],
-    accepted: [],
-    rejected: []
-  };
-  const requiresCompleteDocuments = nextStatus === 'nominated' || nextStatus === 'accepted';
-  return Boolean(
-    transitions[app.status]?.includes(nextStatus)
-    && (!requiresCompleteDocuments || app.documentsStatus === 'complete')
-  );
+  return GEMSApplicationStatus.canTransition(app, nextStatus);
 }
 
 function renderApplicationActions(app) {
@@ -250,18 +239,23 @@ function updateBulkActionButtons() {
     document.getElementById('selection-count').textContent = count;
     exportBtn.style.display = 'inline-block';
     const selectedApplications = currentApplications.filter(app => selectedIds.has(app.id));
-    const canNominateSelection = selectedApplications.length === count
-      && selectedApplications.every(app => canTransition(app, 'nominated'));
+    const primaryAction = selectedApplications.length === count
+      ? GEMSApplicationStatus.getBulkAdminAction(selectedApplications)
+      : null;
     batchApproveBtn.style.display = 'inline-block';
-    batchApproveBtn.disabled = !canNominateSelection;
-    batchApproveBtn.title = canNominateSelection
-      ? 'Nominate all selected applications'
-      : 'Only applications with complete documents in Submitted or Under Review can be batch nominated';
+    batchApproveBtn.disabled = !primaryAction;
+    batchApproveBtn.dataset.status = primaryAction?.status || '';
+    batchApproveBtn.textContent = primaryAction ? `✓ ${primaryAction.label} selected` : '✓ Decision unavailable';
+    batchApproveBtn.title = primaryAction
+      ? `${primaryAction.label} all selected applications`
+      : 'Select applications at the same eligible workflow stage with complete documents';
   } else {
     badge.style.display = 'none';
     exportBtn.style.display = 'none';
     batchApproveBtn.style.display = 'none';
     batchApproveBtn.disabled = false;
+    batchApproveBtn.dataset.status = '';
+    batchApproveBtn.textContent = '✓ Batch decision';
     batchApproveBtn.removeAttribute('title');
   }
 }
@@ -271,23 +265,26 @@ function updateBulkActionButtons() {
  */
 async function batchApprove() {
   if (selectedIds.size === 0) {
-    alert('Please select applications to nominate');
+    alert('Please select applications for a batch decision.');
     return;
   }
 
   const selectedApplications = currentApplications.filter(app => selectedIds.has(app.id));
-  if (selectedApplications.length !== selectedIds.size || !selectedApplications.every(app => canTransition(app, 'nominated'))) {
-    alert('Only applications with complete documents in Submitted or Under Review can be batch nominated.');
+  const primaryAction = selectedApplications.length === selectedIds.size
+    ? GEMSApplicationStatus.getBulkAdminAction(selectedApplications)
+    : null;
+  if (!primaryAction) {
+    alert('Select applications at the same eligible workflow stage with complete documents.');
     return;
   }
 
-  if (!confirm(`Nominate ${selectedIds.size} applications?`)) return;
+  if (!confirm(`${primaryAction.label} ${selectedIds.size} applications?`)) return;
 
   try {
     const response = await fetch(`${API_BASE}/applications/bulk-action`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids: Array.from(selectedIds), status: 'nominated' })
+      body: JSON.stringify({ ids: Array.from(selectedIds), status: primaryAction.status })
     });
 
     const result = await response.json();
@@ -295,7 +292,7 @@ async function batchApprove() {
 
     selectedIds.clear();
     await fetchApplications();
-    console.log(`Batch nominated ${result.count} applications`);
+    console.log(`Batch updated ${result.count} applications to ${primaryAction.status}`);
   } catch (err) {
     console.error('Error batch approving:', err);
     alert(`Error: ${err.message}`);
