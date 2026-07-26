@@ -35,12 +35,36 @@
         && (!filters.period.value || program.periodState === filters.period.value);
     });
 
-    return result.sort((a, b) => {
+    return sortPrograms(result);
+  }
+
+  function sortPrograms(items) {
+    return items.sort((a, b) => {
       if (sort.value === 'name') return a.name.localeCompare(b.name);
       if (sort.value === 'applications') return b.applications - a.applications;
       if (sort.value === 'deadline') return new Date(a.deadline || 0) - new Date(b.deadline || 0);
       return new Date(b.updated || 0) - new Date(a.updated || 0);
     });
+  }
+
+  function exportPrograms(ids = []) {
+    const selectedIds = new Set(Array.isArray(ids) ? ids : []);
+    const records = selectedIds.size
+      ? sortPrograms(programs.filter(program => selectedIds.has(program.id)))
+      : filteredPrograms();
+    const hasActiveFilters = search.value.trim()
+      || Object.values(filters).some(filter => filter.value);
+    const filename = selectedIds.size
+      ? 'selected-programs.csv'
+      : hasActiveFilters
+        ? 'filtered-programs.csv'
+        : 'programs.csv';
+
+    try {
+      GEMSProgramExport.downloadProgramsCsv(records, filename);
+    } catch (error) {
+      alert(`Export failed: ${error.message}`);
+    }
   }
 
   function formatDate(value) {
@@ -199,11 +223,15 @@
   });
   document.getElementById('program-prev').addEventListener('click', () => { if (currentPage > 1) { currentPage -= 1; render(); } });
   document.getElementById('program-next').addEventListener('click', () => { if (currentPage < Math.ceil(filteredPrograms().length / pageSize)) { currentPage += 1; render(); } });
-  document.getElementById('export-programs').addEventListener('click', () => alert('Program list export prepared.'));
+  document.getElementById('export-programs').addEventListener('click', () => exportPrograms());
   document.getElementById('bulk-menu-button').addEventListener('click', () => {
     document.getElementById('program-bulk-bar').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
   document.querySelectorAll('[data-bulk-action]').forEach(button => button.addEventListener('click', () => {
+    if (button.dataset.bulkAction === 'export') {
+      exportPrograms(Array.from(selected));
+      return;
+    }
     alert(`${button.dataset.bulkAction} selected for ${selected.size} program${selected.size === 1 ? '' : 's'}.`);
   }));
   document.addEventListener('click', closeMenus);
