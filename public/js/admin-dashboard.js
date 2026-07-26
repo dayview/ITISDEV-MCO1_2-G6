@@ -445,27 +445,10 @@ function setupSearchInput() {
  */
 function setupTopbarActions() {
   const filterToggle = document.getElementById('admin-filter-toggle');
-  const notificationBtn = document.getElementById('admin-notification-btn');
   const incompletePill = document.querySelector('.pill--filter[data-filter-type="documentsStatus"]');
 
   if (filterToggle && incompletePill) {
     filterToggle.addEventListener('click', () => incompletePill.click());
-  }
-
-  if (notificationBtn) {
-    notificationBtn.addEventListener('click', () => {
-      let notice = document.getElementById('admin-notification-status');
-      if (!notice) {
-        notice = document.createElement('div');
-        notice.id = 'admin-notification-status';
-        notice.setAttribute('role', 'status');
-        notice.style.cssText = 'position:fixed;top:76px;right:24px;z-index:30;padding:12px 14px;border-radius:8px;background:#ffffff;border:1px solid rgba(15,122,61,.18);box-shadow:0 16px 40px rgba(15,23,42,.14);color:#123524;font-size:14px;';
-        document.body.appendChild(notice);
-      }
-      notice.textContent = 'Notifications are not available yet.';
-      window.clearTimeout(notice._hideTimer);
-      notice._hideTimer = window.setTimeout(() => notice.remove(), 2500);
-    });
   }
 }
 

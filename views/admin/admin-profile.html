@@ -56,10 +56,6 @@
         </div>
         <span class="student-topnav__link-label">Post</span>
       </a>
-      <button type="button" class="catalog-notification" aria-label="Notifications">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-        <span class="catalog-notification__badge" hidden></span>
-      </button>
       <a class="student-topnav__link catalog-account-link" href="admin-profile.html" aria-current="page" aria-label="Admin profile">
         <span class="user-avatar" aria-hidden="true">OV</span>
       </a>
@@ -236,29 +232,11 @@
         <div class="profile-card__header">
           <div>
             <h2>Admin Notes / Preferences</h2>
-            <p class="section-subtitle">Set defaults for notifications and administrative views.</p>
+            <p class="section-subtitle">Set defaults for administrative views.</p>
           </div>
         </div>
 
         <div class="profile-grid">
-          <div class="profile-field">
-            <label for="notification-preferences">Notification Preferences</label>
-            <select id="notification-preferences" name="notification-preferences" disabled>
-              <option selected>Email and dashboard alerts</option>
-              <option>Email only</option>
-              <option>Dashboard alerts only</option>
-            </select>
-            <span class="error-message" id="error-notification-preferences"></span>
-          </div>
-          <div class="profile-field">
-            <label for="email-digest-frequency">Email Digest Frequency</label>
-            <select id="email-digest-frequency" name="email-digest-frequency" disabled>
-              <option>Daily</option>
-              <option selected>Weekly</option>
-              <option>Monthly</option>
-            </select>
-            <span class="error-message" id="error-email-digest-frequency"></span>
-          </div>
           <div class="profile-field profile-field--full">
             <label for="default-dashboard-view">Default Dashboard View</label>
             <select id="default-dashboard-view" name="default-dashboard-view" disabled>
