@@ -211,7 +211,13 @@
         <div class="program-cell" data-label="Status"><span class="program-status program-status--${escapeHtml(program.status.toLowerCase())}">${escapeHtml(program.status)}</span></div>
         <div class="program-cell" data-label="Last Updated">${escapeHtml(formatDate(program.updated))}</div>
         <div class="program-row-actions" data-label="Actions">
-          <button type="button" class="program-action-link" data-action="view">View</button>
+          <button
+            type="button"
+            class="program-action-link"
+            data-action="view"
+            title="${program.rawStatus === 'published' ? 'View in student catalog' : 'Available after publishing'}"
+            ${program.rawStatus === 'published' ? '' : 'disabled aria-disabled="true"'}
+          >View</button>
           <button type="button" class="program-action-link" data-action="edit">Edit</button>
           <div class="program-overflow">
             <button type="button" class="program-overflow__trigger" aria-label="More actions for ${escapeHtml(program.name)}" aria-expanded="false">&#8942;</button>
@@ -276,16 +282,15 @@
 
     body.querySelectorAll('[data-action]').forEach(button => {
       button.addEventListener('click', async () => {
+        if (button.disabled) return;
         const row = button.closest('.program-row');
         const program = programs.find(item => item.id === row.dataset.programId);
         const action = button.dataset.action;
         if (action === 'edit') window.location.href = `post-opportunity.html?id=${program.id}`;
-        else if (action === 'view' && program.rawStatus === 'published') window.location.href = `../opportunity.html?id=${program.id}`;
-        else if (action === 'view') alert('Only published programs are visible to students.');
+        else if (action === 'view') window.location.href = `../opportunity.html?id=${program.id}`;
         else if (action === 'duplicate') await duplicateProgram(program, button);
         else if (action === 'close') await changeProgramStatus([program.id], 'close', button);
         else if (action === 'delete') await deletePrograms([program.id], button);
-        else alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action selected for "${program.name}".`);
       });
     });
   }
@@ -358,7 +363,6 @@
       await deletePrograms(Array.from(selected), button);
       return;
     }
-    alert(`${button.dataset.bulkAction} selected for ${selected.size} program${selected.size === 1 ? '' : 's'}.`);
   }));
   document.addEventListener('click', closeMenus);
 

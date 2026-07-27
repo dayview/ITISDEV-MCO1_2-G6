@@ -5080,6 +5080,13 @@ body.catalog-page {
   text-underline-offset: 3px;
 }
 
+.program-action-link:disabled,
+.program-action-link:disabled:hover {
+  color: #98A2B3;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
 .program-overflow {
   position: relative;
 }
