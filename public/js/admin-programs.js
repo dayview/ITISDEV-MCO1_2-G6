@@ -111,6 +111,42 @@
     }
   }
 
+  async function deletePrograms(ids, button) {
+    const requestedIds = Array.isArray(ids) ? [...new Set(ids)] : [];
+    const requestedIdSet = new Set(requestedIds);
+    const targets = programs.filter(program => requestedIdSet.has(program.id));
+
+    if (!requestedIds.length) {
+      alert('Select at least one unused draft program.');
+      return;
+    }
+    if (targets.length !== requestedIds.length
+      || targets.some(program => program.rawStatus !== 'draft' || Number(program.applications) > 0)) {
+      alert('Only draft programs with no applications can be deleted.');
+      return;
+    }
+    if (!confirm(`Permanently delete ${requestedIds.length} draft program${requestedIds.length === 1 ? '' : 's'}? This cannot be undone.`)) return;
+
+    button.disabled = true;
+    try {
+      const response = await fetch('/api/admin/opportunities/bulk-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: requestedIds, action: 'delete' })
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || `HTTP ${response.status}`);
+
+      selected.clear();
+      await loadPrograms();
+      alert(`${result.count} draft program${result.count === 1 ? '' : 's'} deleted successfully.`);
+    } catch (error) {
+      alert(`Unable to delete programs: ${error.message}`);
+    } finally {
+      button.disabled = false;
+    }
+  }
+
   function formatDate(value) {
     if (!value) return 'No date';
     return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -163,7 +199,9 @@
             <div class="program-overflow__menu" hidden>
               <button type="button" data-action="duplicate">Duplicate</button>
               ${program.rawStatus === 'published' ? '<button type="button" data-action="close">Close</button>' : ''}
-              <button type="button" data-action="delete" class="program-danger-action">Delete</button>
+              ${program.rawStatus === 'draft' && Number(program.applications) === 0
+                ? '<button type="button" data-action="delete" class="program-danger-action">Delete</button>'
+                : ''}
             </div>
           </div>
         </div>
@@ -226,6 +264,7 @@
         else if (action === 'view' && program.rawStatus === 'published') window.location.href = `../opportunity.html?id=${program.id}`;
         else if (action === 'view') alert('Only published programs are visible to students.');
         else if (action === 'close') await changeProgramStatus([program.id], 'close', button);
+        else if (action === 'delete') await deletePrograms([program.id], button);
         else alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action selected for "${program.name}".`);
       });
     });
@@ -246,6 +285,10 @@
       !completeSelection || targets.some(program => program.rawStatus !== 'draft');
     document.querySelector('[data-bulk-action="close"]').disabled =
       !completeSelection || targets.some(program => program.rawStatus !== 'published');
+    document.querySelector('[data-bulk-action="delete"]').disabled =
+      !completeSelection || targets.some(program => (
+        program.rawStatus !== 'draft' || Number(program.applications) > 0
+      ));
     document.getElementById('select-all-programs').checked = selected.size > 0
       && filteredPrograms().slice((currentPage - 1) * pageSize, currentPage * pageSize).every(program => selected.has(program.id));
   }
@@ -289,6 +332,10 @@
     }
     if (button.dataset.bulkAction === 'close') {
       await changeProgramStatus(Array.from(selected), 'close', button);
+      return;
+    }
+    if (button.dataset.bulkAction === 'delete') {
+      await deletePrograms(Array.from(selected), button);
       return;
     }
     alert(`${button.dataset.bulkAction} selected for ${selected.size} program${selected.size === 1 ? '' : 's'}.`);

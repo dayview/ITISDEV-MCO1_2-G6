@@ -173,8 +173,8 @@ app.post('/api/admin/opportunities/bulk-action', requireAdminSession, async (req
             }
         };
         const transition = transitions[req.body.action];
-        if (!transition) {
-            return res.status(400).json({ success: false, error: 'Action must be one of: publish, close.' });
+        if (!transition && req.body.action !== 'delete') {
+            return res.status(400).json({ success: false, error: 'Action must be one of: publish, close, delete.' });
         }
         if (requestedIds.some(id => !mongoose.Types.ObjectId.isValid(id))) {
             return res.status(400).json({ success: false, error: 'One or more program ids are invalid.' });
@@ -184,6 +184,45 @@ app.post('/api/admin/opportunities/bulk-action', requireAdminSession, async (req
         const targets = await Opportunity.find({ _id: { $in: ids } }).select('name status deadline');
         if (targets.length !== ids.length) {
             return res.status(404).json({ success: false, error: 'One or more selected programs were not found.' });
+        }
+
+        if (req.body.action === 'delete') {
+            const nonDraft = targets.find(opportunity => opportunity.status !== 'draft');
+            if (nonDraft) {
+                return res.status(409).json({
+                    success: false,
+                    error: `"${nonDraft.name}" must be a draft before it can be deleted.`
+                });
+            }
+
+            const applicationCount = await Application.countDocuments({ opportunityId: { $in: ids } });
+            if (applicationCount > 0) {
+                return res.status(409).json({
+                    success: false,
+                    error: 'Programs with application history cannot be deleted. Close or retain them instead.'
+                });
+            }
+
+            const deleteResult = await Opportunity.deleteMany({ _id: { $in: ids }, status: 'draft' });
+            if (deleteResult.deletedCount !== ids.length) {
+                return res.status(409).json({
+                    success: false,
+                    error: 'One or more program statuses changed while this request was being processed. Refresh and try again.'
+                });
+            }
+
+            await AuditLog.insertMany(targets.map(opportunity => ({
+                userId: req.session.user._id,
+                userRole: req.session.user.role,
+                action: 'opportunity_deleted',
+                targetType: 'Opportunity',
+                targetId: opportunity._id,
+                targetLabel: opportunity.name,
+                changes: [{ field: 'status', from: 'draft', to: 'deleted' }],
+                ip: req.ip
+            })));
+
+            return res.json({ success: true, action: 'delete', count: deleteResult.deletedCount });
         }
 
         const invalidStatus = targets.find(opportunity => opportunity.status !== transition.from);

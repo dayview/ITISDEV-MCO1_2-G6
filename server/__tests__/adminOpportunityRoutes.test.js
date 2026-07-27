@@ -18,7 +18,12 @@ jest.mock('../config/db', () => {
 
 jest.mock('../models/Opportunity', () => ({
     find: jest.fn(),
-    updateMany: jest.fn()
+    updateMany: jest.fn(),
+    deleteMany: jest.fn()
+}));
+
+jest.mock('../models/Applications', () => ({
+    countDocuments: jest.fn()
 }));
 
 jest.mock('../models/AuditLog', () => ({
@@ -27,6 +32,7 @@ jest.mock('../models/AuditLog', () => ({
 }));
 
 const Opportunity = require('../models/Opportunity');
+const Application = require('../models/Applications');
 const AuditLog = require('../models/AuditLog');
 const { app } = require('../server');
 
@@ -226,6 +232,90 @@ describe('POST /api/admin/opportunities/bulk-action', () => {
             error: '"Draft Program" must be published before it can be closed.'
         });
         expect(Opportunity.updateMany).not.toHaveBeenCalled();
+        expect(AuditLog.insertMany).not.toHaveBeenCalled();
+    });
+
+    test('deletes selected unused drafts and records each deletion in the audit log', async () => {
+        const targets = [
+            { _id: PROGRAM_ONE, name: 'Unused Draft One', status: 'draft', deadline: new Date('2099-07-31') },
+            { _id: PROGRAM_TWO, name: 'Unused Draft Two', status: 'draft', deadline: new Date('2099-08-31') }
+        ];
+        Opportunity.find.mockReturnValue({
+            select: jest.fn().mockResolvedValue(targets)
+        });
+        Application.countDocuments.mockResolvedValue(0);
+        Opportunity.deleteMany.mockResolvedValue({ deletedCount: 2 });
+        AuditLog.insertMany.mockResolvedValue([]);
+
+        const response = await request('/api/admin/opportunities/bulk-action', jsonRequest({
+            ids: [PROGRAM_ONE, PROGRAM_TWO],
+            action: 'delete'
+        }));
+        const result = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(result).toEqual({ success: true, action: 'delete', count: 2 });
+        expect(Application.countDocuments).toHaveBeenCalledWith({
+            opportunityId: { $in: [PROGRAM_ONE, PROGRAM_TWO] }
+        });
+        expect(Opportunity.deleteMany).toHaveBeenCalledWith({
+            _id: { $in: [PROGRAM_ONE, PROGRAM_TWO] },
+            status: 'draft'
+        });
+        expect(AuditLog.insertMany).toHaveBeenCalledWith([
+            expect.objectContaining({
+                action: 'opportunity_deleted',
+                targetId: PROGRAM_ONE,
+                changes: [{ field: 'status', from: 'draft', to: 'deleted' }]
+            }),
+            expect.objectContaining({
+                action: 'opportunity_deleted',
+                targetId: PROGRAM_TWO,
+                changes: [{ field: 'status', from: 'draft', to: 'deleted' }]
+            })
+        ]);
+    });
+
+    test('rejects deleting a published program', async () => {
+        Opportunity.find.mockReturnValue({
+            select: jest.fn().mockResolvedValue([
+                { _id: PROGRAM_ONE, name: 'Published Program', status: 'published', deadline: new Date('2099-07-31') }
+            ])
+        });
+
+        const response = await request('/api/admin/opportunities/bulk-action', jsonRequest({
+            ids: [PROGRAM_ONE],
+            action: 'delete'
+        }));
+
+        expect(response.status).toBe(409);
+        await expect(response.json()).resolves.toEqual({
+            success: false,
+            error: '"Published Program" must be a draft before it can be deleted.'
+        });
+        expect(Application.countDocuments).not.toHaveBeenCalled();
+        expect(Opportunity.deleteMany).not.toHaveBeenCalled();
+    });
+
+    test('rejects deleting a draft with application history', async () => {
+        Opportunity.find.mockReturnValue({
+            select: jest.fn().mockResolvedValue([
+                { _id: PROGRAM_ONE, name: 'Used Draft', status: 'draft', deadline: new Date('2099-07-31') }
+            ])
+        });
+        Application.countDocuments.mockResolvedValue(1);
+
+        const response = await request('/api/admin/opportunities/bulk-action', jsonRequest({
+            ids: [PROGRAM_ONE],
+            action: 'delete'
+        }));
+
+        expect(response.status).toBe(409);
+        await expect(response.json()).resolves.toEqual({
+            success: false,
+            error: 'Programs with application history cannot be deleted. Close or retain them instead.'
+        });
+        expect(Opportunity.deleteMany).not.toHaveBeenCalled();
         expect(AuditLog.insertMany).not.toHaveBeenCalled();
     });
 
