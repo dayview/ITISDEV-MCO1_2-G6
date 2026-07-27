@@ -3,6 +3,126 @@
 
   const MOBILE_NAV_QUERY = '(max-width: 760px)';
 
+  // Shared by every student and admin page - each one includes this script
+  // and renders the same .catalog-account-link markup, so converting it here
+  // once covers the desktop bar and the mobile drawer everywhere at once.
+  function createSignOutMenuItem() {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'topnav-account__item topnav-account__signout';
+    button.setAttribute('role', 'menuitem');
+    button.textContent = 'Sign Out';
+
+    button.addEventListener('click', async function () {
+      if (button.disabled) return;
+      const originalLabel = button.textContent;
+      button.disabled = true;
+      button.removeAttribute('aria-label');
+      button.textContent = 'Signing out...';
+
+      try {
+        const response = await fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+        if (!response.ok) throw new Error(`Logout failed with HTTP ${response.status}`);
+        window.location.href = '/login.html';
+      } catch (_error) {
+        button.disabled = false;
+        button.textContent = originalLabel;
+        button.setAttribute('aria-label', 'Sign out failed. Please try again.');
+      }
+    });
+
+    return button;
+  }
+
+  // Converts the existing profile/avatar <a> into a "<button trigger> + <menu>"
+  // account dropdown, reusing its classes, attributes, href, and inner markup
+  // (including any id'd avatar span other scripts look up) so nothing else
+  // that targets .catalog-account-link or #nav-user-avatar has to change.
+  function buildAccountMenu(accountLink) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'topnav-account';
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = accountLink.className + ' topnav-account__trigger';
+    ['aria-label', 'aria-current', 'title'].forEach(function (attr) {
+      if (accountLink.hasAttribute(attr)) trigger.setAttribute(attr, accountLink.getAttribute(attr));
+    });
+    trigger.setAttribute('aria-haspopup', 'menu');
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.innerHTML = accountLink.innerHTML;
+
+    const menu = document.createElement('div');
+    menu.className = 'topnav-account__menu';
+    menu.setAttribute('role', 'menu');
+    menu.hidden = true;
+
+    const profileLink = document.createElement('a');
+    profileLink.className = 'topnav-account__item';
+    profileLink.setAttribute('role', 'menuitem');
+    profileLink.href = accountLink.getAttribute('href') || '#';
+    profileLink.textContent = 'View Profile';
+
+    const signOutItem = createSignOutMenuItem();
+
+    menu.appendChild(profileLink);
+    menu.appendChild(signOutItem);
+    wrapper.appendChild(trigger);
+    wrapper.appendChild(menu);
+
+    function closeMenu(restoreFocus) {
+      if (menu.hidden) return;
+      menu.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+      if (restoreFocus) trigger.focus();
+    }
+
+    function openMenu() {
+      if (!menu.hidden) return;
+      menu.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      profileLink.focus();
+    }
+
+    trigger.addEventListener('click', function () {
+      if (menu.hidden) openMenu();
+      else closeMenu(false);
+    });
+
+    profileLink.addEventListener('click', function () {
+      closeMenu(false);
+    });
+
+    document.addEventListener('click', function (event) {
+      if (menu.hidden || wrapper.contains(event.target)) return;
+      closeMenu(false);
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key !== 'Escape' || menu.hidden) return;
+      // Close just the dropdown on the first Escape rather than also
+      // dropping through to the mobile drawer's own Escape handler below.
+      event.stopImmediatePropagation();
+      closeMenu(true);
+    });
+
+    wrapper.addEventListener('keydown', function (event) {
+      if (menu.hidden || (event.key !== 'ArrowDown' && event.key !== 'ArrowUp')) return;
+      event.preventDefault();
+      const items = [profileLink, signOutItem];
+      const currentIndex = items.indexOf(document.activeElement);
+      const nextIndex = event.key === 'ArrowDown'
+        ? (currentIndex + 1) % items.length
+        : (currentIndex <= 0 ? items.length - 1 : currentIndex - 1);
+      items[nextIndex].focus();
+    });
+
+    return wrapper;
+  }
+
   function initNavigation(nav, index) {
     if (nav.dataset.responsiveNav === 'ready') return;
     const links = nav.querySelector('.student-topnav__links');
@@ -31,23 +151,9 @@
     nav.insertAdjacentElement('afterend', backdrop);
     nav.dataset.responsiveNav = 'ready';
 
-    if (document.body.classList.contains('admin-page') && !links.querySelector('.mobile-admin-logout')) {
-      const logout = document.createElement('button');
-      logout.type = 'button';
-      logout.className = 'student-topnav__link mobile-admin-logout';
-      logout.innerHTML = '<span class="student-topnav__link-icon" aria-hidden="true">&#8594;</span><span class="student-topnav__link-label">Log out</span>';
-      logout.addEventListener('click', async function () {
-        logout.disabled = true;
-        try {
-          const response = await fetch('/api/auth/logout', { method: 'POST' });
-          if (!response.ok) throw new Error('Logout failed');
-          window.location.href = '/login.html';
-        } catch (_error) {
-          logout.disabled = false;
-          logout.setAttribute('aria-label', 'Log out failed. Try again');
-        }
-      });
-      links.appendChild(logout);
+    if (!links.querySelector('.topnav-account')) {
+      const accountLink = links.querySelector('.catalog-account-link');
+      if (accountLink) accountLink.replaceWith(buildAccountMenu(accountLink));
     }
 
     let lastFocused = null;
@@ -83,7 +189,8 @@
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Escape' && nav.classList.contains('is-nav-open')) closeDrawer(true);
       if (event.key !== 'Tab' || !nav.classList.contains('is-nav-open')) return;
-      const focusable = Array.from(links.querySelectorAll('a[href], button:not([disabled])'));
+      const focusable = Array.from(links.querySelectorAll('a[href], button:not([disabled])'))
+        .filter(function (el) { return !el.closest('[hidden]'); });
       if (!focusable.length) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];

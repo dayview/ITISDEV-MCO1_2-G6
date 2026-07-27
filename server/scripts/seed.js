@@ -6,7 +6,9 @@ const User = require('../models/User');
 const Opportunity = require('../models/Opportunity');
 const Application = require('../models/Applications');
 const Document = require('../models/Document');
+const Notification = require('../models/Notification');
 const { defaultFilePath } = require('../lib/documents');
+const { generateDeadlineReminders } = require('../lib/deadlineReminders');
 
 const baseEligibility = { nonGraduatingRequired: false, sdfoClearanceRequired: false };
 const opportunities = [
@@ -96,10 +98,22 @@ async function seed() {
     await Opportunity.deleteMany({});
     await User.deleteMany({});
     await Document.deleteMany({});
+    await Notification.deleteMany({});
 
     await Application.syncIndexes();
 
-    const opps = await Opportunity.insertMany(opportunities);
+    const relativeDeadline = days => {
+        const deadline = new Date();
+        deadline.setHours(12, 0, 0, 0);
+        deadline.setDate(deadline.getDate() + days);
+        return deadline;
+    };
+    const seededOpportunities = opportunities.map((opportunity, index) => ({
+        ...opportunity,
+        deadline: relativeDeadline(index === 0 ? 7 : index === 1 ? 3 : index === 2 ? 7 : index === 3 ? -1 : 30 + index)
+    }));
+    seededOpportunities[1].requiredDocumentTypes = ['curriculumAudit'];
+    const opps = await Opportunity.insertMany(seededOpportunities);
     const passwordHashed = await bcrypt.hash(SEED_PASSWORD, 10);
     const students = await User.insertMany(studentData.map(user => ({ ...user, passwordHashed })));
     const nonAdmins = students.filter(s => s.role === 'Student');
@@ -131,9 +145,49 @@ async function seed() {
     });
 
     await Application.insertMany(appDocs);
+
+    const [studentA, studentB, studentC, studentD] = nonAdmins;
+    await Application.updateMany({ opportunityId: { $in: [opps[0]._id, opps[1]._id, opps[2]._id] } }, { $set: { status: 'accepted' } });
+    await Application.updateOne({ userId: studentA._id, opportunityId: opps[0]._id }, { $set: { status: 'submitted', documentsStatus: 'incomplete' } });
+    await Application.updateOne({ userId: studentB._id, opportunityId: opps[1]._id }, { $set: { status: 'under-review', documentsStatus: 'incomplete' } });
+    await Application.updateOne({ userId: studentC._id, opportunityId: opps[2]._id }, { $set: { status: 'submitted', documentsStatus: 'complete' } });
+    await Application.create({
+        userId: studentD._id,
+        opportunityId: opps[3]._id,
+        status: 'submitted',
+        submittedDate: new Date().toISOString().slice(0, 10),
+        documentsStatus: 'incomplete'
+    });
+
+    const replaceDocument = async (student, type, status) => {
+        await Document.deleteMany({ userId: student._id, type });
+        const fileName = `${type}-${student.studentId}.pdf`;
+        return Document.create({
+            userId: student._id,
+            type,
+            originalFileName: fileName,
+            storedFileName: `${student._id}-${type}-${fileName}`,
+            filePath: defaultFilePath(student._id, fileName),
+            mimeType: 'application/pdf',
+            size: 125000,
+            uploadedAt: new Date(),
+            status
+        });
+    };
+
+    for (const type of opps[0].requiredDocumentTypes.filter(type => type !== 'passport')) {
+        await replaceDocument(studentA, type, 'verified');
+    }
+    await Document.deleteMany({ userId: studentA._id, type: 'passport' });
+    await replaceDocument(studentB, 'curriculumAudit', 'rejected');
+    for (const type of opps[2].requiredDocumentTypes) await replaceDocument(studentC, type, 'verified');
+
+    await Notification.syncIndexes();
+    const reminderSummary = await generateDeadlineReminders();
     console.log(`Done: ${opps.length} opportunities | ${students.length} students`);
     console.log(`Documents: ${documents.length}`);
-    console.log(`Applications: ${appDocs.length}`);
+    console.log(`Applications: ${appDocs.length + 1}`);
+    console.log(`Deadline reminders: ${JSON.stringify(reminderSummary)}`);
     if (process.env.NODE_ENV !== 'production') {
         console.log(`Login with any seeded email and password "${SEED_PASSWORD}" (e.g. admin@dlsu.edu.ph). Development credentials only.`);
     }

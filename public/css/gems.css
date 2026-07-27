@@ -2109,6 +2109,56 @@ button {
   line-height: 18px;
 }
 
+.notification-panel {
+  position: fixed;
+  top: 70px;
+  right: 24px;
+  z-index: 60;
+  width: min(430px, calc(100vw - 32px));
+  max-height: min(680px, calc(100vh - 90px));
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg-white);
+  box-shadow: 0 22px 55px rgba(15, 23, 42, .18);
+}
+
+.notification-panel__header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-white);
+}
+
+.notification-panel__header h2 { margin: 2px 0 0; font-size: 18px; }
+.notification-panel__eyebrow { color: var(--green-dark); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.notification-panel__mark-all { border: 0; background: none; color: var(--green-dark); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.notification-panel__status { padding: 32px 20px; color: var(--text-muted); text-align: center; }
+.notification-panel__status p { margin: 0 0 14px; }
+.notification-panel__list { display: grid; }
+.notification-item { display: grid; grid-template-columns: 8px minmax(0, 1fr); gap: 10px; padding: 18px 20px; border-bottom: 1px solid var(--border); }
+.notification-item:last-child { border-bottom: 0; }
+.notification-item--unread { background: #f1faf5; }
+.notification-item__marker { width: 7px; height: 7px; margin-top: 7px; border-radius: 50%; background: transparent; }
+.notification-item--unread .notification-item__marker { background: var(--green-dark); }
+.notification-item__content h3 { margin: 0 0 5px; color: var(--text-main); font-size: 14px; }
+.notification-item__content p { margin: 0 0 7px; color: var(--text-mid); font-size: 12px; line-height: 1.5; }
+.notification-item__context { font-weight: 700; }
+.notification-item__meta { color: var(--text-muted) !important; }
+.notification-item__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
+.notification-item__actions a,
+.notification-item__actions button { border: 0; padding: 0; background: none; color: var(--green-dark); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: none; }
+
+@media (max-width: 640px) {
+  .notification-panel { top: 66px; right: 12px; width: calc(100vw - 24px); }
+}
+
 .catalog-shell {
   display: block;
   min-height: auto;
@@ -5898,8 +5948,6 @@ body.catalog-page {
   }
 
   .student-page:not(.catalog-page) .catalog-nav__search { display: none; }
-  .mobile-admin-logout { color: #fff; border: 0; background: transparent; cursor: pointer; }
-  .mobile-admin-logout:disabled { opacity: .6; cursor: wait; }
 
   .post-layout {
     grid-template-columns: minmax(0, 1fr) 310px;
@@ -6257,7 +6305,61 @@ button, input, select, textarea { font: inherit; }
 .mobile-nav-toggle,
 .mobile-nav-backdrop { display: none; }
 
-.mobile-admin-logout { display: none; }
+/* Account dropdown (profile avatar -> View Profile / Sign Out). */
+.topnav-account {
+  position: relative;
+}
+
+.topnav-account__trigger {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.topnav-account__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 190px;
+  padding: 6px;
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(16, 24, 40, .16);
+}
+
+.topnav-account__menu[hidden] { display: none; }
+
+.topnav-account__item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dark);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.topnav-account__item:hover,
+.topnav-account__item:focus-visible {
+  background: var(--green-light);
+  color: var(--green-text);
+  outline: none;
+}
+
+.topnav-account__signout:disabled { opacity: .6; cursor: wait; }
 
 .student-page :where(.card, .stat-card, .opportunity-card, .profile-section, .review-table),
 .student-page :where(.dashboard-grid, .stat-grid, .profile-grid, .opportunity-layout) > * {
@@ -6369,7 +6471,17 @@ button, input, select, textarea { font: inherit; }
   }
 
   .student-page .student-topnav__link-label { display: inline; }
-  .student-page .catalog-account-link { margin-top: auto; }
+  .student-page .topnav-account { margin-top: auto; width: 100%; }
+
+  /* Inline expansion beneath the trigger instead of a floating overlay -
+     the drawer is a narrow, scrollable fixed panel, so an absolutely
+     positioned menu would risk clipping or overflow inside it. */
+  .student-page .topnav-account__menu {
+    position: static;
+    width: 100%;
+    margin-top: 6px;
+    box-shadow: none;
+  }
 
   .student-page .catalog-nav__search {
     grid-column: 1 / -1;
