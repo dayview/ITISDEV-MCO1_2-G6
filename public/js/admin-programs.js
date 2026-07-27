@@ -147,6 +147,25 @@
     }
   }
 
+  async function duplicateProgram(program, button) {
+    button.disabled = true;
+    try {
+      const response = await fetch(`/api/admin/opportunities/${encodeURIComponent(program.id)}/duplicate`, {
+        method: 'POST',
+        headers: { Accept: 'application/json' }
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || `HTTP ${response.status}`);
+
+      await loadPrograms();
+      alert(`"${result.data.name}" created as a draft. Applications were not copied.`);
+    } catch (error) {
+      alert(`Unable to duplicate program: ${error.message}`);
+    } finally {
+      button.disabled = false;
+    }
+  }
+
   function formatDate(value) {
     if (!value) return 'No date';
     return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -263,6 +282,7 @@
         if (action === 'edit') window.location.href = `post-opportunity.html?id=${program.id}`;
         else if (action === 'view' && program.rawStatus === 'published') window.location.href = `../opportunity.html?id=${program.id}`;
         else if (action === 'view') alert('Only published programs are visible to students.');
+        else if (action === 'duplicate') await duplicateProgram(program, button);
         else if (action === 'close') await changeProgramStatus([program.id], 'close', button);
         else if (action === 'delete') await deletePrograms([program.id], button);
         else alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action selected for "${program.name}".`);

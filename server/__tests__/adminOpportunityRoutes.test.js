@@ -18,6 +18,8 @@ jest.mock('../config/db', () => {
 
 jest.mock('../models/Opportunity', () => ({
     find: jest.fn(),
+    findById: jest.fn(),
+    create: jest.fn(),
     updateMany: jest.fn(),
     deleteMany: jest.fn()
 }));
@@ -65,6 +67,103 @@ afterAll(done => {
 beforeEach(() => {
     jest.clearAllMocks();
     mockSessionUser = ADMIN;
+});
+
+describe('POST /api/admin/opportunities/:id/duplicate', () => {
+    test('duplicates the complete program configuration as a new draft', async () => {
+        const source = {
+            _id: PROGRAM_ONE,
+            code: 'GEMS-TUM',
+            name: 'TUM Exchange',
+            description: 'Semester exchange',
+            institution: 'Technical University of Munich',
+            country: 'Germany',
+            region: 'Europe',
+            category: 'Exchange',
+            status: 'published',
+            deadline: new Date('2099-07-31'),
+            capacity: 20,
+            benefits: 'Tuition waiver',
+            fees: 'None',
+            credits: 12,
+            requiredDocumentTypes: ['transcript', 'passport'],
+            eligibility: { minCgpa: 3.0 }
+        };
+        const duplicate = {
+            ...source,
+            _id: PROGRAM_TWO,
+            code: 'GEMS-TUM-COPY-00000012',
+            name: 'TUM Exchange (Copy)',
+            status: 'draft',
+            createdBy: ADMIN._id
+        };
+        Opportunity.findById.mockResolvedValue(source);
+        Opportunity.create.mockResolvedValue(duplicate);
+        AuditLog.create.mockResolvedValue({});
+
+        const response = await request(`/api/admin/opportunities/${PROGRAM_ONE}/duplicate`, {
+            method: 'POST'
+        });
+        const result = await response.json();
+
+        expect(response.status).toBe(201);
+        expect(result.success).toBe(true);
+        expect(result.sourceId).toBe(PROGRAM_ONE);
+        expect(result.data).toEqual(expect.objectContaining({
+            id: PROGRAM_TWO,
+            name: 'TUM Exchange (Copy)',
+            rawStatus: 'draft',
+            applications: 0
+        }));
+        expect(Opportunity.create).toHaveBeenCalledWith(expect.objectContaining({
+            code: expect.stringMatching(/^GEMS-TUM-COPY-[A-F0-9]{8}$/),
+            name: 'TUM Exchange (Copy)',
+            status: 'draft',
+            institution: source.institution,
+            requiredDocumentTypes: ['transcript', 'passport'],
+            createdBy: ADMIN._id
+        }));
+        expect(AuditLog.create).toHaveBeenCalledWith(expect.objectContaining({
+            action: 'opportunity_created',
+            targetId: PROGRAM_TWO,
+            targetLabel: 'TUM Exchange (Copy)',
+            changes: [{
+                field: 'duplicatedFrom',
+                from: PROGRAM_ONE,
+                to: PROGRAM_TWO
+            }]
+        }));
+    });
+
+    test('rejects an invalid source id before querying the database', async () => {
+        const response = await request('/api/admin/opportunities/invalid-id/duplicate', {
+            method: 'POST'
+        });
+
+        expect(response.status).toBe(400);
+        await expect(response.json()).resolves.toEqual({
+            success: false,
+            error: 'Invalid program id.'
+        });
+        expect(Opportunity.findById).not.toHaveBeenCalled();
+        expect(Opportunity.create).not.toHaveBeenCalled();
+    });
+
+    test('returns 404 when the source program does not exist', async () => {
+        Opportunity.findById.mockResolvedValue(null);
+
+        const response = await request(`/api/admin/opportunities/${PROGRAM_ONE}/duplicate`, {
+            method: 'POST'
+        });
+
+        expect(response.status).toBe(404);
+        await expect(response.json()).resolves.toEqual({
+            success: false,
+            error: 'Program not found.'
+        });
+        expect(Opportunity.create).not.toHaveBeenCalled();
+        expect(AuditLog.create).not.toHaveBeenCalled();
+    });
 });
 
 describe('POST /api/admin/opportunities/bulk-action', () => {

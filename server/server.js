@@ -150,6 +150,65 @@ app.get('/api/admin/opportunities', requireAdminSession, async (_req, res) => {
     }
 });
 
+app.post('/api/admin/opportunities/:id/duplicate', requireAdminSession, async (req, res) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ success: false, error: 'Invalid program id.' });
+        }
+
+        const source = await Opportunity.findById(req.params.id);
+        if (!source) {
+            return res.status(404).json({ success: false, error: 'Program not found.' });
+        }
+
+        const codeSuffix = new mongoose.Types.ObjectId().toString().slice(-8).toUpperCase();
+        const eligibility = source.eligibility?.toObject
+            ? source.eligibility.toObject()
+            : source.eligibility;
+        const duplicate = await Opportunity.create({
+            code: `${source.code}-COPY-${codeSuffix}`,
+            name: `${source.name} (Copy)`,
+            description: source.description,
+            institution: source.institution,
+            country: source.country,
+            region: source.region,
+            category: source.category,
+            status: 'draft',
+            deadline: source.deadline,
+            capacity: source.capacity,
+            benefits: source.benefits,
+            fees: source.fees,
+            credits: source.credits,
+            requiredDocumentTypes: [...(source.requiredDocumentTypes || [])],
+            eligibility,
+            createdBy: req.session.user._id
+        });
+
+        await AuditLog.create({
+            userId: req.session.user._id,
+            userRole: req.session.user.role,
+            action: 'opportunity_created',
+            targetType: 'Opportunity',
+            targetId: duplicate._id,
+            targetLabel: duplicate.name,
+            changes: [{
+                field: 'duplicatedFrom',
+                from: String(source._id),
+                to: String(duplicate._id)
+            }],
+            ip: req.ip
+        });
+
+        res.status(201).json({
+            success: true,
+            sourceId: String(source._id),
+            data: mapAdminOpportunity(duplicate, 0)
+        });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
 app.post('/api/admin/opportunities/bulk-action', requireAdminSession, async (req, res) => {
     try {
         const requestedIds = Array.isArray(req.body.ids) ? req.body.ids : [];
