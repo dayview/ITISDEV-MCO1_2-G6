@@ -30,9 +30,14 @@ const applicationSchema = new mongoose.Schema({
         default: 'incomplete' 
     },
     statusHistory: [{
-        status: String,
-        changedAt: { type: Date, default: Date.now },
-        changedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        status: {
+            type: String,
+            enum: ['submitted', 'under-review', 'nominated', 'accepted', 'rejected'],
+            required: true
+        },
+        changedAt: { type: Date, default: Date.now, required: true },
+        changedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+        note: { type: String, maxlength: 500 },
     }],
 }, { timestamps: true });
 

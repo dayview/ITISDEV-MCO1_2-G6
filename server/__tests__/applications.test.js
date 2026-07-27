@@ -1,6 +1,8 @@
 const {
     APPLICATION_STATUSES,
+    APPLICATION_STATUS_TRANSITIONS,
     isValidStatus,
+    validateStatusTransition,
     buildApplicationPayload,
     appendStatusHistory,
     toApplicationsCsv,
@@ -22,6 +24,60 @@ describe('Application Logic - status transition / bulk status validation', () =>
 
     test('APPLICATION_STATUSES exposes exactly the five known statuses', () => {
         expect(APPLICATION_STATUSES).toEqual(['submitted', 'under-review', 'nominated', 'accepted', 'rejected']);
+    });
+
+    test('defines the complete application workflow without allowing terminal states to change', () => {
+        expect(APPLICATION_STATUS_TRANSITIONS).toEqual({
+            submitted: ['under-review', 'nominated', 'rejected'],
+            'under-review': ['nominated', 'rejected'],
+            nominated: ['accepted', 'rejected'],
+            accepted: [],
+            rejected: []
+        });
+    });
+
+    test.each([
+        ['submitted', 'under-review'],
+        ['submitted', 'nominated'],
+        ['submitted', 'rejected'],
+        ['under-review', 'nominated'],
+        ['under-review', 'rejected'],
+        ['nominated', 'accepted'],
+        ['nominated', 'rejected']
+    ])('allows the transition from %s to %s when documents are complete', (currentStatus, nextStatus) => {
+        expect(validateStatusTransition(currentStatus, nextStatus, 'complete')).toEqual({ valid: true, error: '' });
+    });
+
+    test.each([
+        ['accepted', 'nominated'],
+        ['rejected', 'submitted'],
+        ['submitted', 'accepted'],
+        ['under-review', 'accepted'],
+        ['nominated', 'nominated']
+    ])('rejects the transition from %s to %s', (currentStatus, nextStatus) => {
+        expect(validateStatusTransition(currentStatus, nextStatus, 'complete').valid).toBe(false);
+    });
+
+    test.each([
+        ['submitted', 'nominated'],
+        ['under-review', 'nominated'],
+        ['nominated', 'accepted']
+    ])('requires complete documents for the transition from %s to %s', (currentStatus, nextStatus) => {
+        expect(validateStatusTransition(currentStatus, nextStatus, 'incomplete')).toEqual({
+            valid: false,
+            error: `Documents must be complete before an application can be ${nextStatus}.`
+        });
+    });
+
+    test('still allows an incomplete application to enter review or be rejected', () => {
+        expect(validateStatusTransition('submitted', 'under-review', 'incomplete').valid).toBe(true);
+        expect(validateStatusTransition('submitted', 'rejected', 'incomplete').valid).toBe(true);
+        expect(validateStatusTransition('nominated', 'rejected', 'incomplete').valid).toBe(true);
+    });
+
+    test('rejects unsupported current and target statuses with useful errors', () => {
+        expect(validateStatusTransition('legacy', 'submitted', 'complete').valid).toBe(false);
+        expect(validateStatusTransition('submitted', 'approved', 'complete').valid).toBe(false);
     });
 });
 
@@ -185,5 +241,30 @@ describe('Application Logic - applicationPipeline query builder', () => {
         const pipeline = applicationPipeline({ sort: 'not-a-real-sort' });
         const sortStage = pipeline.find(stage => stage.$sort);
         expect(sortStage.$sort).toEqual({ createdAt: -1, submittedDate: -1 });
+    });
+
+    test.each([
+        ['firstNameAsc', { sortFirstName: 1, sortLastName: 1, 'student.studentId': 1 }],
+        ['firstNameDesc', { sortFirstName: -1, sortLastName: -1, 'student.studentId': 1 }],
+        ['lastNameAsc', { sortLastName: 1, sortFirstName: 1, 'student.studentId': 1 }],
+        ['lastNameDesc', { sortLastName: -1, sortFirstName: -1, 'student.studentId': 1 }],
+        ['studentIdAsc', { 'student.studentId': 1, sortLastName: 1, sortFirstName: 1 }],
+        ['studentIdDesc', { 'student.studentId': -1, sortLastName: 1, sortFirstName: 1 }],
+        ['collegeAsc', { 'student.college': 1, sortLastName: 1, sortFirstName: 1 }],
+        ['collegeDesc', { 'student.college': -1, sortLastName: 1, sortFirstName: 1 }],
+        ['cgpaDesc', { 'student.cgpa': -1, sortLastName: 1, sortFirstName: 1 }],
+        ['cgpaAsc', { 'student.cgpa': 1, sortLastName: 1, sortFirstName: 1 }]
+    ])('builds a stable %s sort', (sort, expected) => {
+        const pipeline = applicationPipeline({ sort });
+        const sortStage = pipeline.find(stage => stage.$sort);
+        expect(sortStage.$sort).toEqual(expected);
+    });
+
+    test('derives case-insensitive first-name and last-name sort keys from the stored full name', () => {
+        const pipeline = applicationPipeline({ sort: 'lastNameAsc' });
+        const nameSortStage = pipeline.find(stage => stage.$addFields?.sortFirstName);
+
+        expect(nameSortStage.$addFields.sortFirstName).toHaveProperty('$toLower');
+        expect(nameSortStage.$addFields.sortLastName).toHaveProperty('$toLower');
     });
 });

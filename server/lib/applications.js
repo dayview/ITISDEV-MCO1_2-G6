@@ -2,7 +2,36 @@ const mongoose = require('mongoose');
 
 const APPLICATION_STATUSES = ['submitted', 'under-review', 'nominated', 'accepted', 'rejected'];
 
+const APPLICATION_STATUS_TRANSITIONS = Object.freeze({
+    submitted: Object.freeze(['under-review', 'nominated', 'rejected']),
+    'under-review': Object.freeze(['nominated', 'rejected']),
+    nominated: Object.freeze(['accepted', 'rejected']),
+    accepted: Object.freeze([]),
+    rejected: Object.freeze([])
+});
+
+const COMPLETE_DOCUMENT_STATUSES = new Set(['nominated', 'accepted']);
+
 const isValidStatus = (status) => APPLICATION_STATUSES.includes(status);
+
+const validateStatusTransition = (currentStatus, nextStatus, documentsStatus) => {
+    if (!isValidStatus(currentStatus)) {
+        return { valid: false, error: `Application has an unsupported current status: ${currentStatus || 'missing'}.` };
+    }
+    if (!isValidStatus(nextStatus)) {
+        return { valid: false, error: `Status must be one of: ${APPLICATION_STATUSES.join(', ')}.` };
+    }
+    if (!APPLICATION_STATUS_TRANSITIONS[currentStatus].includes(nextStatus)) {
+        if (!APPLICATION_STATUS_TRANSITIONS[currentStatus].length) {
+            return { valid: false, error: `Applications with status "${currentStatus}" are final and cannot be changed.` };
+        }
+        return { valid: false, error: `Cannot change application status from "${currentStatus}" to "${nextStatus}".` };
+    }
+    if (COMPLETE_DOCUMENT_STATUSES.has(nextStatus) && documentsStatus !== 'complete') {
+        return { valid: false, error: `Documents must be complete before an application can be ${nextStatus}.` };
+    }
+    return { valid: true, error: '' };
+};
 
 const applicationPipeline = ({ status = '', college = '', search = '', sort = 'recency', documentsStatus = '', ids = [] } = {}) => {
     const pipeline = [
@@ -35,13 +64,38 @@ const applicationPipeline = ({ status = '', college = '', search = '', sort = 'r
     }
     if (Object.keys(match).length) pipeline.push({ $match: match });
 
+    pipeline.push({
+        $addFields: {
+            sortFirstName: {
+                $toLower: {
+                    $ifNull: [{ $arrayElemAt: [{ $split: [{ $ifNull: ['$student.name', ''] }, ' '] }, 0] }, '']
+                }
+            },
+            sortLastName: {
+                $toLower: {
+                    $ifNull: [{ $arrayElemAt: [{ $split: [{ $ifNull: ['$student.name', ''] }, ' '] }, -1] }, '']
+                }
+            }
+        }
+    });
+
     const sortMap = {
         recency: { createdAt: -1, submittedDate: -1 },
         oldest: { createdAt: 1, submittedDate: 1 },
         urgency: { 'opportunity.deadline': 1 },
         status: { status: 1 },
-        college: { 'student.college': 1 },
-        cgpa: { 'student.cgpa': -1 },
+        firstNameAsc: { sortFirstName: 1, sortLastName: 1, 'student.studentId': 1 },
+        firstNameDesc: { sortFirstName: -1, sortLastName: -1, 'student.studentId': 1 },
+        lastNameAsc: { sortLastName: 1, sortFirstName: 1, 'student.studentId': 1 },
+        lastNameDesc: { sortLastName: -1, sortFirstName: -1, 'student.studentId': 1 },
+        studentIdAsc: { 'student.studentId': 1, sortLastName: 1, sortFirstName: 1 },
+        studentIdDesc: { 'student.studentId': -1, sortLastName: 1, sortFirstName: 1 },
+        college: { 'student.college': 1, sortLastName: 1, sortFirstName: 1 },
+        collegeAsc: { 'student.college': 1, sortLastName: 1, sortFirstName: 1 },
+        collegeDesc: { 'student.college': -1, sortLastName: 1, sortFirstName: 1 },
+        cgpa: { 'student.cgpa': -1, sortLastName: 1, sortFirstName: 1 },
+        cgpaDesc: { 'student.cgpa': -1, sortLastName: 1, sortFirstName: 1 },
+        cgpaAsc: { 'student.cgpa': 1, sortLastName: 1, sortFirstName: 1 },
         documents: { documentsStatus: 1 }
     };
     pipeline.push({ $sort: sortMap[sort] || sortMap.recency });
@@ -126,7 +180,9 @@ const toApplicationsCsv = (data) => {
 
 module.exports = {
     APPLICATION_STATUSES,
+    APPLICATION_STATUS_TRANSITIONS,
     isValidStatus,
+    validateStatusTransition,
     applicationPipeline,
     buildApplicationPayload,
     getInitialDocumentsStatus,

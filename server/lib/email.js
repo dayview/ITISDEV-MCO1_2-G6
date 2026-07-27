@@ -34,9 +34,11 @@ const escapeHtml = value => String(value || '')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
+const appBaseUrl = () => String(process.env.APP_BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
+
 const buildDeadlineReminderEmail = ({ recipientName, reminder }) => {
     const name = recipientName || 'Student';
-    const documentsUrl = `${String(process.env.APP_BASE_URL || 'http://localhost:3000').replace(/\/$/, '')}/documents.html`;
+    const documentsUrl = `${appBaseUrl()}/documents.html`;
     const subject = `[GEMS] ${reminder.title}`;
     const text = [
         `Hello ${name},`,
@@ -86,6 +88,53 @@ const sendDeadlineReminderEmail = async ({ recipientEmail, recipientName, remind
     }
 };
 
+// Generic event email (application status change / opportunity event). Reuses the
+// same transporter, SMTP guards, and skip semantics as the deadline reminder path.
+const buildEventEmail = ({ recipientName, notification }) => {
+    const name = recipientName || 'Student';
+    const link = `${appBaseUrl()}/applications.html`;
+    const subject = `[GEMS] ${notification.title}`;
+    const text = [
+        `Hello ${name},`,
+        '',
+        notification.message,
+        '',
+        notification.opportunityName ? `Opportunity: ${notification.opportunityName}` : '',
+        `View your applications: ${link}`,
+        '',
+        'GEMS — Global Exchange Management System'
+    ].filter(Boolean).join('\n');
+    const html = `
+      <p>Hello ${escapeHtml(name)},</p>
+      <p>${escapeHtml(notification.message)}</p>
+      ${notification.opportunityName ? `<p><strong>Opportunity:</strong> ${escapeHtml(notification.opportunityName)}</p>` : ''}
+      <p><a href="${escapeHtml(link)}">View your applications</a></p>
+      <p>GEMS — Global Exchange Management System</p>
+    `;
+
+    return { subject, text, html };
+};
+
+const sendEventEmail = async ({ recipientEmail, recipientName, notification }) => {
+    if (!isEmailNotificationsEnabled()) return { status: 'skipped', reason: 'Email notifications are disabled.' };
+    if (!recipientEmail) return { status: 'skipped', reason: 'The student does not have an email address.' };
+    if (!hasSmtpConfiguration()) return { status: 'skipped', reason: 'Gmail SMTP is not configured.' };
+
+    try {
+        const content = buildEventEmail({ recipientName, notification });
+        const info = await getTransporter().sendMail({
+            from: process.env.EMAIL_FROM || process.env.SMTP_USER,
+            to: recipientEmail,
+            subject: content.subject,
+            text: content.text,
+            html: content.html
+        });
+        return { status: 'sent', messageId: info.messageId || '' };
+    } catch (error) {
+        return { status: 'failed', error: String(error.message || 'Unable to send email.').slice(0, 500) };
+    }
+};
+
 const resetEmailTransporter = () => {
     transporter = undefined;
 };
@@ -96,5 +145,7 @@ module.exports = {
     hasSmtpConfiguration,
     buildDeadlineReminderEmail,
     sendDeadlineReminderEmail,
+    buildEventEmail,
+    sendEventEmail,
     resetEmailTransporter
 };

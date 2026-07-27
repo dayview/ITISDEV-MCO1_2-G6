@@ -12,6 +12,8 @@
   const filteredEmptyEl = document.getElementById('applications-filtered-empty');
   const listEl = document.getElementById('application-list');
   const pillsEl = document.getElementById('applications-filter-pills');
+  const refreshButton = document.getElementById('applications-refresh');
+  const updatedEl = document.getElementById('applications-updated');
 
   if (!listEl || !STATUS) return;
 
@@ -96,10 +98,38 @@
     return `<div class="progress-steps" role="list" aria-label="Application progress">${stepHtml}</div>`;
   }
 
+  function renderTimeline(application) {
+    const timeline = Array.isArray(application.timeline) ? application.timeline : [];
+    if (!timeline.length) return '';
+
+    const items = timeline.map(entry => {
+      const label = STATUS.getStatusLabel(entry.status);
+      const when = formatDate(entry.at) || 'Date unavailable';
+      const actor = entry.by === 'you' ? 'by you' : 'by an administrator';
+      return `
+        <li class="tracker-timeline__item">
+          <span class="tracker-timeline__dot" aria-hidden="true"></span>
+          <div class="tracker-timeline__body">
+            <span class="tracker-timeline__label">${escapeHtml(label)}</span>
+            <span class="tracker-timeline__meta">${escapeHtml(actor)} &middot; ${escapeHtml(when)}</span>
+          </div>
+        </li>
+      `;
+    }).join('');
+
+    return `
+      <details class="tracker-timeline">
+        <summary class="tracker-timeline__summary">Stage history</summary>
+        <ol class="tracker-timeline__list">${items}</ol>
+      </details>
+    `;
+  }
+
   function renderCard(application) {
     const submittedLabel = formatDate(application.submittedAt) || 'Not provided';
     const deadlineLabel = formatDate(application.deadline);
     const reviewedLabel = formatDate(application.reviewedAt);
+    const updatedLabel = formatDate(application.lastUpdatedAt);
     const statusLabel = STATUS.getStatusLabel(application.status);
     const chipClass = chipClassForStatus(application.status);
     const documentsLabel = application.documentsStatus === 'complete' ? 'Complete' : 'Incomplete';
@@ -112,12 +142,14 @@
           <div class="tracker-card__info">
             <div class="tracker-name">${escapeHtml(application.programName || 'Untitled opportunity')}</div>
             <div class="tracker-host">${escapeHtml(application.hostInstitution || 'Not provided')}${application.location ? ` · ${escapeHtml(application.location)}` : ''}</div>
-            <div class="tracker-submitted">submitted ${escapeHtml(submittedLabel)} &middot; ${deadlineLabel ? `deadline ${escapeHtml(deadlineLabel)}` : 'no deadline available'}</div>
+            <div class="tracker-submitted">submitted ${escapeHtml(submittedLabel)} &middot; ${deadlineLabel ? `deadline ${escapeHtml(deadlineLabel)}` : 'no deadline available'}${updatedLabel ? ` &middot; updated ${escapeHtml(updatedLabel)}` : ''}</div>
           </div>
           <span class="chip ${chipClass}"><span class="chip__dot"></span>${escapeHtml(statusLabel)}</span>
         </div>
 
         ${renderProgressSteps(application.status)}
+
+        ${renderTimeline(application)}
 
         <div class="flex-row align-center space-between gap-12 mt-16">
           <span class="tracker-submitted">Documents: ${escapeHtml(documentsLabel)} &middot; ${reviewedLabel ? `reviewed ${escapeHtml(reviewedLabel)}` : 'not yet reviewed'}</span>
@@ -194,8 +226,16 @@
     activeFilter = 'all';
     renderPills();
     renderList();
+    markRefreshed();
+  }
+
+  function markRefreshed() {
+    if (!updatedEl) return;
+    const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    updatedEl.textContent = `Last refreshed ${now}`;
   }
 
   if (retryButton) retryButton.addEventListener('click', load);
+  if (refreshButton) refreshButton.addEventListener('click', load);
   document.addEventListener('DOMContentLoaded', load);
 })();
