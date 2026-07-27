@@ -150,6 +150,94 @@ app.get('/api/admin/opportunities', requireAdminSession, async (_req, res) => {
     }
 });
 
+app.post('/api/admin/opportunities/bulk-action', requireAdminSession, async (req, res) => {
+    try {
+        const requestedIds = Array.isArray(req.body.ids) ? req.body.ids : [];
+        if (!requestedIds.length) {
+            return res.status(400).json({ success: false, error: 'Select at least one program.' });
+        }
+        const transitions = {
+            publish: {
+                from: 'draft',
+                to: 'published',
+                auditAction: 'opportunity_published',
+                requiredLabel: 'a draft',
+                pastTense: 'published'
+            },
+            close: {
+                from: 'published',
+                to: 'closed',
+                auditAction: 'opportunity_closed',
+                requiredLabel: 'published',
+                pastTense: 'closed'
+            }
+        };
+        const transition = transitions[req.body.action];
+        if (!transition) {
+            return res.status(400).json({ success: false, error: 'Action must be one of: publish, close.' });
+        }
+        if (requestedIds.some(id => !mongoose.Types.ObjectId.isValid(id))) {
+            return res.status(400).json({ success: false, error: 'One or more program ids are invalid.' });
+        }
+
+        const ids = [...new Set(requestedIds.map(String))];
+        const targets = await Opportunity.find({ _id: { $in: ids } }).select('name status deadline');
+        if (targets.length !== ids.length) {
+            return res.status(404).json({ success: false, error: 'One or more selected programs were not found.' });
+        }
+
+        const invalidStatus = targets.find(opportunity => opportunity.status !== transition.from);
+        if (invalidStatus) {
+            return res.status(409).json({
+                success: false,
+                error: `"${invalidStatus.name}" must be ${transition.requiredLabel} before it can be ${transition.pastTense}.`
+            });
+        }
+
+        const expired = req.body.action === 'publish'
+            ? targets.find(opportunity => !opportunity.deadline || new Date(opportunity.deadline) < new Date())
+            : null;
+        if (expired) {
+            return res.status(409).json({
+                success: false,
+                error: `"${expired.name}" needs a future application deadline before it can be published.`
+            });
+        }
+
+        const updateResult = await Opportunity.updateMany(
+            { _id: { $in: ids }, status: transition.from },
+            { $set: { status: transition.to } },
+            { runValidators: true }
+        );
+        if (updateResult.matchedCount !== ids.length) {
+            return res.status(409).json({
+                success: false,
+                error: 'One or more program statuses changed while this request was being processed. Refresh and try again.'
+            });
+        }
+
+        await AuditLog.insertMany(targets.map(opportunity => ({
+            userId: req.session.user._id,
+            userRole: req.session.user.role,
+            action: transition.auditAction,
+            targetType: 'Opportunity',
+            targetId: opportunity._id,
+            targetLabel: opportunity.name,
+            changes: [{ field: 'status', from: transition.from, to: transition.to }],
+            ip: req.ip
+        })));
+
+        res.json({
+            success: true,
+            action: req.body.action,
+            status: transition.to,
+            count: updateResult.modifiedCount
+        });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
 app.get('/api/me', requireSession, (req, res) => {
     res.json({ success: true, user: req.session.user });
 });
