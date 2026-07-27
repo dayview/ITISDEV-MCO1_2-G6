@@ -27,14 +27,26 @@ jest.mock('../models/AuditLog', () => ({
     create: jest.fn()
 }));
 
+jest.mock('../models/Opportunity', () => ({
+    find: jest.fn()
+}));
+
+jest.mock('../lib/eventNotifications', () => ({
+    notifyApplicationStatusChange: jest.fn(() => Promise.resolve()),
+    notifyOpportunityEvent: jest.fn(() => Promise.resolve())
+}));
+
 const Application = require('../models/Applications');
 const AuditLog = require('../models/AuditLog');
+const Opportunity = require('../models/Opportunity');
+const { notifyApplicationStatusChange } = require('../lib/eventNotifications');
 const { app } = require('../server');
 
 const ADMIN = { _id: '64b000000000000000000001', role: 'OVPERI_Admin' };
 const STUDENT = { _id: '64b000000000000000000002', role: 'Student' };
 const APP_ONE = '64b000000000000000000011';
 const APP_TWO = '64b000000000000000000012';
+const OPPORTUNITY_ID = '64b000000000000000000021';
 
 let httpServer;
 let baseUrl;
@@ -55,6 +67,12 @@ afterAll(done => {
 beforeEach(() => {
     jest.clearAllMocks();
     mockSessionUser = ADMIN;
+    Opportunity.find.mockReturnValue({
+        select: jest.fn().mockResolvedValue([{
+            _id: OPPORTUNITY_ID,
+            name: 'Test Exchange Program'
+        }])
+    });
 });
 
 describe('GET /api/applications/export', () => {
@@ -128,10 +146,14 @@ describe('POST /api/applications/bulk-action', () => {
         body: JSON.stringify(body)
     });
 
-    const mockTargets = targets => {
+    const mockTargets = (targets, nextStatus) => {
         Application.find
             .mockReturnValueOnce({ select: jest.fn().mockResolvedValue(targets) })
-            .mockResolvedValueOnce(targets.map(target => ({ ...target, status: undefined })));
+            .mockResolvedValueOnce(targets.map(target => ({
+                ...target,
+                status: nextStatus,
+                opportunityId: OPPORTUNITY_ID
+            })));
         Application.updateMany.mockResolvedValue({ matchedCount: targets.length, modifiedCount: targets.length });
         AuditLog.insertMany.mockResolvedValue([]);
     };
@@ -146,7 +168,7 @@ describe('POST /api/applications/bulk-action', () => {
             { _id: APP_TWO, status: 'nominated', documentsStatus: 'complete' }
         ]]
     ])('applies a valid batch transition to %s and writes audit entries', async (status, targets) => {
-        mockTargets(targets);
+        mockTargets(targets, status);
 
         const response = await request('/api/applications/bulk-action', jsonRequest({
             ids: [APP_ONE, APP_TWO],
@@ -167,6 +189,27 @@ describe('POST /api/applications/bulk-action', () => {
                 changes: [{ field: 'status', from: targets[0].status, to: status }]
             })
         ]));
+        expect(notifyApplicationStatusChange).toHaveBeenCalledTimes(2);
+        expect(notifyApplicationStatusChange).toHaveBeenNthCalledWith(1, {
+            application: expect.objectContaining({
+                _id: APP_ONE,
+                status,
+                opportunityId: OPPORTUNITY_ID
+            }),
+            fromStatus: targets[0].status,
+            toStatus: status,
+            opportunityName: 'Test Exchange Program'
+        });
+        expect(notifyApplicationStatusChange).toHaveBeenNthCalledWith(2, {
+            application: expect.objectContaining({
+                _id: APP_TWO,
+                status,
+                opportunityId: OPPORTUNITY_ID
+            }),
+            fromStatus: targets[1].status,
+            toStatus: status,
+            opportunityName: 'Test Exchange Program'
+        });
     });
 
     test('rejects an invalid application id before querying the database', async () => {
