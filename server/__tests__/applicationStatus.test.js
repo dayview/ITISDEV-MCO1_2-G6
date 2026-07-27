@@ -107,4 +107,42 @@ describe('Application Status - admin workflow actions', () => {
         expect(STATUS.getPrimaryAdminAction({ status: 'accepted', documentsStatus: 'complete' })).toBeNull();
         expect(STATUS.getPrimaryAdminAction({ status: 'submitted', documentsStatus: 'incomplete' })).toBeNull();
     });
+
+    test('returns nomination for a compatible submitted and under-review selection', () => {
+        expect(STATUS.getBulkAdminAction([
+            { status: 'submitted', documentsStatus: 'complete' },
+            { status: 'under-review', documentsStatus: 'complete' }
+        ])).toEqual({ status: 'nominated', label: 'Nominate' });
+    });
+
+    test('returns acceptance for a compatible nominated selection', () => {
+        expect(STATUS.getBulkAdminAction([
+            { status: 'nominated', documentsStatus: 'complete' },
+            { status: 'nominated', documentsStatus: 'complete' }
+        ])).toEqual({ status: 'accepted', label: 'Accept' });
+    });
+
+    test.each([
+        [[]],
+        [[{ status: 'submitted', documentsStatus: 'incomplete' }]],
+        [[
+            { status: 'submitted', documentsStatus: 'complete' },
+            { status: 'nominated', documentsStatus: 'complete' }
+        ]],
+        [[{ status: 'accepted', documentsStatus: 'complete' }]]
+    ])('does not return a primary action for an incompatible selection', applications => {
+        expect(STATUS.getBulkAdminAction(applications)).toBeNull();
+    });
+
+    test('requires every selected application to be eligible for a bulk transition', () => {
+        expect(STATUS.canBulkTransition([
+            { status: 'submitted', documentsStatus: 'incomplete' },
+            { status: 'nominated', documentsStatus: 'complete' }
+        ], 'rejected')).toBe(true);
+        expect(STATUS.canBulkTransition([
+            { status: 'submitted', documentsStatus: 'complete' },
+            { status: 'accepted', documentsStatus: 'complete' }
+        ], 'rejected')).toBe(false);
+        expect(STATUS.canBulkTransition([], 'rejected')).toBe(false);
+    });
 });

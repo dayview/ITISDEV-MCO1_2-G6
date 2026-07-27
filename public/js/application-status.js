@@ -78,6 +78,22 @@
     return null;
   }
 
+  function canBulkTransition(applications, nextStatus) {
+    return Array.isArray(applications)
+      && applications.length > 0
+      && applications.every(application => canTransition(application, nextStatus));
+  }
+
+  function getBulkAdminAction(applications) {
+    if (!Array.isArray(applications) || applications.length === 0) return null;
+
+    const actions = applications.map(getPrimaryAdminAction);
+    const firstAction = actions[0];
+    if (!firstAction || actions.some(action => action?.status !== firstAction.status)) return null;
+
+    return firstAction;
+  }
+
   return {
     STATUS_CONFIG,
     UNKNOWN_STATUS,
@@ -90,6 +106,8 @@
     countByFilter,
     filterApplications,
     canTransition,
-    getPrimaryAdminAction
+    getPrimaryAdminAction,
+    canBulkTransition,
+    getBulkAdminAction
   };
 });

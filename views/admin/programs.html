@@ -54,10 +54,6 @@
         </div>
         <span class="student-topnav__link-label">Post</span>
       </a>
-      <button type="button" class="catalog-notification" aria-label="Notifications, 6 unread">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-        <span class="catalog-notification__badge" hidden></span>
-      </button>
       <a class="student-topnav__link catalog-account-link" href="admin-profile.html" aria-label="Admin profile">
         <span class="user-avatar" aria-hidden="true">OV</span>
       </a>
@@ -107,17 +103,17 @@
 
     <section class="program-summary-grid" aria-label="Program summary">
       <article class="stat-card"><div class="stat-card__label">Programs</div><div class="stat-card__value">—</div><div class="stat-card__sub stat-card__sub--muted">All managed opportunities</div></article>
-      <article class="stat-card"><div class="stat-card__label">Published</div><div class="stat-card__value">—</div><div class="stat-card__sub stat-card__sub--green">Visible to students</div></article>
+      <article class="stat-card"><div class="stat-card__label">Published</div><div class="stat-card__value">—</div><div class="stat-card__sub stat-card__sub--green">Includes expired listings</div></article>
       <article class="stat-card"><div class="stat-card__label">Drafts</div><div class="stat-card__value">—</div><div class="stat-card__sub stat-card__sub--amber">Awaiting publication</div></article>
-      <article class="stat-card"><div class="stat-card__label">Closed</div><div class="stat-card__value">—</div><div class="stat-card__sub stat-card__sub--muted">No longer accepting applications</div></article>
+      <article class="stat-card"><div class="stat-card__label">Closed</div><div class="stat-card__value">—</div><div class="stat-card__sub stat-card__sub--muted">Administratively closed</div></article>
     </section>
 
     <section class="program-filter-panel" id="program-filter-panel" aria-label="Program filters">
-      <label><span>Status</span><select id="filter-status"><option value="">All statuses</option><option>Published</option><option>Draft</option><option>Archived</option><option>Closed</option></select></label>
+      <label><span>Administrative Status</span><select id="filter-status"><option value="">All statuses</option><option>Published</option><option>Draft</option><option>Closed</option></select></label>
       <label><span>Country</span><select id="filter-country"><option value="">All countries</option></select></label>
       <label><span>Partner University</span><select id="filter-university"><option value="">All partners</option></select></label>
       <label><span>Program Type</span><select id="filter-type"><option value="">All types</option></select></label>
-      <label><span>Application Period</span><select id="filter-period"><option value="">Any period</option><option>Open</option><option>Upcoming</option><option>Closed</option></select></label>
+      <label><span>Application Window</span><select id="filter-period"><option value="">Any window</option><option>Open</option><option>Upcoming</option><option value="Closed">Closed / deadline passed</option></select></label>
       <label><span>Sort By</span><select id="sort-programs"><option value="updated">Last updated</option><option value="name">Program name</option><option value="applications">Applications</option><option value="deadline">Application deadline</option></select></label>
     </section>
 
@@ -125,7 +121,7 @@
       <strong><span id="selected-program-count">0</span> selected</strong>
       <div>
         <button type="button" data-bulk-action="publish">Publish</button>
-        <button type="button" data-bulk-action="archive">Archive</button>
+        <button type="button" data-bulk-action="close">Close</button>
         <button type="button" data-bulk-action="delete" class="program-danger-action">Delete</button>
         <button type="button" data-bulk-action="export">Export</button>
       </div>
@@ -142,7 +138,7 @@
       <div class="program-table" role="table" aria-label="Programs management table">
         <div class="program-table__head" role="row">
           <label class="program-checkbox"><input type="checkbox" id="select-all-programs" aria-label="Select all visible programs"><span></span></label>
-          <div>Program</div><div>Partner University</div><div>Country</div><div>Application Period</div>
+          <div>Program</div><div>Partner University</div><div>Country</div><div>Application Window</div>
           <div>Applications</div><div>Status</div><div>Last Updated</div><div>Actions</div>
         </div>
         <div id="program-table-body"></div>
@@ -170,6 +166,7 @@
 </div>
 
 <script src="../../public/js/responsive-ui.js"></script>
+<script src="../../public/js/program-export.js"></script>
 <script src="../../public/js/admin-programs.js"></script>
 </body>
 </html>

@@ -35,12 +35,135 @@
         && (!filters.period.value || program.periodState === filters.period.value);
     });
 
-    return result.sort((a, b) => {
+    return sortPrograms(result);
+  }
+
+  function sortPrograms(items) {
+    return items.sort((a, b) => {
       if (sort.value === 'name') return a.name.localeCompare(b.name);
       if (sort.value === 'applications') return b.applications - a.applications;
       if (sort.value === 'deadline') return new Date(a.deadline || 0) - new Date(b.deadline || 0);
       return new Date(b.updated || 0) - new Date(a.updated || 0);
     });
+  }
+
+  function exportPrograms(ids = []) {
+    const selectedIds = new Set(Array.isArray(ids) ? ids : []);
+    const records = selectedIds.size
+      ? sortPrograms(programs.filter(program => selectedIds.has(program.id)))
+      : filteredPrograms();
+    const hasActiveFilters = search.value.trim()
+      || Object.values(filters).some(filter => filter.value);
+    const filename = selectedIds.size
+      ? 'selected-programs.csv'
+      : hasActiveFilters
+        ? 'filtered-programs.csv'
+        : 'programs.csv';
+
+    try {
+      GEMSProgramExport.downloadProgramsCsv(records, filename);
+    } catch (error) {
+      alert(`Export failed: ${error.message}`);
+    }
+  }
+
+  async function changeProgramStatus(ids, action, button) {
+    const transitions = {
+      publish: { from: 'draft', pastTense: 'published', label: 'Publish' },
+      close: { from: 'published', pastTense: 'closed', label: 'Close' }
+    };
+    const transition = transitions[action];
+    const requestedIds = Array.isArray(ids) ? [...new Set(ids)] : [];
+    const requestedIdSet = new Set(requestedIds);
+    const targets = programs.filter(program => requestedIdSet.has(program.id));
+
+    if (!transition) {
+      alert('Unsupported program action.');
+      return;
+    }
+    if (!requestedIds.length) {
+      alert(`Select at least one ${transition.from} program.`);
+      return;
+    }
+    if (targets.length !== requestedIds.length || targets.some(program => program.rawStatus !== transition.from)) {
+      alert(`Only ${transition.from} programs can be ${transition.pastTense} together.`);
+      return;
+    }
+    if (!confirm(`${transition.label} ${requestedIds.length} program${requestedIds.length === 1 ? '' : 's'}?`)) return;
+
+    button.disabled = true;
+    try {
+      const response = await fetch('/api/admin/opportunities/bulk-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: requestedIds, action })
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || `HTTP ${response.status}`);
+
+      selected.clear();
+      await loadPrograms();
+      alert(`${result.count} program${result.count === 1 ? '' : 's'} ${transition.pastTense} successfully.`);
+    } catch (error) {
+      alert(`Unable to ${action} programs: ${error.message}`);
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  async function deletePrograms(ids, button) {
+    const requestedIds = Array.isArray(ids) ? [...new Set(ids)] : [];
+    const requestedIdSet = new Set(requestedIds);
+    const targets = programs.filter(program => requestedIdSet.has(program.id));
+
+    if (!requestedIds.length) {
+      alert('Select at least one unused draft program.');
+      return;
+    }
+    if (targets.length !== requestedIds.length
+      || targets.some(program => program.rawStatus !== 'draft' || Number(program.applications) > 0)) {
+      alert('Only draft programs with no applications can be deleted.');
+      return;
+    }
+    if (!confirm(`Permanently delete ${requestedIds.length} draft program${requestedIds.length === 1 ? '' : 's'}? This cannot be undone.`)) return;
+
+    button.disabled = true;
+    try {
+      const response = await fetch('/api/admin/opportunities/bulk-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: requestedIds, action: 'delete' })
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || `HTTP ${response.status}`);
+
+      selected.clear();
+      await loadPrograms();
+      alert(`${result.count} draft program${result.count === 1 ? '' : 's'} deleted successfully.`);
+    } catch (error) {
+      alert(`Unable to delete programs: ${error.message}`);
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  async function duplicateProgram(program, button) {
+    button.disabled = true;
+    try {
+      const response = await fetch(`/api/admin/opportunities/${encodeURIComponent(program.id)}/duplicate`, {
+        method: 'POST',
+        headers: { Accept: 'application/json' }
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || `HTTP ${response.status}`);
+
+      await loadPrograms();
+      alert(`"${result.data.name}" created as a draft. Applications were not copied.`);
+    } catch (error) {
+      alert(`Unable to duplicate program: ${error.message}`);
+    } finally {
+      button.disabled = false;
+    }
   }
 
   function formatDate(value) {
@@ -83,19 +206,27 @@
         <div class="program-cell program-cell--name" data-label="Program"><strong>${escapeHtml(program.name)}</strong><small>${escapeHtml(program.type)}</small></div>
         <div class="program-cell" data-label="Partner University">${escapeHtml(program.university)}</div>
         <div class="program-cell" data-label="Country">${escapeHtml(program.country)}</div>
-        <div class="program-cell" data-label="Application Deadline"><strong>${escapeHtml(formatDate(program.deadline))}</strong><small>${escapeHtml(program.periodState)}</small></div>
+        <div class="program-cell" data-label="Application Window"><strong>${escapeHtml(formatDate(program.deadline))}</strong><small>${escapeHtml(program.periodState)}</small></div>
         <div class="program-cell program-cell--applications" data-label="Applications">${program.applications}</div>
         <div class="program-cell" data-label="Status"><span class="program-status program-status--${escapeHtml(program.status.toLowerCase())}">${escapeHtml(program.status)}</span></div>
         <div class="program-cell" data-label="Last Updated">${escapeHtml(formatDate(program.updated))}</div>
         <div class="program-row-actions" data-label="Actions">
-          <button type="button" class="program-action-link" data-action="view">View</button>
+          <button
+            type="button"
+            class="program-action-link"
+            data-action="view"
+            title="${program.rawStatus === 'published' ? 'View in student catalog' : 'Available after publishing'}"
+            ${program.rawStatus === 'published' ? '' : 'disabled aria-disabled="true"'}
+          >View</button>
           <button type="button" class="program-action-link" data-action="edit">Edit</button>
           <div class="program-overflow">
             <button type="button" class="program-overflow__trigger" aria-label="More actions for ${escapeHtml(program.name)}" aria-expanded="false">&#8942;</button>
             <div class="program-overflow__menu" hidden>
               <button type="button" data-action="duplicate">Duplicate</button>
-              <button type="button" data-action="archive">Archive</button>
-              <button type="button" data-action="delete" class="program-danger-action">Delete</button>
+              ${program.rawStatus === 'published' ? '<button type="button" data-action="close">Close</button>' : ''}
+              ${program.rawStatus === 'draft' && Number(program.applications) === 0
+                ? '<button type="button" data-action="delete" class="program-danger-action">Delete</button>'
+                : ''}
             </div>
           </div>
         </div>
@@ -150,14 +281,16 @@
     });
 
     body.querySelectorAll('[data-action]').forEach(button => {
-      button.addEventListener('click', () => {
+      button.addEventListener('click', async () => {
+        if (button.disabled) return;
         const row = button.closest('.program-row');
         const program = programs.find(item => item.id === row.dataset.programId);
         const action = button.dataset.action;
         if (action === 'edit') window.location.href = `post-opportunity.html?id=${program.id}`;
-        else if (action === 'view' && program.rawStatus === 'published') window.location.href = `../opportunity.html?id=${program.id}`;
-        else if (action === 'view') alert('Draft programs are not visible to students yet.');
-        else alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action selected for "${program.name}".`);
+        else if (action === 'view') window.location.href = `../opportunity.html?id=${program.id}`;
+        else if (action === 'duplicate') await duplicateProgram(program, button);
+        else if (action === 'close') await changeProgramStatus([program.id], 'close', button);
+        else if (action === 'delete') await deletePrograms([program.id], button);
       });
     });
   }
@@ -169,8 +302,18 @@
 
   function updateBulkBar() {
     const bar = document.getElementById('program-bulk-bar');
+    const targets = programs.filter(program => selected.has(program.id));
+    const completeSelection = selected.size > 0 && targets.length === selected.size;
     document.getElementById('selected-program-count').textContent = String(selected.size);
     bar.hidden = selected.size === 0;
+    document.querySelector('[data-bulk-action="publish"]').disabled =
+      !completeSelection || targets.some(program => program.rawStatus !== 'draft');
+    document.querySelector('[data-bulk-action="close"]').disabled =
+      !completeSelection || targets.some(program => program.rawStatus !== 'published');
+    document.querySelector('[data-bulk-action="delete"]').disabled =
+      !completeSelection || targets.some(program => (
+        program.rawStatus !== 'draft' || Number(program.applications) > 0
+      ));
     document.getElementById('select-all-programs').checked = selected.size > 0
       && filteredPrograms().slice((currentPage - 1) * pageSize, currentPage * pageSize).every(program => selected.has(program.id));
   }
@@ -199,12 +342,27 @@
   });
   document.getElementById('program-prev').addEventListener('click', () => { if (currentPage > 1) { currentPage -= 1; render(); } });
   document.getElementById('program-next').addEventListener('click', () => { if (currentPage < Math.ceil(filteredPrograms().length / pageSize)) { currentPage += 1; render(); } });
-  document.getElementById('export-programs').addEventListener('click', () => alert('Program list export prepared.'));
+  document.getElementById('export-programs').addEventListener('click', () => exportPrograms());
   document.getElementById('bulk-menu-button').addEventListener('click', () => {
     document.getElementById('program-bulk-bar').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
-  document.querySelectorAll('[data-bulk-action]').forEach(button => button.addEventListener('click', () => {
-    alert(`${button.dataset.bulkAction} selected for ${selected.size} program${selected.size === 1 ? '' : 's'}.`);
+  document.querySelectorAll('[data-bulk-action]').forEach(button => button.addEventListener('click', async () => {
+    if (button.dataset.bulkAction === 'export') {
+      exportPrograms(Array.from(selected));
+      return;
+    }
+    if (button.dataset.bulkAction === 'publish') {
+      await changeProgramStatus(Array.from(selected), 'publish', button);
+      return;
+    }
+    if (button.dataset.bulkAction === 'close') {
+      await changeProgramStatus(Array.from(selected), 'close', button);
+      return;
+    }
+    if (button.dataset.bulkAction === 'delete') {
+      await deletePrograms(Array.from(selected), button);
+      return;
+    }
   }));
   document.addEventListener('click', closeMenus);
 

@@ -33,7 +33,7 @@ const validateStatusTransition = (currentStatus, nextStatus, documentsStatus) =>
     return { valid: true, error: '' };
 };
 
-const applicationPipeline = ({ status = '', college = '', search = '', sort = 'recency', documentsStatus = '', ids = [] } = {}) => {
+const applicationPipeline = ({ status = '', college = '', search = '', sort = 'recency', documentsStatus = '', program = '', ids = [] } = {}) => {
     const pipeline = [
         { $addFields: { studentRef: { $ifNull: ['$userId', '$studentId'] } } },
         { $lookup: { from: 'users', localField: 'studentRef', foreignField: '_id', as: 'student' } },
@@ -53,6 +53,7 @@ const applicationPipeline = ({ status = '', college = '', search = '', sort = 'r
     if (status) match.status = status;
     if (documentsStatus) match.documentsStatus = documentsStatus;
     if (college) match['student.college'] = new RegExp(`^${college}$`, 'i');
+    if (program) match['opportunity.name'] = new RegExp(`^${String(program).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
     if (search) {
         const pattern = new RegExp(search, 'i');
         match.$or = [
@@ -162,19 +163,31 @@ const mapStudentApplication = (application) => {
     };
 };
 
+const csvCell = value => {
+    let text = String(value ?? '');
+    if (/^\s*[=+\-@]/.test(text)) text = `'${text}`;
+    return `"${text.replaceAll('"', '""')}"`;
+};
+
+const csvDate = value => {
+    if (!value) return '';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+};
+
 const toApplicationsCsv = (data) => {
     const header = 'Student Name,Student Id,College,CGPA,Program,Institution,Status,Documents,Submitted Date';
     const rows = data.map(row => [
-        `"${String(row.name || '').replaceAll('"', '""')}"`,
-        row.student_id || '',
-        row.college || '',
-        row.cgpa ?? '',
-        `"${String(row.opp_name || '').replaceAll('"', '""')}"`,
-        `"${String(row.institution || '').replaceAll('"', '""')}"`,
-        row.status || '',
-        row.documents_status || '',
-        row.submitted_date ? new Date(row.submitted_date).toISOString() : ''
-    ].join(','));
+        row.name,
+        row.student_id,
+        row.college,
+        row.cgpa,
+        row.opp_name,
+        row.institution,
+        row.status,
+        row.documents_status,
+        csvDate(row.submitted_date)
+    ].map(csvCell).join(','));
     return [header, ...rows].join('\n');
 };
 

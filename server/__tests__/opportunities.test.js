@@ -94,6 +94,12 @@ describe('Opportunity Management - mapAdminOpportunity (admin-facing view)', () 
         expect(mapped.periodState).toBe('Closed');
     });
 
+    test('marks periodState Closed when the program is closed even if its deadline is in the future', () => {
+        const future = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
+        const mapped = mapAdminOpportunity({ _id: 'id1', name: 'X', institution: 'Y', category: 'Z', deadline: future, status: 'closed' });
+        expect(mapped.periodState).toBe('Closed');
+    });
+
     test('marks periodState Open within 30 days of the deadline', () => {
         const soon = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
         const mapped = mapAdminOpportunity({ _id: 'id1', name: 'X', institution: 'Y', category: 'Z', deadline: soon, status: 'published' });

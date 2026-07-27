@@ -152,6 +152,192 @@ app.get('/api/admin/opportunities', requireAdminSession, async (_req, res) => {
     }
 });
 
+app.post('/api/admin/opportunities/:id/duplicate', requireAdminSession, async (req, res) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ success: false, error: 'Invalid program id.' });
+        }
+
+        const source = await Opportunity.findById(req.params.id);
+        if (!source) {
+            return res.status(404).json({ success: false, error: 'Program not found.' });
+        }
+
+        const codeSuffix = new mongoose.Types.ObjectId().toString().slice(-8).toUpperCase();
+        const eligibility = source.eligibility?.toObject
+            ? source.eligibility.toObject()
+            : source.eligibility;
+        const duplicate = await Opportunity.create({
+            code: `${source.code}-COPY-${codeSuffix}`,
+            name: `${source.name} (Copy)`,
+            description: source.description,
+            institution: source.institution,
+            country: source.country,
+            region: source.region,
+            category: source.category,
+            status: 'draft',
+            deadline: source.deadline,
+            capacity: source.capacity,
+            benefits: source.benefits,
+            fees: source.fees,
+            credits: source.credits,
+            requiredDocumentTypes: [...(source.requiredDocumentTypes || [])],
+            eligibility,
+            createdBy: req.session.user._id
+        });
+
+        await AuditLog.create({
+            userId: req.session.user._id,
+            userRole: req.session.user.role,
+            action: 'opportunity_created',
+            targetType: 'Opportunity',
+            targetId: duplicate._id,
+            targetLabel: duplicate.name,
+            changes: [{
+                field: 'duplicatedFrom',
+                from: String(source._id),
+                to: String(duplicate._id)
+            }],
+            ip: req.ip
+        });
+
+        res.status(201).json({
+            success: true,
+            sourceId: String(source._id),
+            data: mapAdminOpportunity(duplicate, 0)
+        });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/admin/opportunities/bulk-action', requireAdminSession, async (req, res) => {
+    try {
+        const requestedIds = Array.isArray(req.body.ids) ? req.body.ids : [];
+        if (!requestedIds.length) {
+            return res.status(400).json({ success: false, error: 'Select at least one program.' });
+        }
+        const transitions = {
+            publish: {
+                from: 'draft',
+                to: 'published',
+                auditAction: 'opportunity_published',
+                requiredLabel: 'a draft',
+                pastTense: 'published'
+            },
+            close: {
+                from: 'published',
+                to: 'closed',
+                auditAction: 'opportunity_closed',
+                requiredLabel: 'published',
+                pastTense: 'closed'
+            }
+        };
+        const transition = transitions[req.body.action];
+        if (!transition && req.body.action !== 'delete') {
+            return res.status(400).json({ success: false, error: 'Action must be one of: publish, close, delete.' });
+        }
+        if (requestedIds.some(id => !mongoose.Types.ObjectId.isValid(id))) {
+            return res.status(400).json({ success: false, error: 'One or more program ids are invalid.' });
+        }
+
+        const ids = [...new Set(requestedIds.map(String))];
+        const targets = await Opportunity.find({ _id: { $in: ids } }).select('name status deadline');
+        if (targets.length !== ids.length) {
+            return res.status(404).json({ success: false, error: 'One or more selected programs were not found.' });
+        }
+
+        if (req.body.action === 'delete') {
+            const nonDraft = targets.find(opportunity => opportunity.status !== 'draft');
+            if (nonDraft) {
+                return res.status(409).json({
+                    success: false,
+                    error: `"${nonDraft.name}" must be a draft before it can be deleted.`
+                });
+            }
+
+            const applicationCount = await Application.countDocuments({ opportunityId: { $in: ids } });
+            if (applicationCount > 0) {
+                return res.status(409).json({
+                    success: false,
+                    error: 'Programs with application history cannot be deleted. Close or retain them instead.'
+                });
+            }
+
+            const deleteResult = await Opportunity.deleteMany({ _id: { $in: ids }, status: 'draft' });
+            if (deleteResult.deletedCount !== ids.length) {
+                return res.status(409).json({
+                    success: false,
+                    error: 'One or more program statuses changed while this request was being processed. Refresh and try again.'
+                });
+            }
+
+            await AuditLog.insertMany(targets.map(opportunity => ({
+                userId: req.session.user._id,
+                userRole: req.session.user.role,
+                action: 'opportunity_deleted',
+                targetType: 'Opportunity',
+                targetId: opportunity._id,
+                targetLabel: opportunity.name,
+                changes: [{ field: 'status', from: 'draft', to: 'deleted' }],
+                ip: req.ip
+            })));
+
+            return res.json({ success: true, action: 'delete', count: deleteResult.deletedCount });
+        }
+
+        const invalidStatus = targets.find(opportunity => opportunity.status !== transition.from);
+        if (invalidStatus) {
+            return res.status(409).json({
+                success: false,
+                error: `"${invalidStatus.name}" must be ${transition.requiredLabel} before it can be ${transition.pastTense}.`
+            });
+        }
+
+        const expired = req.body.action === 'publish'
+            ? targets.find(opportunity => !opportunity.deadline || new Date(opportunity.deadline) < new Date())
+            : null;
+        if (expired) {
+            return res.status(409).json({
+                success: false,
+                error: `"${expired.name}" needs a future application deadline before it can be published.`
+            });
+        }
+
+        const updateResult = await Opportunity.updateMany(
+            { _id: { $in: ids }, status: transition.from },
+            { $set: { status: transition.to } },
+            { runValidators: true }
+        );
+        if (updateResult.matchedCount !== ids.length) {
+            return res.status(409).json({
+                success: false,
+                error: 'One or more program statuses changed while this request was being processed. Refresh and try again.'
+            });
+        }
+
+        await AuditLog.insertMany(targets.map(opportunity => ({
+            userId: req.session.user._id,
+            userRole: req.session.user.role,
+            action: transition.auditAction,
+            targetType: 'Opportunity',
+            targetId: opportunity._id,
+            targetLabel: opportunity.name,
+            changes: [{ field: 'status', from: transition.from, to: transition.to }],
+            ip: req.ip
+        })));
+
+        res.json({
+            success: true,
+            action: req.body.action,
+            status: transition.to,
+            count: updateResult.modifiedCount
+        });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
 app.get('/api/me', requireSession, (req, res) => {
     res.json({ success: true, user: req.session.user });
 });
@@ -634,8 +820,14 @@ app.get('/api/applications', requireAdminSession, async (req, res) => {
 app.get('/api/applications/export', requireAdminSession, async (req, res) => {
     try {
         const data = await Application.aggregate(applicationPipeline(req.query));
+        if (!data.length) {
+            return res.status(404).json({ success: false, error: 'No applications match the selected export criteria.' });
+        }
+        const ids = Array.isArray(req.query.ids) ? req.query.ids : req.query.ids ? [req.query.ids] : [];
+        const hasFilters = ['status', 'college', 'search', 'documentsStatus', 'program'].some(key => req.query[key]);
+        const filename = ids.length ? 'selected-applications.csv' : hasFilters ? 'filtered-applications.csv' : 'applications.csv';
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-        res.setHeader('Content-Disposition', 'attachment; filename="applications.csv"');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
         res.send(toApplicationsCsv(data));
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
@@ -803,7 +995,11 @@ const startServer = async () => {
     });
 };
 
-startServer().catch(error => {
-    console.error(error.message);
-    process.exit(1);
-});
+if (require.main === module) {
+    startServer().catch(error => {
+        console.error(error.message);
+        process.exit(1);
+    });
+}
+
+module.exports = { app, startServer };

@@ -4960,6 +4960,14 @@ body.catalog-page {
   background: rgba(6, 118, 71, .08);
 }
 
+.program-bulk-bar button:disabled,
+.program-bulk-bar button:disabled:hover {
+  background: transparent;
+  color: #98A2B3 !important;
+  cursor: not-allowed;
+  opacity: .72;
+}
+
 .program-management-card {
   overflow: visible;
   border: 1px solid #E4E7EC;
@@ -5164,6 +5172,13 @@ body.catalog-page {
 .program-action-link:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+.program-action-link:disabled,
+.program-action-link:disabled:hover {
+  color: #98A2B3;
+  cursor: not-allowed;
+  text-decoration: none;
 }
 
 .program-overflow {

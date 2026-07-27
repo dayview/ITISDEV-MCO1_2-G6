@@ -74,7 +74,7 @@ const mapAdminOpportunity = (opportunity, applicationCount = 0) => {
     const status = plain.status === 'published' ? 'Published' : plain.status === 'closed' ? 'Closed' : 'Draft';
     const deadline = plain.deadline ? new Date(plain.deadline) : null;
     const now = new Date();
-    const periodState = !deadline || deadline < now
+    const periodState = plain.status === 'closed' || !deadline || deadline < now
         ? 'Closed'
         : deadline.getTime() - now.getTime() <= 30 * 24 * 60 * 60 * 1000
             ? 'Open'

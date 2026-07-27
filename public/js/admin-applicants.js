@@ -22,6 +22,14 @@
     rejected: 'Rejected'
   };
 
+  const statusValues = Object.fromEntries(Object.entries(statusLabels).map(([value, label]) => [label, value]));
+  const exportSortValues = {
+    newest: 'recency',
+    oldest: 'oldest',
+    name: 'firstNameAsc',
+    status: 'status'
+  };
+
   function escapeHtml(value) {
     const node = document.createElement('div');
     node.textContent = String(value || '');
@@ -247,19 +255,21 @@
     document.getElementById('select-all-applicants').checked = visible.length > 0 && visible.every(item => selected.has(item.id));
     const selectedApplicants = applicants.filter(applicant => selected.has(applicant.id));
     const completeSelection = selectedApplicants.length === selected.size;
-    const nominateButton = document.querySelector('[data-applicant-bulk="approve"]');
+    const primaryButton = document.querySelector('[data-applicant-bulk="primary"]');
     const rejectButton = document.querySelector('[data-applicant-bulk="reject"]');
-    const canNominate = selected.size > 0 && completeSelection && selectedApplicants.every(applicant => GEMSApplicationStatus.canTransition({
+    const workflowApplications = selectedApplicants.map(applicant => ({
       status: applicant.status,
       documentsStatus: applicant.documentsStatus
-    }, 'nominated'));
-    const canReject = selected.size > 0 && completeSelection && selectedApplicants.every(applicant => GEMSApplicationStatus.canTransition({
-      status: applicant.status,
-      documentsStatus: applicant.documentsStatus
-    }, 'rejected'));
+    }));
+    const primaryAction = completeSelection ? GEMSApplicationStatus.getBulkAdminAction(workflowApplications) : null;
+    const canReject = completeSelection && GEMSApplicationStatus.canBulkTransition(workflowApplications, 'rejected');
 
-    nominateButton.disabled = !canNominate;
-    nominateButton.title = canNominate ? 'Nominate selected applications' : 'Only complete Submitted or Under Review applications can be nominated';
+    primaryButton.disabled = !primaryAction;
+    primaryButton.dataset.status = primaryAction?.status || '';
+    primaryButton.textContent = primaryAction ? `${primaryAction.label} Selected` : 'Decision Unavailable';
+    primaryButton.title = primaryAction
+      ? `${primaryAction.label} selected applications`
+      : 'Select applications at the same eligible workflow stage with complete documents';
     rejectButton.disabled = !canReject;
     rejectButton.title = canReject ? 'Reject selected applications' : 'Accepted and rejected applications are final';
   }
@@ -280,16 +290,15 @@
 
   async function bulkStatus(status) {
     const selectedApplicants = applicants.filter(applicant => selected.has(applicant.id));
-    const eligible = selectedApplicants.length === selected.size && selectedApplicants.every(applicant => (
-      GEMSApplicationStatus.canTransition({
+    const eligible = selectedApplicants.length === selected.size && GEMSApplicationStatus.canBulkTransition(
+      selectedApplicants.map(applicant => ({
         status: applicant.status,
         documentsStatus: applicant.documentsStatus
-      }, status)
-    ));
+      })),
+      status
+    );
     if (!selected.size || !eligible) {
-      alert(status === 'nominated'
-        ? 'Only complete Submitted or Under Review applications can be nominated.'
-        : 'One or more selected applications cannot be rejected.');
+      alert(`One or more selected applications cannot be ${status}.`);
       return;
     }
     const response = await fetch('/api/applications/bulk-action', {
@@ -304,6 +313,26 @@
     }
     selected.clear();
     await loadApplicants();
+  }
+
+  async function exportApplications(ids = []) {
+    const selectedIds = Array.isArray(ids) ? ids : [];
+    const filters = selectedIds.length ? {} : {
+      search: search.value.trim(),
+      status: statusValues[statusFilter.value] || '',
+      documentsStatus: documentsFilter.value.toLowerCase(),
+      program: programFilter.value
+    };
+
+    try {
+      await GEMSApplicationExport.downloadApplicationsCsv({
+        ids: selectedIds,
+        filters,
+        sort: exportSortValues[sort.value] || 'recency'
+      });
+    } catch (error) {
+      alert(`Export failed: ${error.message}`);
+    }
   }
 
   async function loadApplicants() {
@@ -343,12 +372,12 @@
   });
   document.getElementById('applicant-prev').addEventListener('click', () => { if (currentPage > 1) { currentPage -= 1; render(); } });
   document.getElementById('applicant-next').addEventListener('click', () => { if (currentPage < Math.ceil(getMatches().length / pageSize)) { currentPage += 1; render(); } });
-  document.getElementById('applicant-export').addEventListener('click', () => alert('Applicant export prepared.'));
+  document.getElementById('applicant-export').addEventListener('click', () => exportApplications());
   document.getElementById('applicant-batch-button').addEventListener('click', () => document.getElementById('applicant-bulk-bar').scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
   document.querySelectorAll('[data-applicant-bulk]').forEach(button => button.addEventListener('click', () => {
-    if (button.dataset.applicantBulk === 'approve') bulkStatus('nominated');
+    if (button.dataset.applicantBulk === 'primary') bulkStatus(button.dataset.status);
     else if (button.dataset.applicantBulk === 'reject') bulkStatus('rejected');
-    else alert(`Export selected for ${selected.size} applicant${selected.size === 1 ? '' : 's'}.`);
+    else exportApplications(Array.from(selected));
   }));
   document.querySelectorAll('[data-close-review-modal]').forEach(button => button.addEventListener('click', closeDocumentReview));
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && !reviewModal.hidden) closeDocumentReview(); });

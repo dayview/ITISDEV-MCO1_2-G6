@@ -136,7 +136,7 @@ describe('Application Logic - CSV export formatter', () => {
         ]);
         const lines = csv.split('\n');
         expect(lines[0]).toBe('Student Name,Student Id,College,CGPA,Program,Institution,Status,Documents,Submitted Date');
-        expect(lines[1]).toBe('"Juan Dela Cruz",123,CCS,3.5,"NUS Exchange","NUS",submitted,complete,2026-01-01T00:00:00.000Z');
+        expect(lines[1]).toBe('"Juan Dela Cruz","123","CCS","3.5","NUS Exchange","NUS","submitted","complete","2026-01-01T00:00:00.000Z"');
     });
 
     test('escapes embedded double quotes in text fields', () => {
@@ -152,7 +152,19 @@ describe('Application Logic - CSV export formatter', () => {
     test('falls back to empty strings for missing optional fields', () => {
         const csv = toApplicationsCsv([{}]);
         const dataLine = csv.split('\n')[1];
-        expect(dataLine).toBe('"",,,,"","",,,');
+        expect(dataLine).toBe('"","","","","","","","",""');
+    });
+
+    test('neutralizes values that spreadsheet programs could interpret as formulas', () => {
+        const csv = toApplicationsCsv([{ name: '=HYPERLINK("https://example.test")', student_id: '+123' }]);
+        const dataLine = csv.split('\n')[1];
+        expect(dataLine).toContain('"\'=HYPERLINK(""https://example.test"")"');
+        expect(dataLine).toContain('"\'+123"');
+    });
+
+    test('uses an empty date cell when a submitted date is invalid', () => {
+        const csv = toApplicationsCsv([{ submitted_date: 'not-a-date' }]);
+        expect(csv.split('\n')[1].endsWith(',""')).toBe(true);
     });
 });
 
@@ -230,6 +242,12 @@ describe('Application Logic - applicationPipeline query builder', () => {
         const pipeline = applicationPipeline({ status: 'nominated' });
         const matchStage = pipeline.find(stage => stage.$match);
         expect(matchStage.$match.status).toBe('nominated');
+    });
+
+    test('adds an exact case-insensitive program-name filter when provided', () => {
+        const pipeline = applicationPipeline({ program: 'TUM Exchange Program' });
+        const matchStage = pipeline.find(stage => stage.$match);
+        expect(matchStage.$match['opportunity.name']).toEqual(/^TUM Exchange Program$/i);
     });
 
     test('omits the $match stage entirely when no filters are provided', () => {
