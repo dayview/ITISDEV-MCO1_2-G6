@@ -33,4 +33,28 @@ const determineOpportunityUpdateAction = (previousStatus, newStatus) => {
     return 'opportunity_updated';
 };
 
-module.exports = { ALLOWED_AUDIT_ACTIONS, buildAuditEntry, determineOpportunityUpdateAction };
+// Builds the Mongo filter for the audit log viewer. `actorIds`, when provided (already
+// resolved from an actor name/email search by the caller), narrows results to those
+// users; it takes precedence over a raw `userId` since a search implies the exact id
+// is no longer known.
+const buildAuditLogQuery = ({ action, targetType, userId, actorIds, from, to } = {}) => {
+    const query = {};
+    if (action) query.action = action;
+    if (targetType) query.targetType = targetType;
+
+    if (Array.isArray(actorIds)) {
+        query.userId = { $in: actorIds };
+    } else if (userId) {
+        query.userId = userId;
+    }
+
+    if (from || to) {
+        query.createdAt = {};
+        if (from) query.createdAt.$gte = new Date(from);
+        if (to) query.createdAt.$lte = new Date(to);
+    }
+
+    return query;
+};
+
+module.exports = { ALLOWED_AUDIT_ACTIONS, buildAuditEntry, determineOpportunityUpdateAction, buildAuditLogQuery };

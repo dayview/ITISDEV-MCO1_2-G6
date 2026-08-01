@@ -209,6 +209,24 @@
     else media.addListener(resetAtDesktop);
   }
 
+  // Nav links marked data-admin-role start hidden in markup (so a lower-privileged
+  // admin never even sees a flash of them) and are revealed here once /api/me
+  // confirms the signed-in user actually holds that role. The API route itself
+  // stays the real access boundary; this only controls link visibility.
+  function applyRoleGating() {
+    const gated = document.querySelectorAll('[data-admin-role]');
+    if (!gated.length) return;
+    fetch('/api/me', { credentials: 'include' })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (payload) {
+        const role = payload && payload.user && payload.user.role;
+        gated.forEach(function (el) {
+          if (el.getAttribute('data-admin-role') === role) el.hidden = false;
+        });
+      })
+      .catch(function () {});
+  }
+
   function labelResponsiveTables() {
     document.querySelectorAll('table').forEach(function (table) {
       const labels = Array.from(table.querySelectorAll('thead th')).map(function (heading) {
@@ -226,6 +244,7 @@
   function init() {
     document.querySelectorAll('.student-topnav.catalog-nav').forEach(initNavigation);
     labelResponsiveTables();
+    applyRoleGating();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
