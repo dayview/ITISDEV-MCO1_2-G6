@@ -5,6 +5,7 @@ const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
 const { requireAuth, requireAdmin, requireSystemAdmin } = require('../middleware/auth');
 const { VALID_ROLES, isValidRole, mapUserSummary } = require('../lib/users');
+const { buildAuditLogQuery } = require('../lib/audit');
 
 router.use(requireAuth, requireAdmin);
 
@@ -93,16 +94,23 @@ router.put('/users/:id/deactivate', requireSystemAdmin, async (req, res, next) =
 
 router.get('/audit-logs', requireSystemAdmin, async (req, res, next) => {
     try {
-        const { action, targetType, userId, from, to, page = 1, pageSize = 50 } = req.query;
-        const query = {};
-        if (action) query.action = action;
-        if (targetType) query.targetType = targetType;
-        if (userId && mongoose.Types.ObjectId.isValid(userId)) query.userId = userId;
-        if (from || to) {
-            query.createdAt = {};
-            if (from) query.createdAt.$gte = new Date(from);
-            if (to) query.createdAt.$lte = new Date(to);
+        const { action, targetType, userId, actorSearch, from, to, page = 1, pageSize = 50 } = req.query;
+
+        let actorIds;
+        if (actorSearch) {
+            const pattern = new RegExp(actorSearch, 'i');
+            const actors = await User.find({ $or: [{ name: pattern }, { email: pattern }] }, '_id');
+            actorIds = actors.map(actor => actor._id);
         }
+
+        const query = buildAuditLogQuery({
+            action,
+            targetType,
+            userId: userId && mongoose.Types.ObjectId.isValid(userId) ? userId : undefined,
+            actorIds,
+            from,
+            to
+        });
 
         const skip = (Number(page) - 1) * Number(pageSize);
         const [logs, total] = await Promise.all([

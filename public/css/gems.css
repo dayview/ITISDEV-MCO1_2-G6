@@ -5296,6 +5296,196 @@ body.catalog-page {
 }
 
 /* ==========================================================================
+   Admin audit log
+   ========================================================================== */
+.audit-log-toolbar {
+  flex-wrap: wrap;
+}
+
+.audit-log-filter select,
+.audit-log-filter input {
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-dark);
+  background: var(--bg-white);
+}
+
+.audit-log-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.audit-log-card .program-table-heading {
+  padding: 18px 20px;
+}
+
+#audit-log-result-count {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.audit-log-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.audit-log-entry {
+  border-top: 1px solid var(--border-inner);
+}
+
+.audit-log-entry__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 20px;
+  cursor: default;
+}
+
+.audit-log-entry__row .user-avatar {
+  width: 34px;
+  height: 34px;
+  font-size: 12px;
+}
+
+.audit-log-entry__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.audit-log-entry__headline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--text-dark);
+}
+
+.audit-log-entry__actor {
+  font-weight: 700;
+}
+
+.audit-log-entry__role {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.audit-log-entry__description {
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.audit-log-entry__description strong {
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
+.audit-log-entry__meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+}
+
+.audit-log-entry__time {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.audit-log-entry__toggle {
+  border: 1px solid var(--border);
+  background: var(--bg-white);
+  border-radius: 8px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: transform .15s ease;
+}
+
+.audit-log-entry__toggle svg {
+  width: 16px;
+  height: 16px;
+  transition: transform .15s ease;
+}
+
+.audit-log-entry[data-expanded="true"] .audit-log-entry__toggle svg {
+  transform: rotate(180deg);
+}
+
+.audit-log-entry__toggle:disabled {
+  visibility: hidden;
+}
+
+.audit-log-entry__details {
+  padding: 0 20px 16px 68px;
+}
+
+.audit-log-entry__diff {
+  border: 1px solid var(--border-inner);
+  border-radius: 8px;
+  background: #F8FAFC;
+  overflow: hidden;
+}
+
+.audit-log-entry__diff-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 24px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  font-size: 12.5px;
+}
+
+.audit-log-entry__diff-row + .audit-log-entry__diff-row {
+  border-top: 1px solid var(--border-inner);
+}
+
+.audit-log-entry__diff-field {
+  font-weight: 600;
+  color: var(--text-dark);
+  text-transform: capitalize;
+}
+
+.audit-log-entry__diff-from {
+  color: var(--red-text);
+  text-decoration: line-through;
+  word-break: break-word;
+}
+
+.audit-log-entry__diff-to {
+  color: var(--green-text);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.audit-log-entry__ip {
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+  .audit-log-entry__row {
+    flex-wrap: wrap;
+  }
+  .audit-log-entry__details {
+    padding-left: 20px;
+  }
+}
+
+/* ==========================================================================
    Admin applicants review database
    ========================================================================== */
 .applicants-page {

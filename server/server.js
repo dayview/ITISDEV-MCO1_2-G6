@@ -113,6 +113,7 @@ app.get('/:page', (req, res, next) => {
 const adminPages = new Set([
     'admin-profile.html',
     'applicants.html',
+    'audit-log.html',
     'dashboard.html',
     'post-opportunity.html',
     'programs.html'
