@@ -27,8 +27,17 @@ describe('Opportunity Management - mapOpportunity (student-facing view)', () => 
         expect(mapped.id).toBe('id1');
         expect(mapped.programName).toBe('NUS Exchange');
         expect(mapped.location).toBe('Singapore');
+        expect(mapped.deadline).toBe('2026-12-31');
         expect(mapped.benefits).toEqual(['A', 'B']);
         expect(mapped.eligible).toBe(true);
+    });
+
+    test('returns an empty deadline instead of an invalid date value', () => {
+        const mapped = mapOpportunity({
+            _id: 'id-invalid-date', name: 'X', institution: 'Y', category: 'Z', deadline: 'not-a-date'
+        });
+
+        expect(mapped.deadline).toBe('');
     });
 
     test('falls back to region for location when country is absent', () => {

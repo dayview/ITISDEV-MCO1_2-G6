@@ -6,6 +6,7 @@ const oneLineArray = (value) => {
 
 const mapOpportunity = (opportunity) => {
     const plain = typeof opportunity.toObject === 'function' ? opportunity.toObject() : opportunity;
+    const deadline = plain.deadline ? new Date(plain.deadline) : null;
     return {
         id: String(plain._id),
         code: plain.code,
@@ -18,7 +19,9 @@ const mapOpportunity = (opportunity) => {
         region: plain.region,
         category: plain.category,
         status: plain.status,
-        deadline: plain.deadline,
+        deadline: deadline && !Number.isNaN(deadline.getTime())
+            ? deadline.toISOString().slice(0, 10)
+            : '',
         capacity: plain.capacity,
         description: plain.description,
         shortDescription: plain.description,

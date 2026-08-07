@@ -19,7 +19,19 @@
   }
 
   function formatDeadline(value) {
-    return new Date(`${value}T00:00:00`).toLocaleDateString('en-US', {
+    if (!value) return 'Date unavailable';
+
+    // Deadlines are calendar dates. The API returns an ISO timestamp while
+    // older/static records use YYYY-MM-DD, so read the date portion from both
+    // shapes without appending a second time component or shifting time zones.
+    const dateParts = String(value).match(/^(\d{4})-(\d{2})-(\d{2})(?:T|$)/);
+    const date = dateParts
+      ? new Date(Number(dateParts[1]), Number(dateParts[2]) - 1, Number(dateParts[3]))
+      : new Date(value);
+
+    if (Number.isNaN(date.getTime())) return 'Date unavailable';
+
+    return date.toLocaleDateString('en-US', {
       day: '2-digit',
       month: 'short',
       year: 'numeric'
