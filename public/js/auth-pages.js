@@ -110,6 +110,8 @@
     };
     const collegeSelect = document.getElementById('register-college');
     const majorSelect = document.getElementById('register-major');
+    const studentIdInput = document.getElementById('register-student-id');
+    const studentIdError = 'Student ID number must contain exactly 8 digits.';
 
     function updateDegreePrograms() {
       const programs = degreePrograms[collegeSelect.value] || [];
@@ -132,6 +134,19 @@
     collegeSelect.addEventListener('change', updateDegreePrograms);
     updateDegreePrograms();
 
+    studentIdInput.addEventListener('input', () => {
+      const value = studentIdInput.value.trim();
+      studentIdInput.setCustomValidity(value && !/^\d{8}$/.test(value) ? studentIdError : '');
+    });
+
+    studentIdInput.addEventListener('invalid', () => {
+      if (studentIdInput.validity.valueMissing) {
+        studentIdInput.setCustomValidity('Please enter your student ID number.');
+      } else if (studentIdInput.validity.patternMismatch || studentIdInput.validity.tooShort) {
+        studentIdInput.setCustomValidity(studentIdError);
+      }
+    });
+
     const message = document.getElementById('register-message');
     registerForm.addEventListener('submit', async event => {
       event.preventDefault();
@@ -147,7 +162,7 @@
           email: document.getElementById('register-email').value,
           password,
           name: document.getElementById('register-name').value,
-          studentId: document.getElementById('register-student-id').value,
+          studentId: studentIdInput.value.trim(),
           major: document.getElementById('register-major').value,
           college: document.getElementById('register-college').value,
           phone: document.getElementById('register-phone').value,

@@ -57,6 +57,26 @@ describe('Authentication - register: duplicate email/student ID detection', () =
         expect(next).not.toHaveBeenCalled();
     });
 
+    test('identifies a duplicate student ID with a specific message', async () => {
+        User.create.mockRejectedValue({ code: 11000, keyPattern: { studentId: 1 } });
+        const req = {
+            body: {
+                email: 'new_student@dlsu.edu.ph', password: 'password123', name: 'New Student',
+                studentId: '12345678', college: 'CCS'
+            },
+            session: {}
+        };
+        const res = mockRes();
+
+        await registerHandler(req, res, jest.fn());
+
+        expect(res.status).toHaveBeenCalledWith(409);
+        expect(res.json).toHaveBeenCalledWith({
+            success: false,
+            error: 'This student ID number is already registered.'
+        });
+    });
+
     test('propagates non-duplicate-key errors to the error handler instead of masking them', async () => {
         User.create.mockRejectedValue(new Error('connection lost'));
         const req = {
@@ -130,7 +150,7 @@ describe('Authentication - register: duplicate email/student ID detection', () =
     test('never forces college to CCS when a different valid college is submitted', async () => {
         User.create.mockResolvedValue({ _id: 'u3', email: 'x@dlsu.edu.ph', name: 'X', role: 'Student', college: 'RVRCOB' });
         const req = {
-            body: { email: 'x@dlsu.edu.ph', password: 'password123', name: 'X', studentId: '1', college: 'RVRCOB' },
+            body: { email: 'x@dlsu.edu.ph', password: 'password123', name: 'X', studentId: '11111111', college: 'RVRCOB' },
             session: {}
         };
         await registerHandler(req, mockRes(), jest.fn());
@@ -146,7 +166,7 @@ describe('Authentication - register: duplicate email/student ID detection', () =
             passwordHashed: '$2b$10$shouldneverbeserialized'
         });
         const req = {
-            body: { email: 'y@dlsu.edu.ph', password: 'password123', name: 'Y', studentId: '2', college: 'CCS' },
+            body: { email: 'y@dlsu.edu.ph', password: 'password123', name: 'Y', studentId: '22222222', college: 'CCS' },
             session: {}
         };
         const res = mockRes();
@@ -166,7 +186,7 @@ describe('Authentication - register: new profile field validation', () => {
         bcrypt.hash.mockResolvedValue('hashed-password');
     });
 
-    const baseBody = { email: 'juan@dlsu.edu.ph', password: 'password123', name: 'Juan', studentId: '123' };
+    const baseBody = { email: 'juan@dlsu.edu.ph', password: 'password123', name: 'Juan', studentId: '12345678' };
 
     test('rejects registration missing college with a field-level error', async () => {
         const req = { body: { ...baseBody }, session: {} };
@@ -294,6 +314,26 @@ describe('Authentication - register: input validation', () => {
 
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.json).toHaveBeenCalledWith({ success: false, error: 'Password must be at least 8 characters.' });
+        expect(User.create).not.toHaveBeenCalled();
+    });
+
+    test('rejects a student ID that is not exactly eight digits with a clear message', async () => {
+        const req = {
+            body: {
+                email: 'juan@dlsu.edu.ph', password: 'password123', name: 'Juan',
+                studentId: '1234A678', college: 'CCS'
+            },
+            session: {}
+        };
+        const res = mockRes();
+
+        await registerHandler(req, res, jest.fn());
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+            success: false,
+            error: 'Student ID number must contain exactly 8 digits.'
+        });
         expect(User.create).not.toHaveBeenCalled();
     });
 

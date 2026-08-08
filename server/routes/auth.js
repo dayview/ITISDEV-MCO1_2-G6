@@ -5,7 +5,7 @@ const { OAuth2Client } = require('google-auth-library');
 const router = express.Router();
 const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
-const { roleHome, sanitizeUser, isDlsuEmail, isValidPassword, validateRegistrationProfile } = require('../lib/authValidation');
+const { roleHome, sanitizeUser, isDlsuEmail, isValidPassword, isValidStudentId, validateRegistrationProfile } = require('../lib/authValidation');
 const { sendOtpEmail } = require('../lib/mailer');
 const { SESSION_COOKIE_NAME, sessionCookieOptions } = require('../config/session');
 
@@ -155,6 +155,12 @@ router.post('/register', async (req, res, next) => {
             return res.status(400).json({ success: false, error: 'Use a valid DLSU email address.' });
         if (!isValidPassword(password))
             return res.status(400).json({ success: false, error: 'Password must be at least 8 characters.' });
+        if (!isValidStudentId(studentId)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Student ID number must contain exactly 8 digits.'
+            });
+        }
 
         const { valid, errors, profile } = validateRegistrationProfile(req.body);
         if (!valid) {
@@ -166,7 +172,7 @@ router.post('/register', async (req, res, next) => {
             email,
             passwordHashed,
             name,
-            studentId,
+            studentId: String(studentId).trim(),
             major,
             cgpa: cgpa ? Number(cgpa) : undefined,
             ...profile,
@@ -188,6 +194,12 @@ router.post('/register', async (req, res, next) => {
         res.status(201).json({ success: true, user: req.session.user, redirectTo: roleHome(user.role) });
     } catch (err) {
         if (err.code === 11000) {
+            if (err.keyPattern?.studentId || err.keyValue?.studentId) {
+                return res.status(409).json({ success: false, error: 'This student ID number is already registered.' });
+            }
+            if (err.keyPattern?.email || err.keyValue?.email) {
+                return res.status(409).json({ success: false, error: 'An account with this email already exists.' });
+            }
             return res.status(409).json({ success: false, error: 'An account with this email or student ID already exists.' });
         }
         next(err);

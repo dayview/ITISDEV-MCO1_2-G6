@@ -1,5 +1,5 @@
 const {
-    roleHome, sanitizeUser, isDlsuEmail, isValidPassword, ADMIN_ROLES,
+    roleHome, sanitizeUser, isDlsuEmail, isValidPassword, isValidStudentId, ADMIN_ROLES,
     isValidPhone, validateRegistrationProfile
 } = require('../lib/authValidation');
 const { GENDER_OPTIONS, ENROLLMENT_STATUSES, COLLEGE_OPTIONS } = require('../lib/profile');
@@ -45,6 +45,18 @@ describe('Authentication - password validation', () => {
     test('rejects an empty/undefined password', () => {
         expect(isValidPassword('')).toBe(false);
         expect(isValidPassword(undefined)).toBe(false);
+    });
+});
+
+describe('Authentication - student ID validation', () => {
+    test('accepts exactly eight digits', () => {
+        expect(isValidStudentId('12345678')).toBe(true);
+    });
+
+    test('rejects IDs with the wrong length or non-digit characters', () => {
+        expect(isValidStudentId('1234567')).toBe(false);
+        expect(isValidStudentId('123456789')).toBe(false);
+        expect(isValidStudentId('1234A678')).toBe(false);
     });
 });
 

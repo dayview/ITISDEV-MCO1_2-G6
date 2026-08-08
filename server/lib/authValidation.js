@@ -21,6 +21,8 @@ const isDlsuEmail = (email) => String(email || '').toLowerCase().endsWith('@dlsu
 
 const isValidPassword = (password) => String(password || '').length >= 8;
 
+const isValidStudentId = (studentId) => /^\d{8}$/.test(String(studentId || '').trim());
+
 const isValidPhone = (phone) => {
     const trimmed = String(phone || '').trim();
     const digits = trimmed.replace(/\D/g, '');
@@ -80,4 +82,4 @@ const validateRegistrationProfile = (body = {}) => {
     return { valid: Object.keys(errors).length === 0, errors, profile };
 };
 
-module.exports = { ADMIN_ROLES, roleHome, sanitizeUser, isDlsuEmail, isValidPassword, isValidPhone, validateRegistrationProfile };
+module.exports = { ADMIN_ROLES, roleHome, sanitizeUser, isDlsuEmail, isValidPassword, isValidStudentId, isValidPhone, validateRegistrationProfile };
