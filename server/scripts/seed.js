@@ -53,9 +53,10 @@ const studentData = [
     { studentId: '12310018', name: 'Natalie Gomez', college: 'GCOE', cgpa: 3.1, email: 'natalie_gomez@dlsu.edu.ph', role: 'student' },
     { studentId: '12410019', name: 'Kevin Bautista', college: 'CCS', cgpa: 3.2, email: 'kevin_bautista@dlsu.edu.ph', role: 'student' },
     { studentId: '12510020', name: 'Admin User', college: 'CCS', cgpa: 4.0, email: 'admin@dlsu.edu.ph', role: 'admin' },
+    { studentId: '12510021', name: 'OVPERI Admin', college: 'CCS', cgpa: 4.0, email: 'ovperi@dlsu.edu.ph', role: 'ovperi-admin' },
 ].map(user => ({
     ...user,
-    role: user.role === 'admin' ? 'OVPERI_Admin' : 'Student',
+    role: user.role === 'ovperi-admin' ? 'OVPERI_Admin' : user.role === 'admin' ? 'System_Admin' : 'Student',
 }));
 
 const DOCUMENT_TYPES = ['transcript', 'recommendation', 'validId', 'passport', 'EAF', 'curriculumAudit'];
